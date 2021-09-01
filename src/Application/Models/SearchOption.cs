@@ -1,4 +1,4 @@
-﻿namespace Aurora.Application.Enums
+﻿namespace Aurora.Application.Models
 {
     public enum SearchOption
     {

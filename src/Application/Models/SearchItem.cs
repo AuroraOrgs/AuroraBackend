@@ -1,6 +1,4 @@
-﻿using Aurora.Application.Enums;
-
-namespace Aurora.Application.Models
+﻿namespace Aurora.Application.Models
 {
     public class SearchItem
     {
