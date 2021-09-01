@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31321.278
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Application", "Application\Aurora.Application.csproj", "{021DBB24-0920-4681-BD8F-B71D2A338E70}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Application", "Aurora.Application\Aurora.Application.csproj", "{021DBB24-0920-4681-BD8F-B71D2A338E70}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Infrastructure", "Aurora.Infrastructure\Aurora.Infrastructure.csproj", "{BD7414D6-8A66-4F02-A99E-558C34AE4896}"
 EndProject

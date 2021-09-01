@@ -9,7 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Application\Aurora.Application.csproj" />
+    <ProjectReference Include="..\Aurora.Application\Aurora.Application.csproj" />
   </ItemGroup>
 
 </Project>
