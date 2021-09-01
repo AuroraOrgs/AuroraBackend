@@ -1,6 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Application", "Application\Aurora.Application.csproj", "{021DBB24-0920-4681-BD8F-B71D2A338E70}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31321.278
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Application", "Application\Aurora.Application.csproj", "{021DBB24-0920-4681-BD8F-B71D2A338E70}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Infrastructure", "Aurora.Infrastructure\Aurora.Infrastructure.csproj", "{BD7414D6-8A66-4F02-A99E-558C34AE4896}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,5 +17,15 @@ Global
 		{021DBB24-0920-4681-BD8F-B71D2A338E70}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{021DBB24-0920-4681-BD8F-B71D2A338E70}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{021DBB24-0920-4681-BD8F-B71D2A338E70}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD7414D6-8A66-4F02-A99E-558C34AE4896}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD7414D6-8A66-4F02-A99E-558C34AE4896}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD7414D6-8A66-4F02-A99E-558C34AE4896}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD7414D6-8A66-4F02-A99E-558C34AE4896}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3EA7E718-B8B7-4EE9-A51E-4E156F1104E9}
 	EndGlobalSection
 EndGlobal
