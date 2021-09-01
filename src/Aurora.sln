@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Application", "Aurora.Application\Aurora.Application.csproj", "{021DBB24-0920-4681-BD8F-B71D2A338E70}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Application", "Application\Aurora.Application.csproj", "{021DBB24-0920-4681-BD8F-B71D2A338E70}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
