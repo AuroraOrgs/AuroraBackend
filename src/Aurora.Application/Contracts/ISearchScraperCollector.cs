@@ -5,6 +5,6 @@ namespace Aurora.Application.Contracts
 {
     public interface ISearchScraperCollector
     {
-        ValueTask<IEnumerable<ISearchScraper>> Collect();
+        ValueTask<IEnumerable<ISearchScraper>> Collect(List<string> websites);
     }
 }
