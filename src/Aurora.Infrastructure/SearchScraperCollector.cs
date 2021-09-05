@@ -21,7 +21,7 @@ namespace Aurora.Infrastructure
             _logger = logger;
         }
 
-        public ValueTask<IEnumerable<ISearchScraper>> Collect(List<string> websites)
+        public ValueTask<IEnumerable<ISearchScraper>> CollectFor(List<string> websites)
         {
             List<ISearchScraper> scrapers = new List<ISearchScraper>();
             foreach (var website in websites)

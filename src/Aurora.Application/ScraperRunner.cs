@@ -18,7 +18,7 @@ namespace Aurora.Application
 
         public async Task<List<SearchResult>> Run(SearchRequest searchRequest, CancellationToken token = default)
         {
-            var scrappers = await _collector.Collect(searchRequest.Websites);
+            var scrappers = await _collector.CollectFor(searchRequest.Websites);
             List<SearchResult> resultCollection = new();
 
             var options = new ParallelOptions
