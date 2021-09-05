@@ -31,7 +31,7 @@ namespace Aurora.Application
             {
                 Parallel.ForEach(scrappers, options, async scrapper =>
                 {
-                    var result = await scrapper.Search(searchRequest);
+                    var result = await scrapper.Search(searchRequest, token);
                     resultCollection.Add(result);
                 });
             }
