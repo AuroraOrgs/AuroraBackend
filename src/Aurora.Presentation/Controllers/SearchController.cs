@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Aurora.Application.Contracts;
 using Aurora.Application.Models;
+using System.Threading;
+using System;
 
 namespace Aurora.Presentation.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v1")]
     [ApiController]
     public class SearchController : ControllerBase
     {
@@ -17,24 +19,31 @@ namespace Aurora.Presentation.Controllers
             _searchScraperCollector = searchScraperCollector;
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Search([FromBody] SearchRequest searchRequest)
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromBody] SearchRequest searchRequest, CancellationToken token)
         {
             var scrappers = await _searchScraperCollector.Collect(searchRequest.Websites);
             List<SearchResult> resultCollection = new();
-            
-            // Parallel.ForEach(scrappers, async scrapper =>
-            // {
-            //     var result = await scrapper.Search(searchRequest);
-            //     resultCollection.Add(result);
-            // });
 
-            foreach (var scrapper in scrappers)
+            var options = new ParallelOptions
             {
-                var result = await scrapper.Search(searchRequest);
-                resultCollection.Add(result);
+                MaxDegreeOfParallelism = 5,
+                CancellationToken = token
+            };
+
+            try
+            {
+                Parallel.ForEach(scrappers, options, async scrapper =>
+                {
+                    var result = await scrapper.Search(searchRequest);
+                    resultCollection.Add(result);
+                });
             }
-            
+            catch (OperationCanceledException)
+            {
+                //if cancelled - do nothing
+            }
+
             return Ok(resultCollection);
         }
     }
