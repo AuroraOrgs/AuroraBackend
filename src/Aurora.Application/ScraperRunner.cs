@@ -1,7 +1,9 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Models;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,7 +21,7 @@ namespace Aurora.Application
         public async Task<List<SearchResult>> Run(SearchRequest searchRequest, CancellationToken token = default)
         {
             var scrappers = await _collector.CollectFor(searchRequest.Websites);
-            List<SearchResult> resultCollection = new();
+            ConcurrentBag<SearchResult> resultCollection = new();
 
             var options = new ParallelOptions
             {
@@ -40,7 +42,7 @@ namespace Aurora.Application
                 //if cancelled - do nothing
             }
 
-            return resultCollection;
+            return resultCollection.ToList();
         }
     }
 }
