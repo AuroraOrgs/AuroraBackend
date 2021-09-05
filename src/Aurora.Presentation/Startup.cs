@@ -1,3 +1,4 @@
+using Aurora.Application;
 using Aurora.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -11,9 +12,11 @@ namespace Aurora.Presentation
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services
+                .AddApplication()
+                .AddInfrastructure();
 
-            services.AddInfrastructure();
+            services.AddControllers();
 
             services.AddSwaggerGen(c =>
             {
