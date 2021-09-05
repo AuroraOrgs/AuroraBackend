@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Aurora.Application.Contracts;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aurora.Infrastructure
 {
@@ -6,7 +7,8 @@ namespace Aurora.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
-            //register all of the services
+            services.AddScoped<ISearchScraperCollector, SearchScraperCollector>();
+
             return services;
         }
     }
