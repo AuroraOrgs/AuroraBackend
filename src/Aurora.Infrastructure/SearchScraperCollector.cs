@@ -2,23 +2,24 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Aurora.Infrastructure
 {
     public class SearchScraperCollector : ISearchScraperCollector
     {
-        private static Dictionary<string, ISearchScraper> _websiteNameToScraper = new Dictionary<string, ISearchScraper>
+        private static Dictionary<string, Type> _websiteNameToScraperType = new Dictionary<string, Type>
         {
-            //initialize scrapers linked to proper website
+            //initialize scraper type linked to proper website
         };
 
         private readonly ILogger<SearchScraperCollector> _logger;
-        public SearchScraperCollector(ILogger<SearchScraperCollector> logger)
+        private readonly IServiceProvider _provider;
+
+        public SearchScraperCollector(ILogger<SearchScraperCollector> logger, IServiceProvider provider)
         {
             _logger = logger;
+            _provider = provider;
         }
 
         public ValueTask<IEnumerable<ISearchScraper>> CollectFor(List<string> websites)
@@ -26,9 +27,13 @@ namespace Aurora.Infrastructure
             List<ISearchScraper> scrapers = new List<ISearchScraper>();
             foreach (var website in websites)
             {
-                if (HaveScraper(website, out ISearchScraper scraper))
+                if (HaveScraper(website, out Type scraperType))
                 {
-                    scrapers.Add(scraper);
+                    var result = _provider.GetService(scraperType);
+                    if (result is ISearchScraper scraper)
+                    {
+                        scrapers.Add(scraper);
+                    }
                 }
                 else
                 {
@@ -38,9 +43,9 @@ namespace Aurora.Infrastructure
             return ValueTask.FromResult<IEnumerable<ISearchScraper>>(scrapers);
         }
 
-        private static bool HaveScraper(string website, out ISearchScraper scraper)
+        private static bool HaveScraper(string website, out Type scraper)
         {
-            return _websiteNameToScraper.TryGetValue(website, out scraper);
+            return _websiteNameToScraperType.TryGetValue(website, out scraper);
         }
     }
 }
