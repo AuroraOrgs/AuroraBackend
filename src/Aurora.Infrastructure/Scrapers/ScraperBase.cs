@@ -1,22 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Aurora.Application.Contracts;
 using Aurora.Application.Models;
+using Aurora.Infrastructure.Models;
 using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
 
-namespace Aurora.Infrastructure
+namespace Aurora.Infrastructure.Scrapers
 {
-    public enum ScraperStatusCode
-    {
-        Success = 0,
-        HandledError = 1,
-        UnhandledError = 2
-    }
-
     public abstract class ScraperBase : ISearchScraper
     {
         private const string LogFormat = "StatusCode: '{code}', scraper '{scraperName}' {scraperMessage} in {time}";
@@ -46,7 +38,6 @@ namespace Aurora.Infrastructure
                 {
                     code = ScraperStatusCode.HandledError;
                 }
-               
             }
             catch
             {
@@ -57,7 +48,7 @@ namespace Aurora.Infrastructure
             watch.Stop();
 
             string time = watch.ElapsedMilliseconds.ToString();
-            string scraperName = this.GetType().Name;
+            string scraperName = GetType().Name;
             string codeMessage = code.ToString();
 
             _logger.LogDebug(LogFormat, codeMessage, scraperName, codeMessage, time);
