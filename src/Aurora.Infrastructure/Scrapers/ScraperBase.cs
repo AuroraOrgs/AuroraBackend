@@ -51,7 +51,7 @@ namespace Aurora.Infrastructure.Scrapers
             string scraperName = GetType().Name;
             string codeMessage = code.ToString();
 
-            _logger.LogDebug(LogFormat, codeMessage, scraperName, codeMessage, time);
+            _logger.LogInformation(LogFormat, codeMessage, scraperName, codeMessage, time);
 
             return result;
         }
