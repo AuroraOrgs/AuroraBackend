@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.XPath;
 
 namespace Aurora.Application
 {
@@ -34,7 +35,10 @@ namespace Aurora.Application
                 Parallel.ForEach(scrappers, options, async scrapper =>
                 {
                     var result = await scrapper.Search(searchRequest, token);
-                    resultCollection.Add(result);
+                    if (result.HasValue)
+                    {
+                        resultCollection.Add(result.Value);
+                    }
                 });
             }
             catch (OperationCanceledException)
