@@ -50,8 +50,9 @@ namespace Aurora.Infrastructure.Scrapers
 
                 if (request.SearchOptions.Contains(SearchOption.Image))
                 {
-                    var images = await ScrapImages(request.SearchTerm, request.ResponseWebsitesMaxCount);
-                    result.Items.AddRange(images);
+                    //TODO: Make image scraping work
+                    //var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
+                    //result.Items.AddRange(images);
                 }
             }
             catch (Exception exception)
