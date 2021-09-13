@@ -19,7 +19,8 @@ namespace Aurora.Infrastructure.Scrapers
         {
         }
 
-        public override async Task<ValueOrNull<SearchResult>> SearchInner(SearchRequest request,
+        public override async Task<ValueOrNull<SearchResult>> SearchInner(
+            SearchRequest request,
             CancellationToken token = default)
         {
             SearchResult result = new()
@@ -30,11 +31,18 @@ namespace Aurora.Infrastructure.Scrapers
             try
             {
                 if (request.SearchOptions.Contains(SearchOption.Video))
-                    result.Items.AddRange(ScrapVideos(request.SearchTerm, request.ResponseWebsitesMaxCount));
+                {
+                    var videos = await ScrapVideos(request.SearchTerm, request.ResponseWebsitesMaxCount);
+                    result.Items.AddRange(videos);
+                }
                 if (request.SearchOptions.Contains(SearchOption.Gif))
+                {
                     result.Items.AddRange(ScrapGifs(request.SearchTerm, request.ResponseWebsitesMaxCount));
+                }
                 if (request.SearchOptions.Contains(SearchOption.Image))
+                {
                     result.Items.AddRange(ScrapImages(request.SearchTerm, request.ResponseWebsitesMaxCount));
+                }
             }
             catch (Exception exception)
             {
@@ -44,8 +52,8 @@ namespace Aurora.Infrastructure.Scrapers
             result.CountItems = result.Items.Count;
             return ValueOrNull<SearchResult>.CreateValue(result);
         }
-        
-        private static IEnumerable<SearchItem> ScrapVideos(string searchTerm, int maxNumberOfVideoUrls)
+
+        private static async Task<IEnumerable<SearchItem>> ScrapVideos(string searchTerm, int maxNumberOfVideoUrls)
         {
             List<SearchItem> videoItems = new();
 
@@ -54,42 +62,46 @@ namespace Aurora.Infrastructure.Scrapers
                 OptionFixNestedTags = true
             };
 
-            var page = 1;
+            var pageNumber = 1;
             const int pageNumberLimit = 5;
+
+            var urlsCount = 0;
 
             using WebClient client = new();
 
-            while (true)
+            for (int i = 0; i < pageNumberLimit; i++)
             {
+
+                if (urlsCount >= maxNumberOfVideoUrls)
+                {
+                    break;
+                }
+
                 // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
-                var searchPageUrl = $"{_baseUrl}/video/search?search={searchTermUrlFormatted}&page={page}";
+                var searchPageUrl = $"{_baseUrl}/video/search?search={searchTermUrlFormatted}&page={pageNumber}";
 
                 ConfigureSecurityAccessToWebsite(client);
                 var htmlSearchPage = client.DownloadString(searchPageUrl);
                 htmlDocument.LoadHtml(htmlSearchPage);
 
-                var bodyNode = htmlDocument.DocumentNode?.SelectSingleNode("//body");
-                var videoLinksNodes = bodyNode?.SelectNodes("//a[contains(@class, 'videoPreviewBg')]");
+                var videoLinksNodes = htmlDocument.DocumentNode
+                    ?.SelectSingleNode("//body")
+                    ?.SelectNodes("//a[contains(@class, 'videoPreviewBg')]");
 
-                if (videoLinksNodes is null || page == pageNumberLimit)
-                    break;
-
-                for (var i = 0; i < maxNumberOfVideoUrls - videoItems.Count; i++)
+                if (videoLinksNodes is null || pageNumber == pageNumberLimit)
                 {
-                    if (videoLinksNodes.Count == i + 1)
-                        break;
+                    break;
+                }
 
-                    var currentElement = videoLinksNodes.ElementAt(i);
-                    if (currentElement is null || currentElement.Name != "a")
-                        continue;
-
+                foreach (var videoLinkNode in videoLinksNodes)
+                {
                     SearchItem searchVideoItem = new()
                     {
                         Option = SearchOption.Video
                     };
 
-                    var currentLinkImageNode = currentElement.ChildNodes
+                    var currentLinkImageNode = videoLinkNode.ChildNodes
                         .FirstOrDefault(n => n.Name == "img");
 
                     if (currentLinkImageNode != null)
@@ -98,14 +110,15 @@ namespace Aurora.Infrastructure.Scrapers
                         searchVideoItem.ImagePreviewUrl = currentLinkImageAttributes["data-thumb_url"].Value;
                     }
 
-                    var currentLinkAttributes = currentElement.Attributes;
+                    var currentLinkAttributes = videoLinkNode.Attributes;
                     searchVideoItem.SearchItemUrl = $"{_baseUrl}{currentLinkAttributes["href"].Value}";
 
+                    urlsCount++;
                     videoItems.Add(searchVideoItem);
                 }
 
-                page++;
-                Thread.Sleep(1000);
+                pageNumber++;
+                await Task.Delay(1000);
             }
 
             return videoItems;
@@ -120,7 +133,7 @@ namespace Aurora.Infrastructure.Scrapers
         {
             throw new NotImplementedException();
         }
-        
+
         private static void ConfigureSecurityAccessToWebsite(WebClient client)
         {
             client.Headers.Add("user-agent",
