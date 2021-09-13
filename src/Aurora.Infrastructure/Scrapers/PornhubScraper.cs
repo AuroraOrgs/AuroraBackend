@@ -10,6 +10,7 @@ using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
 using Aurora.Shared.Extensions;
 using Microsoft.Extensions.Logging;
+using Aurora.Infrastructure.Services;
 
 namespace Aurora.Infrastructure.Scrapers
 {
@@ -19,10 +20,12 @@ namespace Aurora.Infrastructure.Scrapers
         private const string _baseUrl = "https://www.pornhub.com";
         private const string _dateSourcePhncdn = "https://dl.phncdn.com";
         private readonly IWebClientService _clientProvider;
+        private readonly DriverInitializer _initializer;
 
-        public PornhubScraper(ILogger<ISearchScraper> logger, IWebClientService clientProvider) : base(logger)
+        public PornhubScraper(ILogger<ISearchScraper> logger, IWebClientService clientProvider, DriverInitializer initializer) : base(logger)
         {
             _clientProvider = clientProvider;
+            _initializer = initializer;
         }
 
         public override async Task<ValueOrNull<SearchResult>> SearchInner(
@@ -50,9 +53,8 @@ namespace Aurora.Infrastructure.Scrapers
 
                 if (request.SearchOptions.Contains(SearchOption.Image))
                 {
-                    //TODO: Make image scraping work
-                    //var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
-                    //result.Items.AddRange(images);
+                    var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
+                    result.Items.AddRange(images);
                 }
             }
             catch (Exception exception)
@@ -140,6 +142,8 @@ namespace Aurora.Infrastructure.Scrapers
                 OptionFixNestedTags = true
             };
 
+            var driver = await _initializer.Initialize();
+
             var searchTerm = FormatTermToUrl(requestSearchTerm);
             List<SearchItem> result = new List<SearchItem>();
             using (var client = await _clientProvider.Provide())
@@ -165,7 +169,8 @@ namespace Aurora.Infrastructure.Scrapers
                             {
                                 await _clientProvider.SetUserString(client);
                                 string albumUrl = $"{_baseUrl}{linkUrl}";
-                                var albumHtml = client.DownloadString(albumUrl);
+                                driver.Navigate().GoToUrl(albumUrl);
+                                var albumHtml = client.DownloadString(driver.PageSource);
                                 htmlDocument.LoadHtml(albumHtml);
 
                                 var images = htmlDocument.DocumentNode

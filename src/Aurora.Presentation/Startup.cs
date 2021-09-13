@@ -23,7 +23,7 @@ namespace Aurora.Presentation
         {
             services
                 .AddApplication()
-                .AddInfrastructure();
+                .AddInfrastructure(Configuration);
 
             services.AddControllers();
 

@@ -17,6 +17,8 @@ namespace Aurora.Infrastructure
 
             services.AddSingleton<IWebClientService, WebClientService>();
 
+            services.AddSingleton<DriverInitializer>();
+
             services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));
 
             return services;
