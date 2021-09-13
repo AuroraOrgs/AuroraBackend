@@ -6,6 +6,7 @@ namespace Aurora.Application.Models
     {
         public string SearchTerm { get; set; }
         public List<SearchOption> SearchOptions { get; set; }
+        public int ResponseWebsitesMaxCount { get; set; }
         public List<string> Websites { get; set; }
     }
 }

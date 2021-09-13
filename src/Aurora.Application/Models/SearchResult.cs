@@ -4,7 +4,13 @@ namespace Aurora.Application.Models
 {
     public class SearchResult
     {
-        public List<SearchItem> Items { get; set; }
+        public List<SearchItem> Items { get; }
+        public int CountItems { get; set; }
         public string Website { get; set; }
+
+        public SearchResult()
+        {
+            Items = new List<SearchItem>();
+        }
     }
 }
