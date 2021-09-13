@@ -15,6 +15,7 @@ namespace Aurora.Infrastructure.Scrapers
     public class PornhubScraper : ScraperBase
     {
         private const string _baseUrl = "https://www.pornhub.com";
+        private const string _dateSourcePhncdn = "https://dl.phncdn.com";
         private readonly IWebClientService _clientProvider;
 
         public PornhubScraper(ILogger<ISearchScraper> logger, IWebClientService clientProvider) : base(logger)
@@ -35,16 +36,17 @@ namespace Aurora.Infrastructure.Scrapers
             {
                 if (request.SearchOptions.Contains(SearchOption.Video))
                 {
-                    var videos = await ScrapVideos(request.SearchTerm, request.ResponseWebsitesMaxCount);
+                    var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
                     result.Items.AddRange(videos);
                 }
                 if (request.SearchOptions.Contains(SearchOption.Gif))
                 {
-                    result.Items.AddRange(ScrapGifs(request.SearchTerm, request.ResponseWebsitesMaxCount));
+                    var gifs = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
+                    result.Items.AddRange(gifs);
                 }
                 if (request.SearchOptions.Contains(SearchOption.Image))
                 {
-                    result.Items.AddRange(ScrapImages(request.SearchTerm, request.ResponseWebsitesMaxCount));
+                    result.Items.AddRange(ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount));
                 }
             }
             catch (Exception exception)
@@ -131,9 +133,72 @@ namespace Aurora.Infrastructure.Scrapers
             throw new NotImplementedException();
         }
 
-        private static IEnumerable<SearchItem> ScrapGifs(string requestSearchTerm, int requestResponseWebsitesMaxCount)
+        private async Task<IEnumerable<SearchItem>> ScrapGifs(string searchTerm, int maxNumberOfVideoUrls)
         {
-            throw new NotImplementedException();
+            List<SearchItem> gifItems = new();
+
+            var htmlDocument = new HtmlAgilityPack.HtmlDocument
+            {
+                OptionFixNestedTags = true
+            };
+
+            var pageNumber = 1;
+            const int pageNumberLimit = 5;
+
+            var urlsCount = 0;
+
+            using (var client = await _clientProvider.Provide())
+            {
+                for (int i = 0; i < pageNumberLimit; i++)
+                {
+                    if (urlsCount >= maxNumberOfVideoUrls)
+                    {
+                        break;
+                    }
+
+                    // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
+                    var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
+                    var searchPageUrl = $"{_baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={pageNumber}";
+                    await _clientProvider.SetUserString(client);
+                    var htmlSearchPage = client.DownloadString(searchPageUrl);
+                    htmlDocument.LoadHtml(htmlSearchPage);
+
+                    var gifLinksNodes = htmlDocument.DocumentNode
+                        ?.SelectSingleNode("//body")
+                        ?.SelectNodes("//li[contains(@class, 'gifVideoBlock')]");
+
+                    if (gifLinksNodes is null || pageNumber == pageNumberLimit)
+                    {
+                        break;
+                    }
+
+                    foreach (var gifLinkNode in gifLinksNodes)
+                    {
+                        SearchItem searchVideoItem = new()
+                        {
+                            Option = SearchOption.Gif
+                        };
+
+                        var currentLinkGifNode = gifLinkNode.ChildNodes
+                            .FirstOrDefault(n => n.Name == "a");
+
+                        if (currentLinkGifNode != null)
+                        {
+                            var currentLinkImageAttributes = currentLinkGifNode.Attributes;
+                            searchVideoItem.ImagePreviewUrl = $"{_baseUrl}{currentLinkImageAttributes["href"].Value}";
+                            searchVideoItem.SearchItemUrl = $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
+                        }
+
+                        urlsCount++;
+                        gifItems.Add(searchVideoItem);
+                    }
+
+                    pageNumber++;
+                    await Task.Delay(1000);
+                }
+            }
+
+            return gifItems;
         }
 
         private static string FormatTermToUrl(string term)
