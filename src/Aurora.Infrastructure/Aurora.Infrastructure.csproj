@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Aurora.Application\Aurora.Application.csproj" />
+    <ProjectReference Include="..\Aurora.Shared\Aurora.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -8,12 +8,14 @@ using Aurora.Application.Contracts;
 using Aurora.Application.Models;
 using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
+using Aurora.Shared.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace Aurora.Infrastructure.Scrapers
 {
     public class PornhubScraper : ScraperBase
     {
+        private const int PAGE_NUMBER_LIMIT = 5;
         private const string _baseUrl = "https://www.pornhub.com";
         private const string _dateSourcePhncdn = "https://dl.phncdn.com";
         private readonly IWebClientService _clientProvider;
@@ -39,14 +41,17 @@ namespace Aurora.Infrastructure.Scrapers
                     var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
                     result.Items.AddRange(videos);
                 }
+
                 if (request.SearchOptions.Contains(SearchOption.Gif))
                 {
                     var gifs = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
                     result.Items.AddRange(gifs);
                 }
+
                 if (request.SearchOptions.Contains(SearchOption.Image))
                 {
-                    result.Items.AddRange(ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount));
+                    var images = await ScrapImages(request.SearchTerm, request.ResponseWebsitesMaxCount);
+                    result.Items.AddRange(images);
                 }
             }
             catch (Exception exception)
@@ -68,13 +73,12 @@ namespace Aurora.Infrastructure.Scrapers
             };
 
             var pageNumber = 1;
-            const int pageNumberLimit = 5;
 
             var urlsCount = 0;
 
             using (var client = await _clientProvider.Provide())
             {
-                for (int i = 0; i < pageNumberLimit; i++)
+                for (int i = 0; i < PAGE_NUMBER_LIMIT; i++)
                 {
                     if (urlsCount >= maxNumberOfVideoUrls)
                     {
@@ -92,7 +96,7 @@ namespace Aurora.Infrastructure.Scrapers
                         ?.SelectSingleNode("//body")
                         ?.SelectNodes("//a[contains(@class, 'videoPreviewBg')]");
 
-                    if (videoLinksNodes is null || pageNumber == pageNumberLimit)
+                    if (videoLinksNodes is null)
                     {
                         break;
                     }
@@ -128,9 +132,73 @@ namespace Aurora.Infrastructure.Scrapers
             return videoItems;
         }
 
-        private static IEnumerable<SearchItem> ScrapImages(string requestSearchTerm, int requestResponseWebsitesMaxCount)
+        private async Task<IEnumerable<SearchItem>> ScrapImages(string requestSearchTerm, int requestResponseWebsitesMaxCount)
         {
-            throw new NotImplementedException();
+            var htmlDocument = new HtmlAgilityPack.HtmlDocument
+            {
+                OptionFixNestedTags = true
+            };
+
+            var searchTerm = FormatTermToUrl(requestSearchTerm);
+            List<SearchItem> result = new List<SearchItem>();
+            using (var client = await _clientProvider.Provide())
+            {
+                for (int i = 0; i < PAGE_NUMBER_LIMIT; i++)
+                {
+                    var pageNumber = i + 1;
+                    var fullUrl = GetImagePageUrl(searchTerm, pageNumber);
+                    await _clientProvider.SetUserString(client);
+                    var html = client.DownloadString(fullUrl);
+                    htmlDocument.LoadHtml(html);
+
+                    var albumListNode = htmlDocument.DocumentNode
+                        ?.SelectSingleNode("//*[@id='photosAlbumsSection']");
+                    var albumNodes = albumListNode?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
+
+                    if (albumNodes.IsNotNull())
+                    {
+                        foreach (var albumNode in albumNodes)
+                        {
+                            var linkUrl = albumNode.Attributes["href"]?.Value;
+                            if (linkUrl.IsNotNull())
+                            {
+                                await _clientProvider.SetUserString(client);
+                                string albumUrl = $"{_baseUrl}{linkUrl}";
+                                var albumHtml = client.DownloadString(albumUrl);
+                                htmlDocument.LoadHtml(albumHtml);
+
+                                var images = htmlDocument.DocumentNode
+                                    ?.SelectSingleNode("//ul[contains(@class, 'photosAlbumsListing')]")
+                                    ?.SelectNodes("//li/div");
+
+                                if (images.IsNotNull())
+                                {
+                                    foreach (var image in images)
+                                    {
+                                        var preview = image.Attributes["data-bkg"].Value;
+                                        var url = image.SelectSingleNode("/a").Attributes["href"].Value;
+                                        var item = new SearchItem
+                                        {
+                                            ImagePreviewUrl = preview,
+                                            SearchItemUrl = url,
+                                            Option = SearchOption.Image
+                                        };
+                                        result.Add(item);
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        private string GetImagePageUrl(string searchTerm, int pageNumber)
+        {
+            searchTerm = FormatTermToUrl(searchTerm);
+            return $"https://rt.pornhub.com/albums?search={searchTerm}&page={pageNumber}";
         }
 
         private async Task<IEnumerable<SearchItem>> ScrapGifs(string searchTerm, int maxNumberOfVideoUrls)
