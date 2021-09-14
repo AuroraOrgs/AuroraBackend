@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Aurora.Application.Enums;
 
 namespace Aurora.Application
 {
@@ -21,12 +22,12 @@ namespace Aurora.Application
 
         public async Task<List<SearchResult>> Run(SearchRequest searchRequest, CancellationToken token = default)
         {
-            IEnumerable<ISearchScraper> scrappers = await _collector.CollectFor(searchRequest.Websites);
+            var scrappers = await _collector.CollectFor(searchRequest.Websites);
             ConcurrentBag<SearchResult> resultCollection = new();
 
             try
             {
-                List<Task> scraperTasks = new List<Task>();
+                var scraperTasks = new List<Task>();
                 foreach (var scrapper in scrappers)
                 {
                     scraperTasks.Add(Search(searchRequest, resultCollection, scrapper, token));

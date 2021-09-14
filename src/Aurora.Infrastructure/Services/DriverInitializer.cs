@@ -20,10 +20,10 @@ namespace Aurora.Infrastructure.Services
 
         public Task<RemoteWebDriver> Initialize()
         {
-            string seleniumLocation = _options.SeleniumLocation;
-            Uri uri = new Uri(seleniumLocation);
-            var options = new FirefoxOptions();
-            RemoteWebDriver driver = new RemoteWebDriver(uri, options.ToCapabilities());
+            var seleniumLocation = _options.SeleniumLocation;
+            var uri = new Uri(seleniumLocation);
+            var firefoxOptions = new FirefoxOptions();
+            var driver = new RemoteWebDriver(uri, firefoxOptions.ToCapabilities());
             return Task.FromResult(driver);
         }
     }

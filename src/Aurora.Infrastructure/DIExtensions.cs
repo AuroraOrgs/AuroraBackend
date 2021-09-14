@@ -12,13 +12,10 @@ namespace Aurora.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
-            services.AddSingleton<ISearchScraperCollector, SearchScraperCollector>();
-            services.AddSingleton<PornhubScraper>();
-
-            services.AddSingleton<IWebClientService, WebClientService>();
-
-            services.AddSingleton<DriverInitializer>();
-
+            services.AddScoped<ISearchScraperCollector, SearchScraperCollector>();
+            services.AddScoped<PornhubScraper>();
+            services.AddScoped<IWebClientService, WebClientService>();
+            services.AddScoped<DriverInitializer>();
             services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));
 
             return services;

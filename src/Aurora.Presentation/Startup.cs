@@ -1,5 +1,4 @@
 using Aurora.Application;
-using Aurora.Application.Configuration;
 using Aurora.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

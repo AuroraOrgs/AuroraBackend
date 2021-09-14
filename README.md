@@ -11,5 +11,5 @@ Prono aggregator
 2) Start Searching</br>
 3) Receive results without needing to check out every single website on the Internet</br>
 <h2 id="2">2.Deployed version</h2>
-Coming soon 🚀🚀🚀
+Cuming soon 🚀🚀🚀
 

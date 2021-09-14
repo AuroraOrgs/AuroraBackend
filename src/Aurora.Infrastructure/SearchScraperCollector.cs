@@ -3,15 +3,16 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Aurora.Application.Enums;
 using Aurora.Infrastructure.Scrapers;
 
 namespace Aurora.Infrastructure
 {
     public class SearchScraperCollector : ISearchScraperCollector
     {
-        private static readonly Dictionary<string, Type> _websiteNameToScraperType = new()
+        private static readonly Dictionary<SupportedWebsite, Type> _websiteNameToScraperType = new()
         {
-            { "pornhub", typeof(PornhubScraper) }
+            { SupportedWebsite.Pornhub, typeof(PornhubScraper) }
         };
 
         private readonly ILogger<SearchScraperCollector> _logger;
@@ -24,7 +25,7 @@ namespace Aurora.Infrastructure
             _provider = provider;
         }
 
-        public ValueTask<IEnumerable<ISearchScraper>> CollectFor(List<string> websites)
+        public ValueTask<IEnumerable<ISearchScraper>> CollectFor(List<SupportedWebsite> websites)
         {
             List<ISearchScraper> scrapers = new();
             foreach (var website in websites)
@@ -45,7 +46,7 @@ namespace Aurora.Infrastructure
             return ValueTask.FromResult<IEnumerable<ISearchScraper>>(scrapers);
         }
 
-        private static bool HaveScraper(string website, out Type scraper)
+        private static bool HaveScraper(SupportedWebsite website, out Type scraper)
         {
             return _websiteNameToScraperType.TryGetValue(website, out scraper);
         }

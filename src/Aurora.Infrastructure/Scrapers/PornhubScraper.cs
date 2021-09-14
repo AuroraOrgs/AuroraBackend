@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Aurora.Application.Contracts;
 using Aurora.Application.Models;
 using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
-using Aurora.Shared.Extensions;
 using Microsoft.Extensions.Logging;
 using Aurora.Infrastructure.Services;
 
@@ -22,7 +19,8 @@ namespace Aurora.Infrastructure.Scrapers
         private readonly IWebClientService _clientProvider;
         private readonly DriverInitializer _initializer;
 
-        public PornhubScraper(ILogger<ISearchScraper> logger, IWebClientService clientProvider, DriverInitializer initializer) : base(logger)
+        public PornhubScraper(ILogger<PornhubScraper> logger, IWebClientService clientProvider,
+            DriverInitializer initializer) : base(logger)
         {
             _clientProvider = clientProvider;
             _initializer = initializer;
@@ -79,63 +77,62 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using (var client = await _clientProvider.Provide())
+            using var client = await _clientProvider.Provide();
+            for (var i = 0; i < PAGE_NUMBER_LIMIT; i++)
             {
-                for (int i = 0; i < PAGE_NUMBER_LIMIT; i++)
+                if (urlsCount >= maxNumberOfVideoUrls)
                 {
-                    if (urlsCount >= maxNumberOfVideoUrls)
-                    {
-                        break;
-                    }
-
-                    // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
-                    var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
-                    var searchPageUrl = $"{_baseUrl}/video/search?search={searchTermUrlFormatted}&page={pageNumber}";
-                    await _clientProvider.SetUserString(client);
-                    var htmlSearchPage = client.DownloadString(searchPageUrl);
-                    htmlDocument.LoadHtml(htmlSearchPage);
-
-                    var videoLinksNodes = htmlDocument.DocumentNode
-                        ?.SelectSingleNode("//body")
-                        ?.SelectNodes("//a[contains(@class, 'videoPreviewBg')]");
-
-                    if (videoLinksNodes is null)
-                    {
-                        break;
-                    }
-
-                    foreach (var videoLinkNode in videoLinksNodes)
-                    {
-                        SearchItem searchVideoItem = new()
-                        {
-                            Option = SearchOption.Video
-                        };
-
-                        var currentLinkImageNode = videoLinkNode.ChildNodes
-                            .FirstOrDefault(n => n.Name == "img");
-
-                        if (currentLinkImageNode != null)
-                        {
-                            var currentLinkImageAttributes = currentLinkImageNode.Attributes;
-                            searchVideoItem.ImagePreviewUrl = currentLinkImageAttributes["data-thumb_url"].Value;
-                        }
-
-                        var currentLinkAttributes = videoLinkNode.Attributes;
-                        searchVideoItem.SearchItemUrl = $"{_baseUrl}{currentLinkAttributes["href"].Value}";
-
-                        urlsCount++;
-                        videoItems.Add(searchVideoItem);
-                    }
-
-                    pageNumber++;
-                    await Task.Delay(1000);
+                    break;
                 }
+
+                // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
+                var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
+                var searchPageUrl = $"{_baseUrl}/video/search?search={searchTermUrlFormatted}&page={pageNumber}";
+                await _clientProvider.SetUserString(client);
+                var htmlSearchPage = client.DownloadString(searchPageUrl);
+                htmlDocument.LoadHtml(htmlSearchPage);
+
+                var bodyNode = htmlDocument.DocumentNode
+                    ?.SelectSingleNode("//body");
+                var videoLinksNodes = bodyNode
+                    ?.SelectNodes("//a[contains(@class, 'videoPreviewBg')]");
+
+                if (videoLinksNodes is null)
+                {
+                    break;
+                }
+
+                foreach (var videoLinkNode in videoLinksNodes)
+                {
+                    SearchItem searchVideoItem = new()
+                    {
+                        Option = SearchOption.Video
+                    };
+
+                    var currentLinkImageNode = videoLinkNode.ChildNodes
+                        .FirstOrDefault(n => n.Name == "img");
+
+                    if (currentLinkImageNode != null)
+                    {
+                        var currentLinkImageAttributes = currentLinkImageNode.Attributes;
+                        searchVideoItem.ImagePreviewUrl = currentLinkImageAttributes["data-thumb_url"].Value;
+                    }
+
+                    var currentLinkAttributes = videoLinkNode.Attributes;
+                    searchVideoItem.SearchItemUrl = $"{_baseUrl}{currentLinkAttributes["href"].Value}";
+
+                    urlsCount++;
+                    videoItems.Add(searchVideoItem);
+                }
+
+                pageNumber++;
+                await Task.Delay(1000);
             }
 
             return videoItems;
         }
 
-        private async Task<IEnumerable<SearchItem>> ScrapImages(string requestSearchTerm, int requestResponseWebsitesMaxCount)
+        private async Task<IEnumerable<SearchItem>> ScrapImages(string requestSearchTerm, int maxNumberOfImageUrls)
         {
             var htmlDocument = new HtmlAgilityPack.HtmlDocument
             {
@@ -143,65 +140,62 @@ namespace Aurora.Infrastructure.Scrapers
             };
 
             var driver = await _initializer.Initialize();
-
             var searchTerm = FormatTermToUrl(requestSearchTerm);
-            List<SearchItem> result = new List<SearchItem>();
-            using (var client = await _clientProvider.Provide())
+            var result = new List<SearchItem>();
+
+            using var client = await _clientProvider.Provide();
+            for (var i = 0; i < PAGE_NUMBER_LIMIT; i++)
             {
-                for (int i = 0; i < PAGE_NUMBER_LIMIT; i++)
+                var pageNumber = i + 1;
+                var fullUrl = GetImagePageUrl(searchTerm, pageNumber);
+                await _clientProvider.SetUserString(client);
+                var html = client.DownloadString(fullUrl);
+                htmlDocument.LoadHtml(html);
+
+                var photosAlbumSection = htmlDocument.DocumentNode
+                    ?.SelectSingleNode("//*[@id='photosAlbumsSection']");
+                var albumNodes = photosAlbumSection
+                    ?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
+
+                if (albumNodes is null) continue;
+                if (result.Count >= maxNumberOfImageUrls) break;
+
+                foreach (var albumNode in albumNodes)
                 {
-                    var pageNumber = i + 1;
-                    var fullUrl = GetImagePageUrl(searchTerm, pageNumber);
+                    var linkUrl = albumNode.Attributes["href"]?.Value;
+
+                    if (linkUrl is null) continue;
+                    if (result.Count >= maxNumberOfImageUrls) break;
+
                     await _clientProvider.SetUserString(client);
-                    var html = client.DownloadString(fullUrl);
-                    htmlDocument.LoadHtml(html);
+                    var albumUrl = $"{_baseUrl}{linkUrl}";
+                    driver.Navigate().GoToUrl(albumUrl);
+                    var albumHtml = client.DownloadString(driver.PageSource);
+                    htmlDocument.LoadHtml(albumHtml);
 
-                    var albumListNode = htmlDocument.DocumentNode
-                        ?.SelectSingleNode("//*[@id='photosAlbumsSection']");
-                    var albumNodes = albumListNode?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
+                    var images = htmlDocument.DocumentNode
+                        ?.SelectSingleNode("//ul[contains(@class, 'photosAlbumsListing')]")
+                        ?.SelectNodes("//li/div");
 
-                    if (albumNodes.IsNotNull())
+                    if (images is not null)
                     {
-                        foreach (var albumNode in albumNodes)
+                        foreach (var image in images)
                         {
-                            var linkUrl = albumNode.Attributes["href"]?.Value;
-                            if (linkUrl.IsNotNull())
+                            var preview = image.Attributes["data-bkg"].Value;
+                            var url = image.SelectSingleNode("/a").Attributes["href"].Value;
+                            result.Add(new SearchItem
                             {
-                                await _clientProvider.SetUserString(client);
-                                string albumUrl = $"{_baseUrl}{linkUrl}";
-                                driver.Navigate().GoToUrl(albumUrl);
-                                var albumHtml = client.DownloadString(driver.PageSource);
-                                htmlDocument.LoadHtml(albumHtml);
-
-                                var images = htmlDocument.DocumentNode
-                                    ?.SelectSingleNode("//ul[contains(@class, 'photosAlbumsListing')]")
-                                    ?.SelectNodes("//li/div");
-
-                                if (images.IsNotNull())
-                                {
-                                    foreach (var image in images)
-                                    {
-                                        var preview = image.Attributes["data-bkg"].Value;
-                                        var url = image.SelectSingleNode("/a").Attributes["href"].Value;
-                                        var item = new SearchItem
-                                        {
-                                            ImagePreviewUrl = preview,
-                                            SearchItemUrl = url,
-                                            Option = SearchOption.Image
-                                        };
-                                        result.Add(item);
-                                    }
-                                }
-                            }
-
+                                ImagePreviewUrl = preview, SearchItemUrl = url, Option = SearchOption.Image
+                            });
                         }
                     }
                 }
             }
+
             return result;
         }
 
-        private string GetImagePageUrl(string searchTerm, int pageNumber)
+        private static string GetImagePageUrl(string searchTerm, int pageNumber)
         {
             searchTerm = FormatTermToUrl(searchTerm);
             return $"https://rt.pornhub.com/albums?search={searchTerm}&page={pageNumber}";
@@ -216,60 +210,58 @@ namespace Aurora.Infrastructure.Scrapers
                 OptionFixNestedTags = true
             };
 
-            var pageNumber = 1;
-            const int pageNumberLimit = 5;
-
             var urlsCount = 0;
 
-            using (var client = await _clientProvider.Provide())
+            using var client = await _clientProvider.Provide();
+
+            for (var i = 0; i < PAGE_NUMBER_LIMIT; i++)
             {
-                for (int i = 0; i < pageNumberLimit; i++)
+                if (urlsCount >= maxNumberOfVideoUrls)
                 {
-                    if (urlsCount >= maxNumberOfVideoUrls)
-                    {
-                        break;
-                    }
-
-                    // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
-                    var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
-                    var searchPageUrl = $"{_baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={pageNumber}";
-                    await _clientProvider.SetUserString(client);
-                    var htmlSearchPage = client.DownloadString(searchPageUrl);
-                    htmlDocument.LoadHtml(htmlSearchPage);
-
-                    var gifLinksNodes = htmlDocument.DocumentNode
-                        ?.SelectSingleNode("//body")
-                        ?.SelectNodes("//li[contains(@class, 'gifVideoBlock')]");
-
-                    if (gifLinksNodes is null || pageNumber == pageNumberLimit)
-                    {
-                        break;
-                    }
-
-                    foreach (var gifLinkNode in gifLinksNodes)
-                    {
-                        SearchItem searchVideoItem = new()
-                        {
-                            Option = SearchOption.Gif
-                        };
-
-                        var currentLinkGifNode = gifLinkNode.ChildNodes
-                            .FirstOrDefault(n => n.Name == "a");
-
-                        if (currentLinkGifNode != null)
-                        {
-                            var currentLinkImageAttributes = currentLinkGifNode.Attributes;
-                            searchVideoItem.ImagePreviewUrl = $"{_baseUrl}{currentLinkImageAttributes["href"].Value}";
-                            searchVideoItem.SearchItemUrl = $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
-                        }
-
-                        urlsCount++;
-                        gifItems.Add(searchVideoItem);
-                    }
-
-                    pageNumber++;
-                    await Task.Delay(1000);
+                    break;
                 }
+                
+                var currentPageNumber = i + 1;
+                // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
+                var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
+                var searchPageUrl = $"{_baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
+                await _clientProvider.SetUserString(client);
+                var htmlSearchPage = client.DownloadString(searchPageUrl);
+                htmlDocument.LoadHtml(htmlSearchPage);
+
+                var bodyNode = htmlDocument.DocumentNode
+                    ?.SelectSingleNode("//body");
+                var gifLinksNodes = bodyNode
+                    ?.SelectNodes("//li[contains(@class, 'gifVideoBlock')]");
+
+                if (gifLinksNodes is null || currentPageNumber == PAGE_NUMBER_LIMIT)
+                {
+                    break;
+                }
+
+                foreach (var gifLinkNode in gifLinksNodes)
+                {
+                    SearchItem searchVideoItem = new()
+                    {
+                        Option = SearchOption.Gif
+                    };
+
+                    var currentLinkGifNode = gifLinkNode.ChildNodes
+                        .FirstOrDefault(n => n.Name == "a");
+
+                    if (currentLinkGifNode is not null)
+                    {
+                        var currentLinkImageAttributes = currentLinkGifNode.Attributes;
+                        searchVideoItem.ImagePreviewUrl = $"{_baseUrl}{currentLinkImageAttributes["href"].Value}";
+                        searchVideoItem.SearchItemUrl =
+                            $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
+                    }
+
+                    urlsCount++;
+                    gifItems.Add(searchVideoItem);
+                }
+
+                await Task.Delay(1000);
             }
 
             return gifItems;
