@@ -17,7 +17,7 @@ namespace Aurora.Presentation.Controllers
             _runner = runner;
         }
 
-        [HttpGet("search")]
+        [HttpPost("search")]
         public async Task<IActionResult> Search([FromBody] SearchRequest searchRequest, CancellationToken token)
         {
             var result = await _runner.Run(searchRequest, token);

@@ -13,30 +13,30 @@ namespace Aurora.Infrastructure.Scrapers
     {
         private const string LogFormat = "StatusCode: '{code}', scraper '{scraperName}' {scraperMessage} in {time}";
 
-        private readonly ILogger _logger;
+        private readonly ILogger<ISearchScraper> _logger;
 
-        public ScraperBase(ILogger logger)
+        public ScraperBase(ILogger<ISearchScraper> logger)
         {
             _logger = logger;
         }
 
         public async Task<ValueOrNull<SearchResult>> Search(SearchRequest request, CancellationToken token = default)
         {
-            Stopwatch watch = Stopwatch.StartNew();
+            var watch = Stopwatch.StartNew();
             var searchResult = await PerformSearch(request, token);
             watch.Stop();
 
-            var runnedFor = watch.Elapsed;
-            LogRun(searchResult, runnedFor);
+            var ranFor = watch.Elapsed;
+            LogRun(searchResult, ranFor);
 
             return searchResult.Result;
         }
 
-        private void LogRun(ExtendedSearchResult searchResult, System.TimeSpan runnedFor)
+        private void LogRun(ExtendedSearchResult searchResult, System.TimeSpan ranFor)
         {
-            string time = runnedFor.ToString();
-            string scraperName = GetType().Name;
-            string codeMessage = searchResult.StatusCode.ToString();
+            var time = ranFor.ToString();
+            var scraperName = GetType().Name;
+            var codeMessage = searchResult.StatusCode.ToString();
 
             _logger.LogInformation(LogFormat, codeMessage, scraperName, codeMessage, time);
         }
@@ -48,19 +48,12 @@ namespace Aurora.Infrastructure.Scrapers
             try
             {
                 result = await SearchInner(request, token);
-                if (result.HasValue)
-                {
-                    code = ScraperStatusCode.Success;
-                }
-                else
-                {
-                    code = ScraperStatusCode.HandledError;
-                }
+                code = result.HasValue ? ScraperStatusCode.Success : ScraperStatusCode.HandledError;
             }
             catch
             {
                 code = ScraperStatusCode.UnhandledError;
-                result = ValueOrNull<SearchResult>.CreateNull("Unahndled exception");
+                result = ValueOrNull<SearchResult>.CreateNull("Unhandled exception");
             }
 
             return new ExtendedSearchResult

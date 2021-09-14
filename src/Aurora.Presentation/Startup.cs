@@ -5,16 +5,24 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace Aurora.Presentation
 {
     public class Startup
     {
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
         public void ConfigureServices(IServiceCollection services)
         {
             services
                 .AddApplication()
-                .AddInfrastructure();
+                .AddInfrastructure(Configuration);
 
             services.AddControllers();
 
@@ -22,7 +30,6 @@ namespace Aurora.Presentation
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aurora", Version = "v1" });
             });
-
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

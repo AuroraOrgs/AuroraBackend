@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Aurora.Shared.Extensions
 {
-    internal static class GeneralExtensions
+    public static class GeneralExtensions
     {
         public static bool IsEmpty(this string str)
         {

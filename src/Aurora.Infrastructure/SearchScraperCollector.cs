@@ -3,18 +3,21 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Aurora.Application.Enums;
+using Aurora.Infrastructure.Scrapers;
 
 namespace Aurora.Infrastructure
 {
     public class SearchScraperCollector : ISearchScraperCollector
     {
-        private static Dictionary<string, Type> _websiteNameToScraperType = new Dictionary<string, Type>
+        private static readonly Dictionary<SupportedWebsite, Type> _websiteNameToScraperType = new()
         {
-            //initialize scraper type linked to proper website
+            { SupportedWebsite.Pornhub, typeof(PornhubScraper) }
         };
 
         private readonly ILogger<SearchScraperCollector> _logger;
         private readonly IServiceProvider _provider;
+        
 
         public SearchScraperCollector(ILogger<SearchScraperCollector> logger, IServiceProvider provider)
         {
@@ -22,12 +25,12 @@ namespace Aurora.Infrastructure
             _provider = provider;
         }
 
-        public ValueTask<IEnumerable<ISearchScraper>> CollectFor(List<string> websites)
+        public ValueTask<IEnumerable<ISearchScraper>> CollectFor(List<SupportedWebsite> websites)
         {
-            List<ISearchScraper> scrapers = new List<ISearchScraper>();
+            List<ISearchScraper> scrapers = new();
             foreach (var website in websites)
             {
-                if (HaveScraper(website, out Type scraperType))
+                if (HaveScraper(website, out var scraperType))
                 {
                     var result = _provider.GetService(scraperType);
                     if (result is ISearchScraper scraper)
@@ -43,7 +46,7 @@ namespace Aurora.Infrastructure
             return ValueTask.FromResult<IEnumerable<ISearchScraper>>(scrapers);
         }
 
-        private static bool HaveScraper(string website, out Type scraper)
+        private static bool HaveScraper(SupportedWebsite website, out Type scraper)
         {
             return _websiteNameToScraperType.TryGetValue(website, out scraper);
         }
