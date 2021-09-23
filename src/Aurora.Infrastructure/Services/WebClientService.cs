@@ -12,7 +12,7 @@ namespace Aurora.Infrastructure.Services
     {
         public Task<WebClient> Provide()
         {
-            WebClient client = new WebClient();
+            var client = new WebClient();
             return Task.FromResult(client);
         }
 
