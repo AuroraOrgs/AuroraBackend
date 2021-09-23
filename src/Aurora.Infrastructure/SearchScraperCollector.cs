@@ -12,12 +12,12 @@ namespace Aurora.Infrastructure
     {
         private static readonly Dictionary<SupportedWebsite, Type> _websiteNameToScraperType = new()
         {
-            { SupportedWebsite.Pornhub, typeof(PornhubScraper) }
+            { SupportedWebsite.Pornhub, typeof(PornhubScraper) },
+            { SupportedWebsite.Xvideos, typeof(XvideosScraper) }
         };
 
         private readonly ILogger<SearchScraperCollector> _logger;
         private readonly IServiceProvider _provider;
-        
 
         public SearchScraperCollector(ILogger<SearchScraperCollector> logger, IServiceProvider provider)
         {

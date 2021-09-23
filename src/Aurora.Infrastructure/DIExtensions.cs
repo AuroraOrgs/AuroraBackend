@@ -14,6 +14,7 @@ namespace Aurora.Infrastructure
         {
             services.AddScoped<ISearchScraperCollector, SearchScraperCollector>();
             services.AddScoped<PornhubScraper>();
+            services.AddScoped<XvideosScraper>();
             services.AddScoped<IWebClientService, WebClientService>();
             services.AddScoped<DriverInitializer>();
             services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));

@@ -2,6 +2,7 @@
 {
     public enum SupportedWebsite
     {
-        Pornhub
+        Pornhub = 0,
+        Xvideos = 1
     }
 }
