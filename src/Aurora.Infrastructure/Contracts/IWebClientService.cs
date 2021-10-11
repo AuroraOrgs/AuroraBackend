@@ -6,6 +6,7 @@ namespace Aurora.Infrastructure.Contracts
     public interface IWebClientService
     {
         Task<WebClient> Provide();
-        Task<WebClient> SetUserString(WebClient client);
+        Task<WebClient> SetDefaultUserString(WebClient client);
+        Task<WebClient> SetTls12UserString(WebClient client);
     }
 }

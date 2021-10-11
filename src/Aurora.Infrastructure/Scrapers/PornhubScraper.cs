@@ -88,7 +88,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
                 var searchPageUrl = $"{_baseUrl}/video/search?search={searchTermUrlFormatted}&page={pageNumber}";
-                await _clientProvider.SetUserString(client);
+                await _clientProvider.SetDefaultUserString(client);
                 var htmlSearchPage = client.DownloadString(searchPageUrl);
                 htmlDocument.LoadHtml(htmlSearchPage);
 
@@ -148,7 +148,7 @@ namespace Aurora.Infrastructure.Scrapers
             {
                 var pageNumber = i + 1;
                 var fullUrl = GetImagePageUrl(searchTerm, pageNumber);
-                await _clientProvider.SetUserString(client);
+                await _clientProvider.SetDefaultUserString(client);
                 var html = client.DownloadString(fullUrl);
                 htmlDocument.LoadHtml(html);
 
@@ -167,7 +167,7 @@ namespace Aurora.Infrastructure.Scrapers
                     if (linkUrl is null) continue;
                     if (result.Count >= maxNumberOfImageUrls) break;
 
-                    await _clientProvider.SetUserString(client);
+                    await _clientProvider.SetDefaultUserString(client);
                     var albumUrl = $"{_baseUrl}{linkUrl}";
                     driver.Navigate().GoToUrl(albumUrl);
                     var albumHtml = client.DownloadString(driver.PageSource);
@@ -225,7 +225,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
                 var searchPageUrl = $"{_baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
-                await _clientProvider.SetUserString(client);
+                await _clientProvider.SetDefaultUserString(client);
                 var htmlSearchPage = client.DownloadString(searchPageUrl);
                 htmlDocument.LoadHtml(htmlSearchPage);
 
