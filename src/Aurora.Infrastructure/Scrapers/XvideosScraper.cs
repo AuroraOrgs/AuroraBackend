@@ -16,17 +16,15 @@ namespace Aurora.Infrastructure.Scrapers
         private const int PAGE_NUMBER_LIMIT = 5;
         private const string _baseUrl = "https://www.xvideos.com";
         private readonly IWebClientService _clientProvider;
-        private readonly DriverInitializer _initializer;
 
-        public XvideosScraper(ILogger<XvideosScraper> logger, IWebClientService clientProvider,
-            DriverInitializer initializer) : base(logger)
+        public XvideosScraper(ILogger<XvideosScraper> logger, IWebClientService clientProvider) : base(logger)
         {
             _clientProvider = clientProvider;
-            _initializer = initializer;
         }
 
-        public override async Task<ValueOrNull<SearchResult>> SearchInner(
-            SearchRequest request, CancellationToken token = default)
+        public override async Task<ValueOrNull<SearchResult>> SearchVideosInner(
+            SearchRequest request,
+            CancellationToken token = default)
         {
             SearchResult result = new()
             {
@@ -35,23 +33,8 @@ namespace Aurora.Infrastructure.Scrapers
 
             try
             {
-                if (request.SearchOptions.Contains(SearchOption.Video))
-                {
-                    var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
-                    result.Items.AddRange(videos);
-                }
-
-                if (request.SearchOptions.Contains(SearchOption.Gif))
-                {
-                    var gifs = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
-                    result.Items.AddRange(gifs);
-                }
-
-                if (request.SearchOptions.Contains(SearchOption.Image))
-                {
-                    var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
-                    result.Items.AddRange(images);
-                }
+                var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
+                result.Items.AddRange(videos);
             }
             catch (Exception exception)
             {
@@ -59,7 +42,30 @@ namespace Aurora.Infrastructure.Scrapers
             }
 
             result.CountItems = result.Items.Count;
-            return ValueOrNull<SearchResult>.CreateValue(result);
+            return result;
+        }
+
+        public override async Task<ValueOrNull<SearchResult>> SearchImagesInner(
+            SearchRequest request,
+            CancellationToken token = default)
+        {
+            SearchResult result = new()
+            {
+                Website = _baseUrl
+            };
+
+            try
+            {
+                var videos = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
+                result.Items.AddRange(videos);
+            }
+            catch (Exception exception)
+            {
+                return ValueOrNull<SearchResult>.CreateNull(exception.Message);
+            }
+
+            result.CountItems = result.Items.Count;
+            return result;
         }
 
         private async Task<IEnumerable<SearchItem>> ScrapVideos(string searchTerm,
@@ -134,12 +140,6 @@ namespace Aurora.Infrastructure.Scrapers
             return videoItems;
         }
 
-        private async Task<IEnumerable<SearchItem>> ScrapGifs(string requestSearchTerm,
-            int requestResponseItemsMaxCount)
-        {
-            throw new NotImplementedException();
-        }
-
         private async Task<IEnumerable<SearchItem>> ScrapImages(string searchTerm,
             int maxNumberOfImageUrls)
         {
@@ -205,11 +205,6 @@ namespace Aurora.Infrastructure.Scrapers
             }
 
             return imageItems;
-        }
-
-        private static string FormatTermToUrl(string term)
-        {
-            return term.Replace(" ", "+");
         }
     }
 }

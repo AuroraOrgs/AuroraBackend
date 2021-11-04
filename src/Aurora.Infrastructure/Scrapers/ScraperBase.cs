@@ -43,11 +43,29 @@ namespace Aurora.Infrastructure.Scrapers
 
         public async Task<ExtendedSearchResult> PerformSearch(SearchRequest request, CancellationToken token)
         {
-            ValueOrNull<SearchResult> result;
+            ValueOrNull<SearchResult> result = new();
+
             ScraperStatusCode code;
             try
             {
-                result = await SearchInner(request, token);
+                if (request.SearchOptions.Contains(SearchOption.Video))
+                {
+                    var response = await SearchVideosInner(request, token);
+                    result.Value.Items.AddRange(response.Value?.Items);
+                }
+
+                if (request.SearchOptions.Contains(SearchOption.Gif))
+                {
+                    var response = await SearchGifsInner(request, token);
+                    result.Value.Items.AddRange(response.Value?.Items);
+                }
+
+                if (request.SearchOptions.Contains(SearchOption.Image))
+                {
+                    var response = await SearchImagesInner(request, token);
+                    result.Value.Items.AddRange(response.Value?.Items);
+                }
+
                 code = result.HasValue ? ScraperStatusCode.Success : ScraperStatusCode.HandledError;
             }
             catch
@@ -63,6 +81,24 @@ namespace Aurora.Infrastructure.Scrapers
             };
         }
 
-        public abstract Task<ValueOrNull<SearchResult>> SearchInner(SearchRequest request, CancellationToken token = default);
+        public virtual Task<ValueOrNull<SearchResult>> SearchVideosInner(SearchRequest request, CancellationToken token = default)
+        {
+            return default;
+        }
+
+        public virtual Task<ValueOrNull<SearchResult>> SearchImagesInner(SearchRequest request, CancellationToken token = default)
+        {
+            return default;
+        }
+
+        public virtual Task<ValueOrNull<SearchResult>> SearchGifsInner(SearchRequest request, CancellationToken token = default)
+        {
+            return default;
+        }
+
+        protected static string FormatTermToUrl(string term)
+        {
+            return term.Replace(" ", "+");
+        }
     }
 }
