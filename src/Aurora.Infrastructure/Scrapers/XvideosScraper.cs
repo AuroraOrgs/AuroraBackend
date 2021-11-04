@@ -117,7 +117,7 @@ namespace Aurora.Infrastructure.Scrapers
                     var currentLinkImageNode = videoLinkNode.ChildNodes
                         .FirstOrDefault(n => n.Name == "img");
 
-                    if (currentLinkImageNode != null)
+                    if (currentLinkImageNode is not null)
                     {
                         var currentLinkImageAttributes = currentLinkImageNode.Attributes;
                         searchVideoItem.ImagePreviewUrl = currentLinkImageAttributes["data-src"]?.Value;
@@ -189,7 +189,7 @@ namespace Aurora.Infrastructure.Scrapers
                     var currentLinkImageNode = videoLinkNode.ChildNodes
                         .FirstOrDefault(n => n.Name == "img");
 
-                    if (currentLinkImageNode != null)
+                    if (currentLinkImageNode is not null)
                     {
                         var currentLinkImageAttributes = currentLinkImageNode.Attributes;
                         searchImageItem.SearchItemUrl = currentLinkImageAttributes["data-src"]?.Value;
