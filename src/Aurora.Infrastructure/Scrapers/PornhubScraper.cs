@@ -26,7 +26,7 @@ namespace Aurora.Infrastructure.Scrapers
             _initializer = initializer;
         }
 
-        public override async Task<ValueOrNull<SearchResult>> SearchInner(
+        public override async Task<ValueOrNull<SearchResult>> SearchVideosInner(
             SearchRequest request,
             CancellationToken token = default)
         {
@@ -37,23 +37,8 @@ namespace Aurora.Infrastructure.Scrapers
 
             try
             {
-                if (request.SearchOptions.Contains(SearchOption.Video))
-                {
-                    var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
-                    result.Items.AddRange(videos);
-                }
-
-                if (request.SearchOptions.Contains(SearchOption.Gif))
-                {
-                    var gifs = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
-                    result.Items.AddRange(gifs);
-                }
-
-                if (request.SearchOptions.Contains(SearchOption.Image))
-                {
-                    var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
-                    result.Items.AddRange(images);
-                }
+                var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
+                result.Items.AddRange(videos);
             }
             catch (Exception exception)
             {
@@ -61,7 +46,53 @@ namespace Aurora.Infrastructure.Scrapers
             }
 
             result.CountItems = result.Items.Count;
-            return ValueOrNull<SearchResult>.CreateValue(result);
+            return result;
+        }
+
+        public override async Task<ValueOrNull<SearchResult>> SearchGifsInner(
+            SearchRequest request,
+            CancellationToken token = default)
+        {
+            SearchResult result = new()
+            {
+                Website = _baseUrl
+            };
+
+            try
+            {
+                var videos = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
+                result.Items.AddRange(videos);
+            }
+            catch (Exception exception)
+            {
+                return ValueOrNull<SearchResult>.CreateNull(exception.Message);
+            }
+
+            result.CountItems = result.Items.Count;
+            return result;
+        }
+
+        public override async Task<ValueOrNull<SearchResult>> SearchImagesInner(
+            SearchRequest request,
+            CancellationToken token = default)
+        {
+            SearchResult result = new()
+            {
+                Website = _baseUrl
+            };
+
+            try
+            {
+                var videos = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
+                result.Items.AddRange(videos);
+            }
+            catch (Exception exception)
+            {
+                return ValueOrNull<SearchResult>.CreateNull(exception.Message);
+            }
+
+            result.CountItems = result.Items.Count;
+            return result;
         }
 
         private async Task<IEnumerable<SearchItem>> ScrapVideos(string searchTerm, int maxNumberOfVideoUrls)
@@ -112,7 +143,7 @@ namespace Aurora.Infrastructure.Scrapers
                     var currentLinkImageNode = videoLinkNode.ChildNodes
                         .FirstOrDefault(n => n.Name == "img");
 
-                    if (currentLinkImageNode != null)
+                    if (currentLinkImageNode is not null)
                     {
                         var currentLinkImageAttributes = currentLinkImageNode.Attributes;
                         searchVideoItem.ImagePreviewUrl = currentLinkImageAttributes["data-thumb_url"].Value;
@@ -195,12 +226,6 @@ namespace Aurora.Infrastructure.Scrapers
             return result;
         }
 
-        private static string GetImagePageUrl(string searchTerm, int pageNumber)
-        {
-            searchTerm = FormatTermToUrl(searchTerm);
-            return $"https://rt.pornhub.com/albums?search={searchTerm}&page={pageNumber}";
-        }
-
         private async Task<IEnumerable<SearchItem>> ScrapGifs(string searchTerm, int maxNumberOfVideoUrls)
         {
             List<SearchItem> gifItems = new();
@@ -267,9 +292,10 @@ namespace Aurora.Infrastructure.Scrapers
             return gifItems;
         }
 
-        private static string FormatTermToUrl(string term)
+        private static string GetImagePageUrl(string searchTerm, int pageNumber)
         {
-            return term.Replace(" ", "+");
+            searchTerm = FormatTermToUrl(searchTerm);
+            return $"https://rt.pornhub.com/albums?search={searchTerm}&page={pageNumber}";
         }
     }
 }
