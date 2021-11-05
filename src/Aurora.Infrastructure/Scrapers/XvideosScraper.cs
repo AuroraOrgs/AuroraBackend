@@ -22,50 +22,28 @@ namespace Aurora.Infrastructure.Scrapers
             _clientProvider = clientProvider;
         }
 
-        public override async Task<ValueOrNull<SearchResult>> SearchVideosInner(
+        public override async Task<SearchResult> SearchVideosInner(
             SearchRequest request,
             CancellationToken token = default)
         {
-            SearchResult result = new()
+            var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
+
+            return new SearchResult(videos.ToList())
             {
                 Website = _baseUrl
             };
-
-            try
-            {
-                var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
-                result.Items.AddRange(videos);
-            }
-            catch (Exception exception)
-            {
-                return ValueOrNull<SearchResult>.CreateNull(exception.Message);
-            }
-
-            result.CountItems = result.Items.Count;
-            return result;
         }
 
-        public override async Task<ValueOrNull<SearchResult>> SearchImagesInner(
+        public override async Task<SearchResult> SearchImagesInner(
             SearchRequest request,
             CancellationToken token = default)
         {
-            SearchResult result = new()
+            var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
+
+            return new SearchResult(images.ToList())
             {
                 Website = _baseUrl
             };
-
-            try
-            {
-                var videos = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
-                result.Items.AddRange(videos);
-            }
-            catch (Exception exception)
-            {
-                return ValueOrNull<SearchResult>.CreateNull(exception.Message);
-            }
-
-            result.CountItems = result.Items.Count;
-            return result;
         }
 
         private async Task<IEnumerable<SearchItem>> ScrapVideos(string searchTerm,

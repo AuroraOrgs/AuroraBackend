@@ -26,73 +26,40 @@ namespace Aurora.Infrastructure.Scrapers
             _initializer = initializer;
         }
 
-        public override async Task<ValueOrNull<SearchResult>> SearchVideosInner(
+        public override async Task<SearchResult> SearchVideosInner(
             SearchRequest request,
             CancellationToken token = default)
         {
-            SearchResult result = new()
+            var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
+
+            return new SearchResult(videos.ToList())
             {
                 Website = _baseUrl
             };
-
-            try
-            {
-                var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
-                result.Items.AddRange(videos);
-            }
-            catch (Exception exception)
-            {
-                return ValueOrNull<SearchResult>.CreateNull(exception.Message);
-            }
-
-            result.CountItems = result.Items.Count;
-            return result;
         }
 
-        public override async Task<ValueOrNull<SearchResult>> SearchGifsInner(
+        public override async Task<SearchResult> SearchGifsInner(
             SearchRequest request,
             CancellationToken token = default)
         {
-            SearchResult result = new()
+            var gifs = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
+
+            return new SearchResult(gifs.ToList())
             {
                 Website = _baseUrl
             };
-
-            try
-            {
-                var videos = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
-                result.Items.AddRange(videos);
-            }
-            catch (Exception exception)
-            {
-                return ValueOrNull<SearchResult>.CreateNull(exception.Message);
-            }
-
-            result.CountItems = result.Items.Count;
-            return result;
         }
 
-        public override async Task<ValueOrNull<SearchResult>> SearchImagesInner(
+        public override async Task<SearchResult> SearchImagesInner(
             SearchRequest request,
             CancellationToken token = default)
         {
-            SearchResult result = new()
+            var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
+
+            return new SearchResult(images.ToList())
             {
                 Website = _baseUrl
             };
-
-            try
-            {
-                var videos = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
-                result.Items.AddRange(videos);
-            }
-            catch (Exception exception)
-            {
-                return ValueOrNull<SearchResult>.CreateNull(exception.Message);
-            }
-
-            result.CountItems = result.Items.Count;
-            return result;
         }
 
         private async Task<IEnumerable<SearchItem>> ScrapVideos(string searchTerm, int maxNumberOfVideoUrls)
@@ -216,7 +183,9 @@ namespace Aurora.Infrastructure.Scrapers
                             var url = image.SelectSingleNode("/a").Attributes["href"].Value;
                             result.Add(new SearchItem
                             {
-                                ImagePreviewUrl = preview, SearchItemUrl = url, Option = SearchOption.Image
+                                ImagePreviewUrl = preview,
+                                SearchItemUrl = url,
+                                Option = SearchOption.Image
                             });
                         }
                     }
@@ -245,7 +214,7 @@ namespace Aurora.Infrastructure.Scrapers
                 {
                     break;
                 }
-                
+
                 var currentPageNumber = i + 1;
                 // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
