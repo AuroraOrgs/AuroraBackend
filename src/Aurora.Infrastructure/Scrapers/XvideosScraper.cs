@@ -28,7 +28,7 @@ namespace Aurora.Infrastructure.Scrapers
         {
             var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
 
-            return new SearchResult(videos.ToList())
+            return new SearchResult(videos)
             {
                 Website = _baseUrl
             };
@@ -40,13 +40,13 @@ namespace Aurora.Infrastructure.Scrapers
         {
             var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
 
-            return new SearchResult(images.ToList())
+            return new SearchResult(images)
             {
                 Website = _baseUrl
             };
         }
 
-        private async Task<IEnumerable<SearchItem>> ScrapVideos(string searchTerm,
+        private async Task<List<SearchItem>> ScrapVideos(string searchTerm,
             int maxNumberOfVideoUrls)
         {
             List<SearchItem> videoItems = new();
@@ -118,7 +118,7 @@ namespace Aurora.Infrastructure.Scrapers
             return videoItems;
         }
 
-        private async Task<IEnumerable<SearchItem>> ScrapImages(string searchTerm,
+        private async Task<List<SearchItem>> ScrapImages(string searchTerm,
             int maxNumberOfImageUrls)
         {
             List<SearchItem> imageItems = new();

@@ -32,7 +32,7 @@ namespace Aurora.Infrastructure.Scrapers
         {
             var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
 
-            return new SearchResult(videos.ToList())
+            return new SearchResult(videos)
             {
                 Website = _baseUrl
             };
@@ -44,7 +44,7 @@ namespace Aurora.Infrastructure.Scrapers
         {
             var gifs = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
 
-            return new SearchResult(gifs.ToList())
+            return new SearchResult(gifs)
             {
                 Website = _baseUrl
             };
@@ -56,13 +56,13 @@ namespace Aurora.Infrastructure.Scrapers
         {
             var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
 
-            return new SearchResult(images.ToList())
+            return new SearchResult(images)
             {
                 Website = _baseUrl
             };
         }
 
-        private async Task<IEnumerable<SearchItem>> ScrapVideos(string searchTerm, int maxNumberOfVideoUrls)
+        private async Task<List<SearchItem>> ScrapVideos(string searchTerm, int maxNumberOfVideoUrls)
         {
             List<SearchItem> videoItems = new();
 
@@ -130,7 +130,7 @@ namespace Aurora.Infrastructure.Scrapers
             return videoItems;
         }
 
-        private async Task<IEnumerable<SearchItem>> ScrapImages(string requestSearchTerm, int maxNumberOfImageUrls)
+        private async Task<List<SearchItem>> ScrapImages(string requestSearchTerm, int maxNumberOfImageUrls)
         {
             var htmlDocument = new HtmlAgilityPack.HtmlDocument
             {
@@ -195,7 +195,7 @@ namespace Aurora.Infrastructure.Scrapers
             return result;
         }
 
-        private async Task<IEnumerable<SearchItem>> ScrapGifs(string searchTerm, int maxNumberOfVideoUrls)
+        private async Task<List<SearchItem>> ScrapGifs(string searchTerm, int maxNumberOfVideoUrls)
         {
             List<SearchItem> gifItems = new();
 
