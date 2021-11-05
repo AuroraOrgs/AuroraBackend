@@ -1,12 +1,26 @@
-﻿namespace Aurora.Shared.Models
+﻿using System;
+
+namespace Aurora.Shared.Models
 {
     public struct ValueOrNull<T>
     {
         public bool IsNull { get; set; }
-        public T Value { get; set; }
+        private T Value { get; set; }
 
         public bool HasValue => !IsNull;
         public string NullMessage { get; set; }
+
+        public void Resolve(Action<T> onValue, Action<string> onNull = null)
+        {
+            if (HasValue)
+            {
+                onValue(Value);
+            }
+            else
+            {
+                onNull?.Invoke(NullMessage);
+            }
+        }
 
         public static ValueOrNull<T> CreateValue(T value)
         {

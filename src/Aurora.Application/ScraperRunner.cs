@@ -48,10 +48,10 @@ namespace Aurora.Application
             try
             {
                 var result = await scrapper.Search(searchRequest, token);
-                if (result.HasValue)
+                result.Resolve(value =>
                 {
-                    resultCollection.Add(result.Value);
-                }
+                    resultCollection.Add(value);
+                });
             }
             finally
             {
