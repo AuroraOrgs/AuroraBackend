@@ -12,5 +12,10 @@ namespace Aurora.Application.Models
         {
             Items = new List<SearchItem>();
         }
+
+        public SearchResult(List<SearchItem> searchItems)
+        {
+            Items = searchItems;
+        }
     }
 }

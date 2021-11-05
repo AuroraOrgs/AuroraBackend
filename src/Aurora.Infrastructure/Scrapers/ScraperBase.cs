@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Aurora.Application.Contracts;
@@ -43,7 +45,8 @@ namespace Aurora.Infrastructure.Scrapers
 
         public async Task<ExtendedSearchResult> PerformSearch(SearchRequest request, CancellationToken token)
         {
-            ValueOrNull<SearchResult> result = new();
+            ValueOrNull<SearchResult> resultOrNull = new();
+            SearchResult result = new();
 
             ScraperStatusCode code;
             try
@@ -51,49 +54,54 @@ namespace Aurora.Infrastructure.Scrapers
                 if (request.SearchOptions.Contains(SearchOption.Video))
                 {
                     var response = await SearchVideosInner(request, token);
-                    result.Value.Items.AddRange(response.Value?.Items);
+                    result.Items.AddRange(response.Items);
+                    result.Website = response.Website;
                 }
 
                 if (request.SearchOptions.Contains(SearchOption.Gif))
                 {
                     var response = await SearchGifsInner(request, token);
-                    result.Value.Items.AddRange(response.Value?.Items);
+                    result.Items.AddRange(response.Items);
+                    result.Website = response.Website;
                 }
 
                 if (request.SearchOptions.Contains(SearchOption.Image))
                 {
                     var response = await SearchImagesInner(request, token);
-                    result.Value.Items.AddRange(response.Value?.Items);
+                    result.Items.AddRange(response.Items);
+                    result.Website = response.Website;
                 }
 
-                code = result.HasValue ? ScraperStatusCode.Success : ScraperStatusCode.HandledError;
+                result.CountItems = result.Items.Count;
+                resultOrNull = result;
+                code = ScraperStatusCode.Success;
             }
-            catch
+            catch (Exception exception)
             {
                 code = ScraperStatusCode.UnhandledError;
-                result = ValueOrNull<SearchResult>.CreateNull("Unhandled exception");
+                resultOrNull = ValueOrNull<SearchResult>.CreateNull(exception.Message);
             }
 
             return new ExtendedSearchResult
             {
-                Result = result,
+                Result = resultOrNull,
                 StatusCode = code
             };
         }
 
-        public virtual Task<ValueOrNull<SearchResult>> SearchVideosInner(SearchRequest request, CancellationToken token = default)
+        public virtual Task<SearchResult> SearchVideosInner(SearchRequest request, CancellationToken token = default)
         {
-            return default;
+            return null;
         }
 
-        public virtual Task<ValueOrNull<SearchResult>> SearchImagesInner(SearchRequest request, CancellationToken token = default)
+        public virtual Task<SearchResult> SearchImagesInner(SearchRequest request, CancellationToken token = default)
         {
-            return default;
+            return null;
         }
 
-        public virtual Task<ValueOrNull<SearchResult>> SearchGifsInner(SearchRequest request, CancellationToken token = default)
+        public virtual Task<SearchResult> SearchGifsInner(SearchRequest request, CancellationToken token = default)
         {
-            return default;
+            return null;
         }
 
         protected static string FormatTermToUrl(string term)
