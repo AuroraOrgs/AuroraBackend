@@ -19,6 +19,8 @@ namespace Aurora.Infrastructure.Scrapers
         private readonly IWebClientService _clientProvider;
         private readonly DriverInitializer _initializer;
 
+        public override string WebSiteName => _baseUrl;
+
         public PornhubScraper(ILogger<PornhubScraper> logger, IWebClientService clientProvider,
             DriverInitializer initializer) : base(logger)
         {
@@ -26,40 +28,25 @@ namespace Aurora.Infrastructure.Scrapers
             _initializer = initializer;
         }
 
-        public override async Task<SearchResult> SearchVideosInner(
+        public override async Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(
             SearchRequest request,
             CancellationToken token = default)
         {
-            var videos = await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
-
-            return new SearchResult(videos)
-            {
-                Website = _baseUrl
-            };
+            return await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
         }
 
-        public override async Task<SearchResult> SearchGifsInner(
+        public override async Task<ValueOrNull<List<SearchItem>>> SearchGifsInner(
             SearchRequest request,
             CancellationToken token = default)
         {
-            var gifs = await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
-
-            return new SearchResult(gifs)
-            {
-                Website = _baseUrl
-            };
+            return await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
         }
 
-        public override async Task<SearchResult> SearchImagesInner(
+        public override async Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(
             SearchRequest request,
             CancellationToken token = default)
         {
-            var images = await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
-
-            return new SearchResult(images)
-            {
-                Website = _baseUrl
-            };
+            return await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);
         }
 
         private async Task<List<SearchItem>> ScrapVideos(string searchTerm, int maxNumberOfVideoUrls)

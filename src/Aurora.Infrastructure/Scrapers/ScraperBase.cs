@@ -45,41 +45,20 @@ namespace Aurora.Infrastructure.Scrapers
 
         public async Task<ExtendedSearchResult> PerformSearch(SearchRequest request, CancellationToken token)
         {
-            ValueOrNull<SearchResult> resultOrNull = new();
-            SearchResult result = new();
+            List<SearchItem> items = new List<SearchItem>();
+
+            ValueOrNull<SearchResult> resultOrNull;
 
             ScraperStatusCode code;
             try
             {
-                if (request.SearchOptions.Contains(SearchOption.Video))
-                {
-                    var response = await SearchVideosInner(request, token);
-                    result.Items.AddRange(response.Items);
-                    result.Website = response.Website;
-                }
-
-                if (request.SearchOptions.Contains(SearchOption.Gif))
-                {
-                    var response = await SearchGifsInner(request, token);
-                    result.Items.AddRange(response.Items);
-                    result.Website = response.Website;
-                }
-
-                if (request.SearchOptions.Contains(SearchOption.Image))
-                {
-                    var response = await SearchImagesInner(request, token);
-                    result.Items.AddRange(response.Items);
-                    result.Website = response.Website;
-                }
-
-                result.CountItems = result.Items.Count;
-                resultOrNull = result;
+                resultOrNull = await GetResult(request, items, token);
                 code = ScraperStatusCode.Success;
             }
             catch (Exception exception)
             {
-                code = ScraperStatusCode.UnhandledError;
                 resultOrNull = ValueOrNull<SearchResult>.CreateNull(exception.Message);
+                code = ScraperStatusCode.UnhandledError;
             }
 
             return new ExtendedSearchResult
@@ -89,20 +68,54 @@ namespace Aurora.Infrastructure.Scrapers
             };
         }
 
-        public virtual Task<SearchResult> SearchVideosInner(SearchRequest request, CancellationToken token = default)
+        private async Task<SearchResult> GetResult(SearchRequest request, List<SearchItem> items, CancellationToken token)
+        {
+            var result = new SearchResult(items, WebSiteName);
+            if (request.SearchOptions.Contains(SearchOption.Video))
+            {
+                var response = await SearchVideosInner(request, token);
+                Resolve(items, response);
+            }
+
+            if (request.SearchOptions.Contains(SearchOption.Gif))
+            {
+                var response = await SearchGifsInner(request, token);
+                Resolve(items, response);
+            }
+
+            if (request.SearchOptions.Contains(SearchOption.Image))
+            {
+                var response = await SearchImagesInner(request, token);
+                Resolve(items, response);
+            }
+
+            return result;
+        }
+
+        private static void Resolve(List<SearchItem> items, ValueOrNull<List<SearchItem>> response)
+        {
+            response.Resolve(responseItems =>
+            {
+                items.AddRange(responseItems);
+            });
+        }
+
+        public virtual Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(SearchRequest request, CancellationToken token = default)
         {
             return null;
         }
 
-        public virtual Task<SearchResult> SearchImagesInner(SearchRequest request, CancellationToken token = default)
+        public virtual Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(SearchRequest request, CancellationToken token = default)
         {
             return null;
         }
 
-        public virtual Task<SearchResult> SearchGifsInner(SearchRequest request, CancellationToken token = default)
+        public virtual Task<ValueOrNull<List<SearchItem>>> SearchGifsInner(SearchRequest request, CancellationToken token = default)
         {
             return null;
         }
+
+        public abstract string WebSiteName { get; }
 
         protected static string FormatTermToUrl(string term)
         {
