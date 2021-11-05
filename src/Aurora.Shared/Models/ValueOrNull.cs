@@ -43,7 +43,7 @@ namespace Aurora.Shared.Models
 
         public static implicit operator ValueOrNull<T>(T value)
         {
-            if (value == null)
+            if (value is null)
             {
                 return CreateNull();
             }
