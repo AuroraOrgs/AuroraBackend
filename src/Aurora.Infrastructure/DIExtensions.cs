@@ -18,6 +18,8 @@ namespace Aurora.Infrastructure
             services.AddScoped<XvideosScraper>();
             services.AddScoped<IWebClientService, WebClientService>();
             services.AddScoped<DriverInitializer>();
+            services.AddScoped<ISearchDataService, SearchDataService>();
+            services.AddDistributedMemoryCache();
             services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));
 
             services.AddDbContext<SearchContext>(x =>
