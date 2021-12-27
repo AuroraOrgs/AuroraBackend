@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Aurora.Application.Contracts;
+using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using Aurora.Infrastructure.Models;
 using Aurora.Shared.Models;
@@ -22,7 +23,7 @@ namespace Aurora.Infrastructure.Scrapers
             _logger = logger;
         }
 
-        public async Task<ValueOrNull<SearchResult>> Search(SearchRequest request, CancellationToken token = default)
+        public async Task<ValueOrNull<SearchResultDto>> Search(SearchRequestDto request, CancellationToken token = default)
         {
             var watch = Stopwatch.StartNew();
             var searchResult = await PerformSearch(request, token);
@@ -43,11 +44,11 @@ namespace Aurora.Infrastructure.Scrapers
             _logger.LogInformation(LogFormat, codeMessage, scraperName, codeMessage, time);
         }
 
-        public async Task<ExtendedSearchResult> PerformSearch(SearchRequest request, CancellationToken token)
+        public async Task<ExtendedSearchResult> PerformSearch(SearchRequestDto request, CancellationToken token)
         {
             List<SearchItem> items = new List<SearchItem>();
 
-            ValueOrNull<SearchResult> resultOrNull;
+            ValueOrNull<SearchResultDto> resultOrNull;
 
             ScraperStatusCode code;
             try
@@ -57,7 +58,7 @@ namespace Aurora.Infrastructure.Scrapers
             }
             catch (Exception exception)
             {
-                resultOrNull = ValueOrNull<SearchResult>.CreateNull(exception.Message);
+                resultOrNull = ValueOrNull<SearchResultDto>.CreateNull(exception.Message);
                 code = ScraperStatusCode.UnhandledError;
             }
 
@@ -68,9 +69,9 @@ namespace Aurora.Infrastructure.Scrapers
             };
         }
 
-        private async Task<SearchResult> GetResult(SearchRequest request, List<SearchItem> items, CancellationToken token)
+        private async Task<SearchResultDto> GetResult(SearchRequestDto request, List<SearchItem> items, CancellationToken token)
         {
-            var result = new SearchResult(items, WebSiteName);
+            var result = new SearchResultDto(items, WebSite);
             if (request.SearchOptions.Contains(SearchOption.Video))
             {
                 var response = await SearchVideosInner(request, token);
@@ -100,22 +101,22 @@ namespace Aurora.Infrastructure.Scrapers
             });
         }
 
-        public virtual Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(SearchRequest request, CancellationToken token = default)
+        public virtual Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(SearchRequestDto request, CancellationToken token = default)
         {
             return null;
         }
 
-        public virtual Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(SearchRequest request, CancellationToken token = default)
+        public virtual Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(SearchRequestDto request, CancellationToken token = default)
         {
             return null;
         }
 
-        public virtual Task<ValueOrNull<List<SearchItem>>> SearchGifsInner(SearchRequest request, CancellationToken token = default)
+        public virtual Task<ValueOrNull<List<SearchItem>>> SearchGifsInner(SearchRequestDto request, CancellationToken token = default)
         {
             return null;
         }
 
-        public abstract string WebSiteName { get; }
+        public abstract SupportedWebsite WebSite { get; }
 
         protected static string FormatTermToUrl(string term)
         {

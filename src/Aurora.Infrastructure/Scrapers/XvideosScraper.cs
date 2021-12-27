@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
@@ -15,7 +16,7 @@ namespace Aurora.Infrastructure.Scrapers
         private const string _baseUrl = "https://www.xvideos.com";
         private readonly IWebClientService _clientProvider;
 
-        public override string WebSiteName => _baseUrl;
+        public override SupportedWebsite WebSite => SupportedWebsite.Xvideos;
 
         public XvideosScraper(ILogger<XvideosScraper> logger, IWebClientService clientProvider) : base(logger)
         {
@@ -23,14 +24,14 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public override async Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(
-            SearchRequest request,
+            SearchRequestDto request,
             CancellationToken token = default)
         {
             return await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
         }
 
         public override async Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(
-            SearchRequest request,
+            SearchRequestDto request,
             CancellationToken token = default)
         {
             return await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);

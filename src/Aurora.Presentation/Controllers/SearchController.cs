@@ -3,6 +3,9 @@ using System.Threading.Tasks;
 using Aurora.Application.Models;
 using System.Threading;
 using Aurora.Application;
+using Aurora.Application.Contracts;
+using Aurora.Application.Commands;
+using MediatR;
 
 namespace Aurora.Presentation.Controllers
 {
@@ -10,17 +13,17 @@ namespace Aurora.Presentation.Controllers
     [ApiController]
     public class SearchController : ControllerBase
     {
-        private readonly IScraperRunner _runner;
+        private readonly IMediator _mediator;
 
-        public SearchController(IScraperRunner runner)
+        public SearchController(IMediator mediator)
         {
-            _runner = runner;
+            _mediator = mediator;
         }
 
         [HttpPost("search")]
-        public async Task<IActionResult> Search([FromBody] SearchRequest searchRequest, CancellationToken token)
+        public async Task<IActionResult> Search([FromBody] SearchRequestDto searchRequest, CancellationToken token)
         {
-            var result = await _runner.Run(searchRequest, token);
+            var result = await _mediator.Send(new SearchCommand(searchRequest));
             return Ok(result);
         }
     }

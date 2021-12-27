@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Configuration;
+using Hangfire;
 
 namespace Aurora.Presentation
 {
@@ -39,6 +40,7 @@ namespace Aurora.Presentation
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aurora v1"));
+                app.UseHangfireDashboard();
             }
 
             app.UseRouting();

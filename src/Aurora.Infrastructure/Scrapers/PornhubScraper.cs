@@ -8,6 +8,7 @@ using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Aurora.Infrastructure.Services;
+using Aurora.Application.Enums;
 
 namespace Aurora.Infrastructure.Scrapers
 {
@@ -19,7 +20,7 @@ namespace Aurora.Infrastructure.Scrapers
         private readonly IWebClientService _clientProvider;
         private readonly DriverInitializer _initializer;
 
-        public override string WebSiteName => _baseUrl;
+        public override SupportedWebsite WebSite => SupportedWebsite.Pornhub;
 
         public PornhubScraper(ILogger<PornhubScraper> logger, IWebClientService clientProvider,
             DriverInitializer initializer) : base(logger)
@@ -29,21 +30,21 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public override async Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(
-            SearchRequest request,
+            SearchRequestDto request,
             CancellationToken token = default)
         {
             return await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
         }
 
         public override async Task<ValueOrNull<List<SearchItem>>> SearchGifsInner(
-            SearchRequest request,
+            SearchRequestDto request,
             CancellationToken token = default)
         {
             return await ScrapGifs(request.SearchTerm, request.ResponseItemsMaxCount);
         }
 
         public override async Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(
-            SearchRequest request,
+            SearchRequestDto request,
             CancellationToken token = default)
         {
             return await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);

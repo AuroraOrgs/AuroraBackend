@@ -7,6 +7,6 @@ namespace Aurora.Application.Contracts
 {
     public interface ISearchScraper
     {
-        Task<ValueOrNull<SearchResult>> Search(SearchRequest request, CancellationToken token = default);
+        Task<ValueOrNull<SearchResultDto>> Search(SearchRequestDto request, CancellationToken token = default);
     }
 }
