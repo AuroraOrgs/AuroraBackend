@@ -7,6 +7,6 @@ namespace Aurora.Application
 {
     public interface IScraperRunner
     {
-        Task<List<SearchResult>> Run(SearchRequest searchRequest, CancellationToken token = default);
+        Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, CancellationToken token = default);
     }
 }

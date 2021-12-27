@@ -23,14 +23,14 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public override async Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(
-            SearchRequest request,
+            SearchRequestDto request,
             CancellationToken token = default)
         {
             return await ScrapVideos(request.SearchTerm, request.ResponseItemsMaxCount);
         }
 
         public override async Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(
-            SearchRequest request,
+            SearchRequestDto request,
             CancellationToken token = default)
         {
             return await ScrapImages(request.SearchTerm, request.ResponseItemsMaxCount);

@@ -20,10 +20,10 @@ namespace Aurora.Application
             _collector = collector;
         }
 
-        public async Task<List<SearchResult>> Run(SearchRequest searchRequest, CancellationToken token = default)
+        public async Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, CancellationToken token = default)
         {
             var scrappers = await _collector.CollectFor(searchRequest.Websites);
-            ConcurrentBag<SearchResult> resultCollection = new();
+            ConcurrentBag<SearchResultDto> resultCollection = new();
 
             try
             {
@@ -42,7 +42,7 @@ namespace Aurora.Application
             return resultCollection.ToList();
         }
 
-        private async Task Search(SearchRequest searchRequest, ConcurrentBag<SearchResult> resultCollection, ISearchScraper scrapper, CancellationToken token)
+        private async Task Search(SearchRequestDto searchRequest, ConcurrentBag<SearchResultDto> resultCollection, ISearchScraper scrapper, CancellationToken token)
         {
             _scraperLimiter.WaitOne();
             try
