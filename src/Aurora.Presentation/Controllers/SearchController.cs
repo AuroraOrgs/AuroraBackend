@@ -5,6 +5,7 @@ using System.Threading;
 using Aurora.Application;
 using Aurora.Application.Contracts;
 using Aurora.Application.Commands;
+using MediatR;
 
 namespace Aurora.Presentation.Controllers
 {
@@ -12,24 +13,18 @@ namespace Aurora.Presentation.Controllers
     [ApiController]
     public class SearchController : ControllerBase
     {
-        private readonly IScraperRunner _runner;
-        private readonly IQueueProvider _queue;
+        private readonly IMediator _mediator;
 
-        public SearchController(IScraperRunner runner, IQueueProvider queue)
+        public SearchController(IMediator mediator)
         {
-            _runner = runner;
-            _queue = queue;
+            _mediator = mediator;
         }
 
         [HttpPost("search")]
         public async Task<IActionResult> Search([FromBody] SearchRequestDto searchRequest, CancellationToken token)
         {
-            _queue.Enqueue("Scrapping", new ScrapRequest()
-            {
-                SearchRequest = searchRequest
-            });
-            //var result = await _runner.Run(searchRequest, token);
-            return Ok(null);
+            var result = await _mediator.Send(new SearchCommand(searchRequest));
+            return Ok(result);
         }
     }
 }

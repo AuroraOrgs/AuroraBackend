@@ -10,9 +10,6 @@ namespace Aurora.Application.Entities
         [Key]
         public Guid Id { get; set; }
 
-       /* [Key]
-        public string Id => $"<{SearchTerm}>_{Website}_{ContentOption}";
-*/
         [MaxLength(255)]
         public string SearchTerm { get; set; }
         public SupportedWebsite Website { get; set; }

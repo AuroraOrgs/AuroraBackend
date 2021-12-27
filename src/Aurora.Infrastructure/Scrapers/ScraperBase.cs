@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Aurora.Application.Contracts;
+using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using Aurora.Infrastructure.Models;
 using Aurora.Shared.Models;
@@ -70,7 +71,7 @@ namespace Aurora.Infrastructure.Scrapers
 
         private async Task<SearchResultDto> GetResult(SearchRequestDto request, List<SearchItem> items, CancellationToken token)
         {
-            var result = new SearchResultDto(items, WebSiteName);
+            var result = new SearchResultDto(items, WebSite);
             if (request.SearchOptions.Contains(SearchOption.Video))
             {
                 var response = await SearchVideosInner(request, token);
@@ -115,7 +116,7 @@ namespace Aurora.Infrastructure.Scrapers
             return null;
         }
 
-        public abstract string WebSiteName { get; }
+        public abstract SupportedWebsite WebSite { get; }
 
         protected static string FormatTermToUrl(string term)
         {

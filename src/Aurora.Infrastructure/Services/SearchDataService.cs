@@ -62,7 +62,7 @@ namespace Aurora.Infrastructure.Services
 
         public async Task AddOrUpdateResults(SearchRequestDto request, IEnumerable<SearchResultDto> resultDtos)
         {
-            var webSiteToGroupToResult = resultDtos.GroupBy(x => Enum.Parse<SupportedWebsite>(x.Website))
+            var webSiteToGroupToResult = resultDtos.GroupBy(x => x.Website)
                 .Select(x =>
                 (WebSite: x.Key, x.SelectMany(x => x.Items)
                                     .GroupBy(x => x.Option)
@@ -118,7 +118,7 @@ namespace Aurora.Infrastructure.Services
                     SearchItemUrl = y.SearchItemUrl,
                     ImagePreviewUrl = y.ImagePreviewUrl
                 })))
-                .Select(x => new SearchResultDto(x.Item2.ToList(), x.Key.ToString()))
+                .Select(x => new SearchResultDto(x.Item2.ToList(), x.Key))
                 .ToList();
         }
     }

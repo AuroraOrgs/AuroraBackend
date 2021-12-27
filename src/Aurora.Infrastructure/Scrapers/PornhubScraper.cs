@@ -8,6 +8,7 @@ using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Aurora.Infrastructure.Services;
+using Aurora.Application.Enums;
 
 namespace Aurora.Infrastructure.Scrapers
 {
@@ -19,7 +20,7 @@ namespace Aurora.Infrastructure.Scrapers
         private readonly IWebClientService _clientProvider;
         private readonly DriverInitializer _initializer;
 
-        public override string WebSiteName => _baseUrl;
+        public override SupportedWebsite WebSite => SupportedWebsite.Pornhub;
 
         public PornhubScraper(ILogger<PornhubScraper> logger, IWebClientService clientProvider,
             DriverInitializer initializer) : base(logger)
