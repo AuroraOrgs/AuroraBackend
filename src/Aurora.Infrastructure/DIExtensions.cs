@@ -3,6 +3,7 @@ using Aurora.Infrastructure.Config;
 using Aurora.Infrastructure.Contracts;
 using Aurora.Infrastructure.Scrapers;
 using Aurora.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -18,6 +19,14 @@ namespace Aurora.Infrastructure
             services.AddScoped<IWebClientService, WebClientService>();
             services.AddScoped<DriverInitializer>();
             services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));
+
+            services.AddDbContext<SearchContext>(x =>
+            {
+                x.UseNpgsql(config.GetConnectionString("MainDb"), b =>
+                {
+                    b.MigrationsAssembly("Aurora.Infrastructure");
+                });
+            });
 
             return services;
         }
