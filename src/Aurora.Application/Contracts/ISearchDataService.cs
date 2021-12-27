@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace Aurora.Application.Contracts
 {
-    public interface ISearchService
+    public interface ISearchDataService
     {
         Task<List<SearchResultDto>> GetResults(SearchRequestDto request);
         Task StoreRequest(SearchRequestDto request);

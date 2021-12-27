@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 
 namespace Aurora.Infrastructure.Services
 {
-    public class SearchService : ISearchService
+    public class SearchDataService : ISearchDataService
     {
         private readonly SearchContext _context;
 
-        public SearchService(SearchContext context)
+        public SearchDataService(SearchContext context)
         {
             _context = context;
         }
@@ -109,7 +109,7 @@ namespace Aurora.Infrastructure.Services
             return Convert(storedResults); 
         }
 
-        private List<SearchResultDto> Convert(List<SearchResult> results)
+        private static List<SearchResultDto> Convert(List<SearchResult> results)
         {
             return results.GroupBy(x => x.Request.Website)
                 .Select(x => (x.Key, x.Select(y => new SearchItem()
