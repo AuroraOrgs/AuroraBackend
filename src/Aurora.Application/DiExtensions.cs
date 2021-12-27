@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Aurora.Application
 {
@@ -7,7 +8,7 @@ namespace Aurora.Application
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             services.AddScoped<IScraperRunner, ScraperRunner>();
-
+            services.AddMediatR(typeof(DiExtensions).Assembly);
             return services;
         }
     }
