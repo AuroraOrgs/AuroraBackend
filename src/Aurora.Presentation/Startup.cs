@@ -50,7 +50,7 @@ namespace Aurora.Presentation
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHub<NotificationHub>("notifications");
+                endpoints.MapHub<NotificationHub>("hub/notifications");
             });
         }
     }
