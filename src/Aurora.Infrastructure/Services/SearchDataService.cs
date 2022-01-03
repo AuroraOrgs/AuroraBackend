@@ -23,25 +23,27 @@ namespace Aurora.Infrastructure.Services
         {
             List<SearchRequest> existingRequests = await GetExistingFor(request);
 
+            List<SearchRequest> newRequests = new List<SearchRequest>();
             foreach (var webSite in request.Websites)
             {
                 foreach (var option in request.SearchOptions)
                 {
-                    if (existingRequests.Where(x => x.Website == webSite && x.ContentOption == option).Any() == false)
+                    if (SearchOptionNotCreated(existingRequests, webSite, option))
                     {
-                        //TODO: Bulk insert
-                        var inserted = new SearchRequest()
+                        var newRequest = new SearchRequest()
                         {
                             ContentOption = option,
                             OccurredCount = 1,
                             SearchTerm = request.SearchTerm,
                             Website = webSite
                         };
-                        await _context.Request
-                            .AddAsync(inserted);
+                        newRequests.Add(newRequest);
                     }
                 }
             }
+
+            await _context.Request
+                .AddRangeAsync(newRequests);
 
             foreach (var existingRequest in existingRequests)
             {
@@ -51,6 +53,11 @@ namespace Aurora.Infrastructure.Services
             _context.Request.UpdateRange(existingRequests);
 
             await _context.SaveChangesAsync();
+        }
+
+        private static bool SearchOptionNotCreated(List<SearchRequest> existingRequests, SupportedWebsite webSite, SearchOption option)
+        {
+            return existingRequests.Where(x => x.Website == webSite && x.ContentOption == option).Any() == false;
         }
 
         private async Task<List<SearchRequest>> GetExistingFor(SearchRequestDto request)

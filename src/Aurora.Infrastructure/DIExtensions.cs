@@ -6,6 +6,7 @@ using Aurora.Infrastructure.Scrapers;
 using Aurora.Infrastructure.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,9 @@ namespace Aurora.Infrastructure
             services.AddScoped<IQueueProvider, QueueProvider>();
             services.AddDistributedMemoryCache();
             services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));
+            services.AddSignalR();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie();
 
             string mainConnectionString = config.GetConnectionString("MainDb");
             services.AddHangfire(configuration =>
