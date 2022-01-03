@@ -2,10 +2,9 @@
 using System.Threading.Tasks;
 using Aurora.Application.Models;
 using System.Threading;
-using Aurora.Application;
-using Aurora.Application.Contracts;
 using Aurora.Application.Commands;
 using MediatR;
+using System.Security.Claims;
 
 namespace Aurora.Presentation.Controllers
 {
@@ -23,7 +22,18 @@ namespace Aurora.Presentation.Controllers
         [HttpPost("search")]
         public async Task<IActionResult> Search([FromBody] SearchRequestDto searchRequest, CancellationToken token)
         {
-            var result = await _mediator.Send(new SearchCommand(searchRequest));
+            SearchCommand command;
+            var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (idClaim is not null)
+            {
+                var id = idClaim.Value;
+                command = new SearchCommand(searchRequest, id);
+            }
+            else
+            {
+                command = new SearchCommand(searchRequest);
+            }
+            var result = await _mediator.Send(command, token);
             return Ok(result);
         }
     }

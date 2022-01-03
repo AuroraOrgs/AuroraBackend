@@ -44,6 +44,7 @@ namespace Aurora.Presentation
                 app.UseHangfireDashboard();
             }
 
+            app.UseAuthentication();
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
