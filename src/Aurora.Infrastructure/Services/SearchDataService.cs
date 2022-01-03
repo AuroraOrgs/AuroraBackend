@@ -1,6 +1,5 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
-using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -23,25 +22,27 @@ namespace Aurora.Infrastructure.Services
         {
             List<SearchRequest> existingRequests = await GetExistingFor(request);
 
+            List<SearchRequest> newRequests = new List<SearchRequest>();
             foreach (var webSite in request.Websites)
             {
                 foreach (var option in request.SearchOptions)
                 {
                     if (existingRequests.Where(x => x.Website == webSite && x.ContentOption == option).Any() == false)
                     {
-                        //TODO: Bulk insert
-                        var inserted = new SearchRequest()
+                        var newRequest = new SearchRequest()
                         {
                             ContentOption = option,
                             OccurredCount = 1,
                             SearchTerm = request.SearchTerm,
                             Website = webSite
                         };
-                        await _context.Request
-                            .AddAsync(inserted);
+                        newRequests.Add(newRequest);
                     }
                 }
             }
+
+            await _context.Request
+                .AddRangeAsync(newRequests);
 
             foreach (var existingRequest in existingRequests)
             {
