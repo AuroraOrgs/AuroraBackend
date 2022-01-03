@@ -9,7 +9,16 @@ namespace Aurora.Application.Commands
         public SearchCommand(SearchRequestDto searchRequest)
         {
             SearchRequest = searchRequest;
+            UserId = null;
         }
-        public SearchRequestDto SearchRequest { get; set; }
+
+        public SearchCommand(SearchRequestDto searchRequest, string userId)
+        {
+            SearchRequest = searchRequest;
+            UserId = userId;
+        }
+
+        public SearchRequestDto SearchRequest { get; }
+        public string? UserId { get; }
     }
 }
