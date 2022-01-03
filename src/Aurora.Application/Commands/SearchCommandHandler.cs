@@ -47,7 +47,7 @@ namespace Aurora.Application.Commands
                     ResponseItemsMaxCount = 200
                 };
 
-                _queue.Enqueue(new ScrapRequest(childRequest));
+                _queue.Enqueue(new ScrapCommand(childRequest));
 
                 foreach (var webSite in notCachedWebsites)
                 {

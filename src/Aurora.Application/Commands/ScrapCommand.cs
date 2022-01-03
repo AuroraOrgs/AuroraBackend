@@ -3,9 +3,9 @@ using MediatR;
 
 namespace Aurora.Application.Commands
 {
-    public class ScrapRequest : IRequest
+    public class ScrapCommand : IRequest
     {
-        public ScrapRequest(SearchRequestDto innerRequest)
+        public ScrapCommand(SearchRequestDto innerRequest)
         {
             SearchRequest = innerRequest;
         }
