@@ -1,5 +1,6 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
+using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -27,7 +28,7 @@ namespace Aurora.Infrastructure.Services
             {
                 foreach (var option in request.SearchOptions)
                 {
-                    if (existingRequests.Where(x => x.Website == webSite && x.ContentOption == option).Any() == false)
+                    if (SearchOptionNotCreated(existingRequests, webSite, option))
                     {
                         var newRequest = new SearchRequest()
                         {
@@ -52,6 +53,11 @@ namespace Aurora.Infrastructure.Services
             _context.Request.UpdateRange(existingRequests);
 
             await _context.SaveChangesAsync();
+        }
+
+        private static bool SearchOptionNotCreated(List<SearchRequest> existingRequests, SupportedWebsite webSite, SearchOption option)
+        {
+            return existingRequests.Where(x => x.Website == webSite && x.ContentOption == option).Any() == false;
         }
 
         private async Task<List<SearchRequest>> GetExistingFor(SearchRequestDto request)
