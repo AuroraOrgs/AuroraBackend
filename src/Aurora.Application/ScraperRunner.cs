@@ -15,6 +15,8 @@ namespace Aurora.Application
         private Semaphore _scraperLimiter = new Semaphore(1, 5);
         private readonly ISearchScraperCollector _collector;
 
+        public event EventHandler<SearchResultDto> RequestProcessed;
+
         public ScraperRunner(ISearchScraperCollector collector)
         {
             _collector = collector;
@@ -51,6 +53,7 @@ namespace Aurora.Application
                 result.Resolve(value =>
                 {
                     resultCollection.Add(value);
+                    RequestProcessed?.Invoke(this, value);
                 });
             }
             finally
