@@ -7,6 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Configuration;
 using Hangfire;
+using Aurora.Infrastructure.Services;
 
 namespace Aurora.Presentation
 {
@@ -48,6 +49,7 @@ namespace Aurora.Presentation
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<NotificationHub>("notifications");
             });
         }
     }
