@@ -34,7 +34,7 @@ namespace Aurora.Infrastructure
             services.AddHangfire(configuration =>
             {
                 configuration
-                .UsePostgreSqlStorage(mainConnectionString)
+                .UseSqlServerStorage(mainConnectionString)
                 .UseMediatR();
             });
 
@@ -44,7 +44,7 @@ namespace Aurora.Infrastructure
 
             services.AddDbContext<SearchContext>(x =>
             {
-                x.UseNpgsql(mainConnectionString, b =>
+                x.UseSqlServer(mainConnectionString, b =>
                 {
                     b.MigrationsAssembly("Aurora.Infrastructure");
                 });
