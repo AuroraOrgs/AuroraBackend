@@ -5,6 +5,8 @@ using System.Threading;
 using Aurora.Application.Commands;
 using MediatR;
 using System.Security.Claims;
+using System;
+using Aurora.Application.Enums;
 
 namespace Aurora.Presentation.Controllers
 {
@@ -35,6 +37,12 @@ namespace Aurora.Presentation.Controllers
             }
             var result = await _mediator.Send(command, token);
             return Ok(result);
+        }
+
+        [HttpGet("supported-websites")]
+        public IActionResult SupportedWebsites()
+        {
+            return Ok(Enum.GetNames(typeof(SupportedWebsite)));
         }
     }
 }
