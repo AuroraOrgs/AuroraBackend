@@ -38,6 +38,8 @@ namespace Aurora.Infrastructure
                 .UseMediatR();
             });
 
+            services.AddTransient<INotificator, Notificator>();
+
             services.AddHangfireServer();
 
             services.AddDbContext<SearchContext>(x =>

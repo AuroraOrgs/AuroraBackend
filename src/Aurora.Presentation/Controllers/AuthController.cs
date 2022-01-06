@@ -12,7 +12,7 @@ namespace Aurora.Presentation.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        [Route("auth")]
+        [HttpPost("auth")]
         public async Task<ActionResult> Authorize()
         {
             Guid id = Guid.NewGuid();
