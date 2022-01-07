@@ -36,7 +36,7 @@ jobs:
         run: dotnet test --no-restore --verbosity normal '${{ env.WORKING_DIRECTORY }}'
 
       - name: Update EF Migrations
-        run: dotnet ef database update -p Aurora.Infrastructure/Aurora.Infrastructure.csproj -s Aurora.Presentation/Aurora.Presentation.csproj -c SearchContext
+        run: dotnet ef database update -p '${{ env.WORKING_DIRECTORY }}/Aurora.Infrastructure/Aurora.Infrastructure.csproj' -s '${{ env.WORKING_DIRECTORY }}/Aurora.Presentation/Aurora.Presentation.csproj' -c SearchContext
 
       - name: dotnet publish
         run: dotnet publish --configuration Release '${{ env.WORKING_DIRECTORY }}' --output '${{ env.WORKING_DIRECTORY }}/dotnetcorewebapp'
