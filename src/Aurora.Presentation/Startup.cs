@@ -51,10 +51,10 @@ namespace Aurora.Presentation
             app.UseCors(CorsPolicyName);
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aurora v1"));
-            app.UseHangfireDashboard();
-
 
             app.UseAuthentication();
+
+            app.UseHangfireDashboard();
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
