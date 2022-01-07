@@ -26,7 +26,7 @@ jobs:
       - name: Install EF Tool
         run: dotnet tool install --global dotnet-ef
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: dotnet restore '${{ env.WORKING_DIRECTORY }}'
 
       - name: Build
