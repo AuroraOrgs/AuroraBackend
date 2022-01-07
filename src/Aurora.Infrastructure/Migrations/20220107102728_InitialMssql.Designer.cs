@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Aurora.Infrastructure.Migrations
 {
     [DbContext(typeof(SearchContext))]
-    [Migration("20220106185518_UseSqlServer")]
-    partial class UseSqlServer
+    [Migration("20220107102728_InitialMssql")]
+    partial class InitialMssql
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

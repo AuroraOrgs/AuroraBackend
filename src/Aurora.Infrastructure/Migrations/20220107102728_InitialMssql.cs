@@ -1,9 +1,11 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
 namespace Aurora.Infrastructure.Migrations
 {
-    public partial class Initial : Migration
+    public partial class InitialMssql : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -11,11 +13,11 @@ namespace Aurora.Infrastructure.Migrations
                 name: "Request",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    SearchTerm = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: true),
-                    Website = table.Column<int>(type: "integer", nullable: false),
-                    ContentOption = table.Column<int>(type: "integer", nullable: false),
-                    OccurredCount = table.Column<int>(type: "integer", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SearchTerm = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    Website = table.Column<int>(type: "int", nullable: false),
+                    ContentOption = table.Column<int>(type: "int", nullable: false),
+                    OccurredCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -26,10 +28,10 @@ namespace Aurora.Infrastructure.Migrations
                 name: "Result",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ImagePreviewUrl = table.Column<string>(type: "text", nullable: true),
-                    SearchItemUrl = table.Column<string>(type: "text", nullable: true),
-                    RequestId = table.Column<Guid>(type: "uuid", nullable: false)
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ImagePreviewUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SearchItemUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
