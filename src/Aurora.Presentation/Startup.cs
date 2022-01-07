@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.Configuration;
 using Hangfire;
 using Aurora.Infrastructure.Services;
+using Aurora.Presentation.Services;
 
 namespace Aurora.Presentation
 {
@@ -56,7 +57,8 @@ namespace Aurora.Presentation
 
             app.UseHangfireDashboard(options: new DashboardOptions()
             {
-                IgnoreAntiforgeryToken = true
+                IgnoreAntiforgeryToken = true,
+                Authorization = new[] { new HangfireAuthorization() }
             });
 
             app.UseRouting();
