@@ -86,11 +86,16 @@ namespace Aurora.Infrastructure.Services
                 {
                     foreach (var result in results)
                     {
+                        var hasOptionsToIdRequestId = optionsToId.TryGetValue((website, option), out var requestId);
+
+                        if (hasOptionsToIdRequestId == false)
+                            break;
+
                         var searchResult = new SearchResult()
                         {
                             ImagePreviewUrl = result.ImagePreviewUrl,
                             SearchItemUrl = result.SearchItemUrl,
-                            RequestId = optionsToId[(website, option)]
+                            RequestId = requestId
                         };
                         searchResults.Add(searchResult);
                     }
@@ -113,7 +118,7 @@ namespace Aurora.Infrastructure.Services
                 .Where(x => request.SearchOptions.Contains(x.Request.ContentOption) && request.Websites.Contains(x.Request.Website))
                 .ToListAsync();
 
-            return Convert(storedResults); 
+            return Convert(storedResults);
         }
 
         private static List<SearchResultDto> Convert(List<SearchResult> results)
