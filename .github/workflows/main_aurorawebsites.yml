@@ -24,7 +24,7 @@ jobs:
           include-prerelease: true
 
       - name: Install EF Tool
-        run: install dotnet-ef
+        run: dotnet tool install dotnet-ef
 
       - name: Install dependencies
         run: dotnet restore '${{ env.WORKING_DIRECTORY }}'
