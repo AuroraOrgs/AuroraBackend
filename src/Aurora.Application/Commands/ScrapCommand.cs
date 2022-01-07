@@ -5,10 +5,12 @@ namespace Aurora.Application.Commands
 {
     public class ScrapCommand : IRequest
     {
-        public ScrapCommand(SearchRequestDto innerRequest)
+        public ScrapCommand()
         {
-            SearchRequest = innerRequest;
-            UserId = null;
+            SearchRequest = new()
+            {
+                SearchTerm = "Haha - default is written by hand!"
+            };
         }
 
         public ScrapCommand(SearchRequestDto innerRequest, string userId)

@@ -33,7 +33,7 @@ namespace Aurora.Presentation.Controllers
             }
             else
             {
-                command = new SearchCommand(searchRequest);
+                command = new SearchCommand(searchRequest, null!);
             }
             var result = await _mediator.Send(command, token);
             return Ok(result);

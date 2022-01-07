@@ -6,10 +6,12 @@ namespace Aurora.Application.Commands
 {
     public class SearchCommand : IRequest<List<SearchResultDto>>
     {
-        public SearchCommand(SearchRequestDto searchRequest)
+        public SearchCommand()
         {
-            SearchRequest = searchRequest;
-            UserId = null;
+            SearchRequest = new()
+            {
+                SearchTerm = "Haha - default is written by hand!"
+            };
         }
 
         public SearchCommand(SearchRequestDto searchRequest, string userId)

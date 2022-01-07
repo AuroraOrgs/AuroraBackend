@@ -7,8 +7,8 @@ namespace Aurora.Application.Entities
     {
         [Key]
         public Guid Id { get; set; }
-        public string ImagePreviewUrl { get; set; }
-        public string SearchItemUrl { get; set; }
+        public string? ImagePreviewUrl { get; set; }
+        public string? SearchItemUrl { get; set; }
 
         public Guid RequestId { get; set; }
         public SearchRequest Request { get; set; }

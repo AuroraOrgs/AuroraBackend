@@ -47,7 +47,10 @@ namespace Aurora.Application.Commands
                     ResponseItemsMaxCount = 200
                 };
 
-                _queue.Enqueue(new ScrapCommand(childRequest));
+                string websites = String.Join(", ", notCachedWebsites.Select(x => x.ToString()));
+                _queue.Enqueue(
+                    $"Scrapping {websites} for {request.SearchTerm}",
+                    new ScrapCommand(childRequest, null!));
 
                 foreach (var webSite in notCachedWebsites)
                 {

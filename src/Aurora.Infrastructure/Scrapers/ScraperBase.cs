@@ -103,17 +103,17 @@ namespace Aurora.Infrastructure.Scrapers
 
         public virtual Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(SearchRequestDto request, CancellationToken token = default)
         {
-            return null;
+            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull());
         }
 
         public virtual Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(SearchRequestDto request, CancellationToken token = default)
         {
-            return null;
+            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull());
         }
 
         public virtual Task<ValueOrNull<List<SearchItem>>> SearchGifsInner(SearchRequestDto request, CancellationToken token = default)
         {
-            return null;
+            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull());
         }
 
         public abstract SupportedWebsite WebSite { get; }

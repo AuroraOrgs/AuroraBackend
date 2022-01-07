@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Aurora.Infrastructure.Migrations
 {
-    public partial class InitialMssql : Migration
+    public partial class SearchContextNullableImage : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -29,8 +29,8 @@ namespace Aurora.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ImagePreviewUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SearchItemUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImagePreviewUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SearchItemUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
