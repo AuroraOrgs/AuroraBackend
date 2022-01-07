@@ -54,7 +54,11 @@ namespace Aurora.Presentation
 
             app.UseAuthentication();
 
-            app.UseHangfireDashboard();
+            app.UseHangfireDashboard(options: new DashboardOptions()
+            {
+                IgnoreAntiforgeryToken = true
+            });
+
             app.UseRouting();
 
             app.UseEndpoints(endpoints =>
