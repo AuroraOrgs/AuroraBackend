@@ -5,7 +5,6 @@ using Aurora.Infrastructure.Contracts;
 using Aurora.Infrastructure.Scrapers;
 using Aurora.Infrastructure.Services;
 using Hangfire;
-using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
