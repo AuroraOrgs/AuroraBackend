@@ -10,10 +10,10 @@ namespace Aurora.Presentation.Controllers
 {
     [Route("api/v1")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class SubscribeController : ControllerBase
     {
-        [HttpPost("auth")]
-        public async Task<ActionResult> Authorize()
+        [HttpGet("subscribe")]
+        public async Task<ActionResult> Subscribe()
         {
             Guid id = Guid.NewGuid();
             List<Claim> claims = new()
