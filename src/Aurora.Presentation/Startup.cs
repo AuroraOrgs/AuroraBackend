@@ -13,6 +13,7 @@ namespace Aurora.Presentation
 {
     public class Startup
     {
+        private static readonly string CorsPolicyName = "AllowAll";
         public IConfiguration Configuration { get; }
 
         public Startup(IConfiguration configuration)
@@ -28,6 +29,16 @@ namespace Aurora.Presentation
 
             services.AddControllers();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy(CorsPolicyName, policy =>
+                {
+                    policy.AllowAnyHeader();
+                    policy.AllowAnyMethod();
+                    policy.AllowAnyOrigin();
+                });
+            });
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aurora", Version = "v1" });
@@ -37,9 +48,11 @@ namespace Aurora.Presentation
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseDeveloperExceptionPage();
+            app.UseCors(CorsPolicyName);
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aurora v1"));
             app.UseHangfireDashboard();
+
 
             app.UseAuthentication();
             app.UseRouting();
