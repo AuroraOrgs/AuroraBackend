@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Aurora.Infrastructure.Migrations
 {
-    public partial class SearchContextNullableImage : Migration
+    public partial class UniqueFields : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -43,6 +43,12 @@ namespace Aurora.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Request_SearchTerm_Website_ContentOption",
+                table: "Request",
+                columns: new[] { "SearchTerm", "Website", "ContentOption" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Result_RequestId",
