@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Aurora.Infrastructure.Migrations
 {
     [DbContext(typeof(SearchContext))]
-    [Migration("20220107152043_SearchContextNullableImage")]
-    partial class SearchContextNullableImage
+    [Migration("20220120163956_UniqueFields")]
+    partial class UniqueFields
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -45,6 +45,9 @@ namespace Aurora.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("SearchTerm", "Website", "ContentOption")
+                        .IsUnique();
 
                     b.ToTable("Request");
                 });

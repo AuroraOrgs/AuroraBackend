@@ -44,6 +44,9 @@ namespace Aurora.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("SearchTerm", "Website", "ContentOption")
+                        .IsUnique();
+
                     b.ToTable("Request");
                 });
 
