@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Aurora.Application.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace Aurora.Application
 {
@@ -14,12 +14,14 @@ namespace Aurora.Application
     {
         private Semaphore _scraperLimiter = new Semaphore(1, 5);
         private readonly ISearchScraperCollector _collector;
+        private readonly ILogger<ScraperRunner> _logger;
 
-        public event EventHandler<SearchResultDto> RequestProcessed;
+        public event EventHandler<SearchResultDto>? RequestProcessed;
 
-        public ScraperRunner(ISearchScraperCollector collector)
+        public ScraperRunner(ISearchScraperCollector collector, ILogger<ScraperRunner> logger)
         {
             _collector = collector;
+            _logger = logger;
         }
 
         public async Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, CancellationToken token = default)
@@ -54,6 +56,9 @@ namespace Aurora.Application
                 {
                     resultCollection.Add(value);
                     RequestProcessed?.Invoke(this, value);
+                }, errorMessage =>
+                {
+                    _logger.LogWarning(errorMessage);
                 });
             }
             finally
