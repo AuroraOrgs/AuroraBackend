@@ -124,12 +124,7 @@ namespace Aurora.Infrastructure.Services
         private static List<SearchResultDto> Convert(List<SearchResult> results)
         {
             return results.GroupBy(x => x.Request.Website)
-                .Select(x => (x.Key, x.Select(y => new SearchItem()
-                {
-                    Option = y.Request.ContentOption,
-                    SearchItemUrl = y.SearchItemUrl,
-                    ImagePreviewUrl = y.ImagePreviewUrl
-                })))
+                .Select(x => (x.Key, x.Select(y => new SearchItem(y.Request.ContentOption, y.SearchItemUrl, y.ImagePreviewUrl))))
                 .Select(x => new SearchResultDto(x.Item2.ToList(), x.Key))
                 .ToList();
         }
