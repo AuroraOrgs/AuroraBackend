@@ -115,7 +115,9 @@ namespace Aurora.Infrastructure.Services
         {
             var storedResults = await _context.Result
                 .Include(x => x.Request)
-                .Where(x => request.SearchOptions.Contains(x.Request.ContentOption) && request.Websites.Contains(x.Request.Website))
+                .Where(x => request.SearchTerm == request.SearchTerm 
+                    && request.SearchOptions.Contains(x.Request.ContentOption)
+                    && request.Websites.Contains(x.Request.Website))
                 .ToListAsync();
 
             return Convert(storedResults);
