@@ -78,28 +78,28 @@ namespace Aurora.Infrastructure.Scrapers
 
                 foreach (var videoLinkNode in videoLinksNodes)
                 {
-                    SearchItem searchVideoItem = new()
-                    {
-                        Option = SearchOption.Video
-                    };
-
                     var currentLinkImageNode = videoLinkNode.ChildNodes
                         .FirstOrDefault(n => n.Name == "img");
 
                     if (currentLinkImageNode is not null)
                     {
                         var currentLinkImageAttributes = currentLinkImageNode.Attributes;
-                        searchVideoItem.ImagePreviewUrl = currentLinkImageAttributes["data-src"]?.Value;
+                        string imagePreviewUrl = currentLinkImageAttributes["data-src"]?.Value;
+                        if (imagePreviewUrl is not null)
+                        {
+                            var currentLinkAttributes = videoLinkNode.Attributes;
+                            var videoLink = currentLinkAttributes["href"]?.Value;
+                            if (videoLink is not null && videoLink.Contains("video") && !videoLink.Contains("videos"))
+                            {
+                                string searchItemUrl = $"{_baseUrl}{videoLink}";
+                                if (searchItemUrl is not null && imagePreviewUrl is not null)
+                                {
+                                    videoItems.Add(new(SearchOption.Video, imagePreviewUrl, searchItemUrl));
+                                }
+                            }
+                        }
                     }
-
-                    var currentLinkAttributes = videoLinkNode.Attributes;
-                    var videoLink = currentLinkAttributes["href"]?.Value;
-                    if (videoLink is not null && videoLink.Contains("video") && !videoLink.Contains("videos"))
-                        searchVideoItem.SearchItemUrl = $"{_baseUrl}{videoLink}";
-
                     urlsCount++;
-                    if (searchVideoItem.SearchItemUrl is not null && searchVideoItem.ImagePreviewUrl is not null)
-                        videoItems.Add(searchVideoItem);
                 }
 
                 pageNumber++;
@@ -150,23 +150,20 @@ namespace Aurora.Infrastructure.Scrapers
 
                 foreach (var videoLinkNode in videoLinksNodes)
                 {
-                    SearchItem searchImageItem = new()
-                    {
-                        Option = SearchOption.Image
-                    };
-
                     var currentLinkImageNode = videoLinkNode.ChildNodes
                         .FirstOrDefault(n => n.Name == "img");
 
                     if (currentLinkImageNode is not null)
                     {
                         var currentLinkImageAttributes = currentLinkImageNode.Attributes;
-                        searchImageItem.SearchItemUrl = currentLinkImageAttributes["data-src"]?.Value;
+                        string imageUrl = currentLinkImageAttributes["data-src"]?.Value;
+                        if (imageUrl is not null)
+                        {
+                            imageItems.Add(new(SearchOption.Image, imageUrl, imageUrl));
+                        }
                     }
 
                     urlsCount++;
-                    if (searchImageItem.SearchItemUrl is not null)
-                        imageItems.Add(searchImageItem);
                 }
 
                 pageNumber++;

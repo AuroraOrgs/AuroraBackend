@@ -46,14 +46,12 @@ namespace Aurora.Infrastructure.Scrapers
 
         public async Task<ExtendedSearchResult> PerformSearch(SearchRequestDto request, CancellationToken token)
         {
-            List<SearchItem> items = new List<SearchItem>();
-
             ValueOrNull<SearchResultDto> resultOrNull;
 
             ScraperStatusCode code;
             try
             {
-                resultOrNull = await GetResult(request, items, token);
+                resultOrNull = await GetResult(request, token);
                 code = ScraperStatusCode.Success;
             }
             catch (Exception exception)
@@ -69,9 +67,9 @@ namespace Aurora.Infrastructure.Scrapers
             };
         }
 
-        private async Task<SearchResultDto> GetResult(SearchRequestDto request, List<SearchItem> items, CancellationToken token)
+        private async Task<SearchResultDto> GetResult(SearchRequestDto request, CancellationToken token)
         {
-            var result = new SearchResultDto(items, WebSite);
+            List<SearchItem> items = new ();
             if (request.SearchOptions.Contains(SearchOption.Video))
             {
                 var response = await SearchVideosInner(request, token);
@@ -90,7 +88,7 @@ namespace Aurora.Infrastructure.Scrapers
                 Resolve(items, response);
             }
 
-            return result;
+            return new(items, WebSite);
         }
 
         private static void Resolve(List<SearchItem> items, ValueOrNull<List<SearchItem>> response)
@@ -101,19 +99,20 @@ namespace Aurora.Infrastructure.Scrapers
             });
         }
 
+        //TODO: Move those into separate child, because some website may have mixed items
         public virtual Task<ValueOrNull<List<SearchItem>>> SearchVideosInner(SearchRequestDto request, CancellationToken token = default)
         {
-            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull());
+            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull($"Videos are not supported by {GetType().Name}"));
         }
 
         public virtual Task<ValueOrNull<List<SearchItem>>> SearchImagesInner(SearchRequestDto request, CancellationToken token = default)
         {
-            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull());
+            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull($"Images are not supported by {GetType().Name}"));
         }
 
         public virtual Task<ValueOrNull<List<SearchItem>>> SearchGifsInner(SearchRequestDto request, CancellationToken token = default)
         {
-            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull());
+            return Task.FromResult(ValueOrNull<List<SearchItem>>.CreateNull($"Gifs are not supported by {GetType().Name}"));
         }
 
         public abstract SupportedWebsite WebSite { get; }

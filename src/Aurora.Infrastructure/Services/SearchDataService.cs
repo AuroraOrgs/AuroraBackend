@@ -115,7 +115,9 @@ namespace Aurora.Infrastructure.Services
         {
             var storedResults = await _context.Result
                 .Include(x => x.Request)
-                .Where(x => request.SearchOptions.Contains(x.Request.ContentOption) && request.Websites.Contains(x.Request.Website))
+                .Where(x => request.SearchTerm == request.SearchTerm
+                    && request.SearchOptions.Contains(x.Request.ContentOption)
+                    && request.Websites.Contains(x.Request.Website))
                 .ToListAsync();
 
             return Convert(storedResults);
@@ -123,14 +125,15 @@ namespace Aurora.Infrastructure.Services
 
         private static List<SearchResultDto> Convert(List<SearchResult> results)
         {
-            return results.GroupBy(x => x.Request.Website)
-                .Select(x => (x.Key, x.Select(y => new SearchItem()
-                {
-                    Option = y.Request.ContentOption,
-                    SearchItemUrl = y.SearchItemUrl,
-                    ImagePreviewUrl = y.ImagePreviewUrl
-                })))
-                .Select(x => new SearchResultDto(x.Item2.ToList(), x.Key))
+            return results.GroupBy(result => result.Request.Website)
+                .Select(resultsByWebsite => new SearchResultDto(ConvertResults(resultsByWebsite), resultsByWebsite.Key))
+                .ToList();
+        }
+
+        private static List<SearchItem> ConvertResults(IEnumerable<SearchResult> results)
+        {
+            return results
+                .Select(result => new SearchItem(result.Request.ContentOption, result.SearchItemUrl, result.ImagePreviewUrl))
                 .ToList();
         }
     }

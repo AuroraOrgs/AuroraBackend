@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Aurora.Infrastructure
 {
-
     public class SearchContext : DbContext
     {
         public SearchContext(DbContextOptions<SearchContext> options) : base(options) { }
