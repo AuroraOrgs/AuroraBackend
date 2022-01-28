@@ -26,9 +26,9 @@ namespace Aurora.Application.Commands
             var request = requestWrapper.SearchRequest;
             await _search.StoreRequest(request);
             var results = await _search.GetResults(request);
-            var storedWebsite = results.Select(x => x.Website).ToList();
+            var storedWebsites = results.Select(x => x.Website).ToList();
             List<SupportedWebsite> notCachedWebsites = request.Websites
-                .Where(x => storedWebsite.Contains(x) == false)
+                .Except(storedWebsites)
                 .ToList();
 
             if (notCachedWebsites.Count > 0)
@@ -50,7 +50,7 @@ namespace Aurora.Application.Commands
                 string websites = String.Join(", ", notCachedWebsites.Select(x => x.ToString()));
                 _queue.Enqueue(
                     $"Scrapping {websites} for {request.SearchTerm}",
-                    new ScrapCommand(childRequest, null!));
+                    new ScrapCommand(childRequest, requestWrapper.UserId));
 
                 foreach (var webSite in notCachedWebsites)
                 {

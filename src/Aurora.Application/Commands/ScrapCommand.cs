@@ -13,7 +13,7 @@ namespace Aurora.Application.Commands
             };
         }
 
-        public ScrapCommand(SearchRequestDto innerRequest, string userId)
+        public ScrapCommand(SearchRequestDto innerRequest, string? userId)
         {
             SearchRequest = innerRequest;
             UserId = userId;
