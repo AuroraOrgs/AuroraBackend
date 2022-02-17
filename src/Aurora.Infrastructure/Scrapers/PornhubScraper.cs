@@ -136,7 +136,7 @@ namespace Aurora.Infrastructure.Scrapers
                 var pageNumber = i + 1;
                 var fullpath = GetImagePageUrl(searchTerm, pageNumber);
                 using var rtclient = _clientProvider.CreateClient(HttpClientConstants.RTPornhubClient);
-                var html = await client.GetStringAsync(fullpath);
+                var html = await rtclient.GetStringAsync(fullpath);
                 htmlDocument.LoadHtml(html);
 
                 var photosAlbumSection = htmlDocument.DocumentNode
