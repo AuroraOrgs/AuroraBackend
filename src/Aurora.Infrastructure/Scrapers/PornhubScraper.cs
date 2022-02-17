@@ -4,25 +4,26 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Aurora.Application.Models;
-using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Aurora.Infrastructure.Services;
 using Aurora.Application.Enums;
+using System.Net.Http;
+using Aurora.Application;
+using System.Net.Http.Json;
 
 namespace Aurora.Infrastructure.Scrapers
 {
     public class PornhubScraper : ScraperBase
     {
         private const int PAGE_NUMBER_LIMIT = 5;
-        private const string _baseUrl = "https://www.pornhub.com";
         private const string _dateSourcePhncdn = "https://dl.phncdn.com";
-        private readonly IWebClientService _clientProvider;
+        private readonly IHttpClientFactory _clientProvider;
         private readonly DriverInitializer _initializer;
 
         public override SupportedWebsite WebSite => SupportedWebsite.Pornhub;
 
-        public PornhubScraper(ILogger<PornhubScraper> logger, IWebClientService clientProvider,
+        public PornhubScraper(ILogger<PornhubScraper> logger, IHttpClientFactory clientProvider,
             DriverInitializer initializer) : base(logger)
         {
             _clientProvider = clientProvider;
@@ -63,7 +64,7 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = await _clientProvider.Provide();
+            using var client = _clientProvider.CreateClient(HttpClientConstants.PornhubClient);
             for (var i = 0; i < PAGE_NUMBER_LIMIT; i++)
             {
                 if (urlsCount >= maxNumberOfVideoUrls)
@@ -73,9 +74,9 @@ namespace Aurora.Infrastructure.Scrapers
 
                 // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
-                var searchPageUrl = $"{_baseUrl}/video/search?search={searchTermUrlFormatted}&page={pageNumber}";
-                await _clientProvider.SetDefaultUserString(client);
-                var htmlSearchPage = client.DownloadString(searchPageUrl);
+                var searchPageUrl = $"/video/search?search={searchTermUrlFormatted}&page={pageNumber}";
+
+                var htmlSearchPage = await client.GetStringAsync(searchPageUrl);
                 htmlDocument.LoadHtml(htmlSearchPage);
 
                 var bodyNode = htmlDocument.DocumentNode
@@ -105,7 +106,7 @@ namespace Aurora.Infrastructure.Scrapers
                     }
 
                     var currentLinkAttributes = videoLinkNode.Attributes;
-                    searchVideoItem.SearchItemUrl = $"{_baseUrl}{currentLinkAttributes["href"].Value}";
+                    searchVideoItem.SearchItemUrl = $"{client.BaseAddress}{currentLinkAttributes["href"].Value}";
 
                     urlsCount++;
                     videoItems.Add(searchVideoItem);
@@ -129,13 +130,13 @@ namespace Aurora.Infrastructure.Scrapers
             var searchTerm = FormatTermToUrl(requestSearchTerm);
             var result = new List<SearchItem>();
 
-            using var client = await _clientProvider.Provide();
+            using var client = _clientProvider.CreateClient(HttpClientConstants.PornhubClient);
             for (var i = 0; i < PAGE_NUMBER_LIMIT; i++)
             {
                 var pageNumber = i + 1;
-                var fullUrl = GetImagePageUrl(searchTerm, pageNumber);
-                await _clientProvider.SetDefaultUserString(client);
-                var html = client.DownloadString(fullUrl);
+                var fullpath = GetImagePageUrl(searchTerm, pageNumber);
+                using var rtclient = _clientProvider.CreateClient(HttpClientConstants.RTPornhubClient);
+                var html = await client.GetStringAsync(fullpath);
                 htmlDocument.LoadHtml(html);
 
                 var photosAlbumSection = htmlDocument.DocumentNode
@@ -153,10 +154,9 @@ namespace Aurora.Infrastructure.Scrapers
                     if (linkUrl is null) continue;
                     if (result.Count >= maxNumberOfImageUrls) break;
 
-                    await _clientProvider.SetDefaultUserString(client);
-                    var albumUrl = $"{_baseUrl}{linkUrl}";
+                    var albumUrl = $"{client.BaseAddress}{linkUrl}";
                     driver.Navigate().GoToUrl(albumUrl);
-                    var albumHtml = client.DownloadString(driver.PageSource);
+                    var albumHtml = await client.GetStringAsync(driver.PageSource);
                     htmlDocument.LoadHtml(albumHtml);
 
                     var images = htmlDocument.DocumentNode
@@ -194,8 +194,7 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = await _clientProvider.Provide();
-
+            using var client = _clientProvider.CreateClient(HttpClientConstants.PornhubClient);
             for (var i = 0; i < PAGE_NUMBER_LIMIT; i++)
             {
                 if (urlsCount >= maxNumberOfVideoUrls)
@@ -206,9 +205,8 @@ namespace Aurora.Infrastructure.Scrapers
                 var currentPageNumber = i + 1;
                 // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
-                var searchPageUrl = $"{_baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
-                await _clientProvider.SetDefaultUserString(client);
-                var htmlSearchPage = client.DownloadString(searchPageUrl);
+                var searchPageUrl = $"/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
+                var htmlSearchPage = await client.GetStringAsync(searchPageUrl);
                 htmlDocument.LoadHtml(htmlSearchPage);
 
                 var bodyNode = htmlDocument.DocumentNode
@@ -234,7 +232,7 @@ namespace Aurora.Infrastructure.Scrapers
                     if (currentLinkGifNode is not null)
                     {
                         var currentLinkImageAttributes = currentLinkGifNode.Attributes;
-                        searchVideoItem.ImagePreviewUrl = $"{_baseUrl}{currentLinkImageAttributes["href"].Value}";
+                        searchVideoItem.ImagePreviewUrl = $"{client.BaseAddress}{currentLinkImageAttributes["href"].Value}";
                         searchVideoItem.SearchItemUrl =
                             $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
                     }
@@ -252,7 +250,7 @@ namespace Aurora.Infrastructure.Scrapers
         private static string GetImagePageUrl(string searchTerm, int pageNumber)
         {
             searchTerm = FormatTermToUrl(searchTerm);
-            return $"https://rt.pornhub.com/albums?search={searchTerm}&page={pageNumber}";
+            return "/albums?search={searchTerm}&page={pageNumber}";
         }
     }
 }

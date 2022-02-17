@@ -1,7 +1,8 @@
-﻿using Aurora.Application.Contracts;
+﻿using System;
+using Aurora.Application;
+using Aurora.Application.Contracts;
 using Aurora.Infrastructure.Bridge;
 using Aurora.Infrastructure.Config;
-using Aurora.Infrastructure.Contracts;
 using Aurora.Infrastructure.Scrapers;
 using Aurora.Infrastructure.Services;
 using Hangfire;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Polly;
 
 namespace Aurora.Infrastructure
 {
@@ -19,7 +21,6 @@ namespace Aurora.Infrastructure
             services.AddScoped<ISearchScraperCollector, SearchScraperCollector>();
             services.AddScoped<PornhubScraper>();
             services.AddScoped<XvideosScraper>();
-            services.AddScoped<IWebClientService, WebClientService>();
             services.AddScoped<DriverInitializer>();
             services.AddScoped<ISearchDataService, SearchDataService>();
             services.AddScoped<IQueueProvider, QueueProvider>();
@@ -41,6 +42,10 @@ namespace Aurora.Infrastructure
 
             services.AddHangfireServer();
 
+            services.AddDefaultHttpClient(HttpClientConstants.PornhubClient, "https://www.pornhub.com");
+            services.AddDefaultHttpClient(HttpClientConstants.XvideosClient, "https://www.xvideos.com");
+            services.AddDefaultHttpClient(HttpClientConstants.RTPornhubClient, "https://rt.pornhub.com");
+
             services.AddDbContext<SearchContext>(x =>
             {
                 x.UseSqlServer(mainConnectionString, b =>
@@ -49,6 +54,19 @@ namespace Aurora.Infrastructure
                 });
             });
 
+            return services;
+        }
+
+        private static IServiceCollection AddDefaultHttpClient(this IServiceCollection services, string name, string url)
+        {
+            services.AddHttpClient(name, client =>
+            {
+                client.BaseAddress = new Uri(url);
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+                client.DefaultRequestHeaders.Add("User-Agent", "AuroraApplication");
+            }).AddTransientHttpErrorPolicy(p =>
+                p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(600)));
+                
             return services;
         }
     }

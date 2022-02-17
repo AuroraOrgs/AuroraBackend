@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Aurora.Application;
 using Aurora.Application.Enums;
 using Aurora.Application.Models;
-using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
 
@@ -13,12 +14,11 @@ namespace Aurora.Infrastructure.Scrapers
     public class XvideosScraper : ScraperBase
     {
         private const int PAGE_NUMBER_LIMIT = 5;
-        private const string _baseUrl = "https://www.xvideos.com";
-        private readonly IWebClientService _clientProvider;
+        private readonly IHttpClientFactory _clientProvider;
 
         public override SupportedWebsite WebSite => SupportedWebsite.Xvideos;
 
-        public XvideosScraper(ILogger<XvideosScraper> logger, IWebClientService clientProvider) : base(logger)
+        public XvideosScraper(ILogger<XvideosScraper> logger, IHttpClientFactory clientProvider) : base(logger)
         {
             _clientProvider = clientProvider;
         }
@@ -51,7 +51,7 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = await _clientProvider.Provide();
+            using var client = _clientProvider.CreateClient(HttpClientConstants.XvideosClient);
             for (var i = 0; i < PAGE_NUMBER_LIMIT; i++)
             {
                 if (urlsCount >= maxNumberOfVideoUrls)
@@ -61,9 +61,9 @@ namespace Aurora.Infrastructure.Scrapers
 
                 // e.g: https://www.xvideos.com/?k=test+value&p=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
-                var searchPageUrl = $"{_baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
-                await _clientProvider.SetTls12UserString(client);
-                var htmlSearchPage = client.DownloadString(searchPageUrl);
+                var searchPageUrl = $"/?k={searchTermUrlFormatted}&p={pageNumber}";
+                var htmlSearchPage = await client.GetStringAsync(searchPageUrl);
+
                 htmlDocument.LoadHtml(htmlSearchPage);
 
                 var bodyNode = htmlDocument.DocumentNode
@@ -95,7 +95,7 @@ namespace Aurora.Infrastructure.Scrapers
                     var currentLinkAttributes = videoLinkNode.Attributes;
                     var videoLink = currentLinkAttributes["href"]?.Value;
                     if (videoLink is not null && videoLink.Contains("video") && !videoLink.Contains("videos"))
-                        searchVideoItem.SearchItemUrl = $"{_baseUrl}{videoLink}";
+                        searchVideoItem.SearchItemUrl = $"{client.BaseAddress}{videoLink}";
 
                     urlsCount++;
                     if (searchVideoItem.SearchItemUrl is not null && searchVideoItem.ImagePreviewUrl is not null)
@@ -123,7 +123,7 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = await _clientProvider.Provide();
+            using var client = _clientProvider.CreateClient(HttpClientConstants.XvideosClient);
             for (var i = 0; i < PAGE_NUMBER_LIMIT; i++)
             {
                 if (urlsCount >= maxNumberOfImageUrls)
@@ -133,9 +133,9 @@ namespace Aurora.Infrastructure.Scrapers
 
                 // e.g: https://www.xvideos.com/?k=test+value&p=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
-                var searchPageUrl = $"{_baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
-                await _clientProvider.SetTls12UserString(client);
-                var htmlSearchPage = client.DownloadString(searchPageUrl);
+                var searchPageUrl = $"/?k={searchTermUrlFormatted}&p={pageNumber}";
+                var htmlSearchPage = await client.GetStringAsync(searchPageUrl);
+
                 htmlDocument.LoadHtml(htmlSearchPage);
 
                 var bodyNode = htmlDocument.DocumentNode
