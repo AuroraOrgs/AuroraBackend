@@ -7,6 +7,8 @@ using MediatR;
 using System.Security.Claims;
 using System;
 using Aurora.Application.Enums;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Aurora.Presentation.Controllers
 {
@@ -46,7 +48,19 @@ namespace Aurora.Presentation.Controllers
         [HttpGet("supported-websites")]
         public IActionResult SupportedWebsites()
         {
-            return Ok(Enum.GetNames(typeof(SupportedWebsite)));
+            return Ok(EnumValueToName<SupportedWebsite>());
+        }
+
+        [HttpGet("supported-content-types")]
+        public IActionResult SupportedContentTypes()
+        {
+            return Ok(EnumValueToName<SearchOption>());
+        }
+
+        private Dictionary<int, string> EnumValueToName<T>() where T : struct, Enum
+        {
+            var vals = Enum.GetValues<T>();
+            return vals.ToDictionary(x => Int32.Parse(x.ToString("D")), y => y.ToString());
         }
     }
 }
