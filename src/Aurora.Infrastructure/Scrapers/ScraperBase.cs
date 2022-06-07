@@ -35,7 +35,7 @@ namespace Aurora.Infrastructure.Scrapers
             return searchResult.Result;
         }
 
-        private void LogRun(ExtendedSearchResult searchResult, System.TimeSpan ranFor)
+        private void LogRun(ExtendedSearchResult searchResult, TimeSpan ranFor)
         {
             var time = ranFor.ToString();
             var scraperName = GetType().Name;
@@ -69,34 +69,47 @@ namespace Aurora.Infrastructure.Scrapers
 
         private async Task<SearchResultDto> GetResult(SearchRequestDto request, CancellationToken token)
         {
-            List<SearchItem> items = new ();
+            List<SearchItem> items = new();
             if (request.SearchOptions.Contains(SearchOption.Video))
             {
-                var response = await SearchVideosInner(request, token);
-                Resolve(items, response);
+                await ExecuteScraping(items, request, token, (request, token) => SearchVideosInner(request, token));
             }
 
             if (request.SearchOptions.Contains(SearchOption.Gif))
             {
-                var response = await SearchGifsInner(request, token);
-                Resolve(items, response);
+                await ExecuteScraping(items, request, token, (request, token) => SearchGifsInner(request, token));
             }
 
             if (request.SearchOptions.Contains(SearchOption.Image))
             {
-                var response = await SearchImagesInner(request, token);
-                Resolve(items, response);
+                await ExecuteScraping(items, request, token, (request, token) => SearchImagesInner(request, token));
             }
 
             return new(items, WebSite);
         }
 
-        private static void Resolve(List<SearchItem> items, ValueOrNull<List<SearchItem>> response)
+        private async Task ExecuteScraping(
+            List<SearchItem> items,
+            SearchRequestDto request,
+            CancellationToken token,
+            Func<SearchRequestDto, CancellationToken, Task<ValueOrNull<List<SearchItem>>>> scrappingFunc
+            )
         {
-            response.Resolve(responseItems =>
+            try
             {
-                items.AddRange(responseItems);
-            });
+                var response = await scrappingFunc(request, token);
+                response.Resolve(responseItems =>
+                {
+                    items.AddRange(responseItems);
+                }, message =>
+                {
+                    _logger.LogWarning("Scrapper returned nothing with message '{message}'", message);
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to scrap with following message '{0}'", ex.Message);
+            }
         }
 
         //TODO: Move those into separate child, because some website may have mixed items
