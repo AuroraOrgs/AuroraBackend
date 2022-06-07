@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Aurora.Application.Enums;
+using Aurora.Application.Models;
 
 namespace Aurora.Application.Contracts
 {

@@ -6,7 +6,6 @@ using Aurora.Application.Commands;
 using MediatR;
 using System.Security.Claims;
 using System;
-using Aurora.Application.Enums;
 using System.Collections.Generic;
 using System.Linq;
 

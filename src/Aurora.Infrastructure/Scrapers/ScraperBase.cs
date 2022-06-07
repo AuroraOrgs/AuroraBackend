@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Aurora.Application.Contracts;
-using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using Aurora.Infrastructure.Models;
 using Aurora.Shared.Models;

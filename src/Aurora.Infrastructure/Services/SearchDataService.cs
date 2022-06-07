@@ -1,7 +1,6 @@
 ﻿using Aurora.Application.Commands;
 using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
-using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using Microsoft.EntityFrameworkCore;
 using System;

@@ -8,7 +8,6 @@ using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Aurora.Infrastructure.Services;
-using Aurora.Application.Enums;
 using HtmlAgilityPack;
 using System.Net;
 

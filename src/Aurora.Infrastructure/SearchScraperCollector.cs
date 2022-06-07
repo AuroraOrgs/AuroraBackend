@@ -3,8 +3,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Aurora.Application.Enums;
 using Aurora.Infrastructure.Scrapers;
+using Aurora.Application.Models;
 
 namespace Aurora.Infrastructure
 {

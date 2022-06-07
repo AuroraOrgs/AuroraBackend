@@ -1,5 +1,4 @@
 ﻿using Aurora.Application.Commands;
-using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;

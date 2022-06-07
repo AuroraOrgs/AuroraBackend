@@ -1,5 +1,4 @@
 ﻿using Aurora.Application.Contracts;
-using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using MediatR;
 using System;
