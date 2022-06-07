@@ -9,6 +9,8 @@ using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
 using Aurora.Infrastructure.Services;
 using Aurora.Application.Enums;
+using HtmlAgilityPack;
+using System.Net;
 
 namespace Aurora.Infrastructure.Scrapers
 {
@@ -59,8 +61,6 @@ namespace Aurora.Infrastructure.Scrapers
                 OptionFixNestedTags = true
             };
 
-            var pageNumber = 1;
-
             var urlsCount = 0;
 
             using var client = await _clientProvider.Provide();
@@ -73,51 +73,75 @@ namespace Aurora.Infrastructure.Scrapers
 
                 // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
-                var searchPageUrl = $"{_baseUrl}/video/search?search={searchTermUrlFormatted}&page={pageNumber}";
+                var searchPageUrl = $"{_baseUrl}/video/search?search={searchTermUrlFormatted}&page={i + 1}";
                 await _clientProvider.SetDefaultUserString(client);
-                var htmlSearchPage = client.DownloadString(searchPageUrl);
-                htmlDocument.LoadHtml(htmlSearchPage);
+                bool isEnd = LoadDocumentFromUrl(htmlDocument, client, searchPageUrl);
+
+                if (isEnd)
+                {
+                    break;
+                }
 
                 var bodyNode = htmlDocument.DocumentNode
                     ?.SelectSingleNode("//body");
                 var videoLinksNodes = bodyNode
                     ?.SelectNodes("//a[contains(@class, 'videoPreviewBg')]");
 
-                if (videoLinksNodes is null)
+                if (videoLinksNodes is not null)
                 {
-                    break;
-                }
-
-                foreach (var videoLinkNode in videoLinksNodes)
-                {
-                    var currentLinkImageNode = videoLinkNode.ChildNodes
-                        .FirstOrDefault(n => n.Name == "img");
-                    //TODO: Add default image or make preview image nullable
-                    string previewImage = null;
-
-                    if (currentLinkImageNode is not null)
+                    foreach (var videoLinkNode in videoLinksNodes)
                     {
-                        var currentLinkImageAttributes = currentLinkImageNode.Attributes;
-                        previewImage = currentLinkImageAttributes["data-thumb_url"].Value;
+                        var currentLinkImageNode = videoLinkNode.ChildNodes
+                            .FirstOrDefault(n => n.Name == "img");
+                        //TODO: Add default image or make preview image nullable
+                        string previewImage = null;
+
+                        if (currentLinkImageNode is not null)
+                        {
+                            var currentLinkImageAttributes = currentLinkImageNode.Attributes;
+                            previewImage = currentLinkImageAttributes["data-thumb_url"].Value;
+                        }
+
+                        var currentLinkAttributes = videoLinkNode.Attributes;
+                        string itemUrl = $"{_baseUrl}{currentLinkAttributes["href"].Value}";
+
+                        urlsCount++;
+                        videoItems.Add(new(SearchOption.Video, previewImage, itemUrl));
                     }
-
-                    var currentLinkAttributes = videoLinkNode.Attributes;
-                    string itemUrl = $"{_baseUrl}{currentLinkAttributes["href"].Value}";
-
-                    urlsCount++;
-                    videoItems.Add(new(SearchOption.Video, previewImage, itemUrl));
                 }
 
-                pageNumber++;
                 await Task.Delay(1000);
             }
 
             return videoItems;
         }
 
+        private static bool LoadDocumentFromUrl(HtmlDocument htmlDocument, WebClient client, string searchPageUrl)
+        {
+            bool reachedEnd;
+            try
+            {
+                var htmlSearchPage = client.DownloadString(searchPageUrl);
+                htmlDocument.LoadHtml(htmlSearchPage);
+                reachedEnd = false;
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("404"))
+                {
+                    reachedEnd = true;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return reachedEnd;
+        }
+
         private async Task<List<SearchItem>> ScrapImages(string requestSearchTerm, int maxNumberOfImageUrls)
         {
-            var htmlDocument = new HtmlAgilityPack.HtmlDocument
+            var htmlDocument = new HtmlDocument
             {
                 OptionFixNestedTags = true
             };
@@ -179,7 +203,7 @@ namespace Aurora.Infrastructure.Scrapers
         {
             List<SearchItem> gifItems = new();
 
-            var htmlDocument = new HtmlAgilityPack.HtmlDocument
+            var htmlDocument = new HtmlDocument
             {
                 OptionFixNestedTags = true
             };
@@ -200,33 +224,33 @@ namespace Aurora.Infrastructure.Scrapers
                 var searchTermUrlFormatted = FormatTermToUrl(searchTerm);
                 var searchPageUrl = $"{_baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
                 await _clientProvider.SetDefaultUserString(client);
-                var htmlSearchPage = client.DownloadString(searchPageUrl);
-                htmlDocument.LoadHtml(htmlSearchPage);
-
+                bool isEnd = LoadDocumentFromUrl(htmlDocument, client, searchPageUrl);
+                if (isEnd)
+                {
+                    break;
+                }
                 var bodyNode = htmlDocument.DocumentNode
                     ?.SelectSingleNode("//body");
                 var gifLinksNodes = bodyNode
                     ?.SelectNodes("//li[contains(@class, 'gifVideoBlock')]");
 
-                if (gifLinksNodes is null || currentPageNumber == PAGE_NUMBER_LIMIT)
+                if (gifLinksNodes is not null)
                 {
-                    break;
-                }
-
-                foreach (var gifLinkNode in gifLinksNodes)
-                {
-                    var currentLinkGifNode = gifLinkNode.ChildNodes
-                        .FirstOrDefault(n => n.Name == "a");
-
-                    if (currentLinkGifNode is not null)
+                    foreach (var gifLinkNode in gifLinksNodes)
                     {
-                        var currentLinkImageAttributes = currentLinkGifNode.Attributes;
-                        string imagePreviewUrl = $"{_baseUrl}{currentLinkImageAttributes["href"].Value}";
-                        string searchItemUrl = $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
-                        gifItems.Add(new(SearchOption.Gif, imagePreviewUrl, searchItemUrl));
-                    }
+                        var currentLinkGifNode = gifLinkNode.ChildNodes
+                            .FirstOrDefault(n => n.Name == "a");
 
-                    urlsCount++;
+                        if (currentLinkGifNode is not null)
+                        {
+                            var currentLinkImageAttributes = currentLinkGifNode.Attributes;
+                            string imagePreviewUrl = $"{_baseUrl}{currentLinkImageAttributes["href"].Value}";
+                            string searchItemUrl = $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
+                            gifItems.Add(new(SearchOption.Gif, imagePreviewUrl, searchItemUrl));
+                        }
+
+                        urlsCount++;
+                    }
                 }
 
                 await Task.Delay(1000);
