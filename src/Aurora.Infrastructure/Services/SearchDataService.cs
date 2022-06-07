@@ -1,4 +1,5 @@
-﻿using Aurora.Application.Contracts;
+﻿using Aurora.Application.Commands;
+using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
 using Aurora.Application.Enums;
 using Aurora.Application.Models;
@@ -63,7 +64,9 @@ namespace Aurora.Infrastructure.Services
         private async Task<List<SearchRequest>> GetExistingFor(SearchRequestDto request)
         {
             return await _context.Request
-                            .Where(x => request.SearchOptions.Contains(x.ContentOption) && request.Websites.Contains(x.Website))
+                            .Where(x => request.SearchOptions.Contains(x.ContentOption)
+                                && request.Websites.Contains(x.Website)
+                                && request.SearchTerm == x.SearchTerm)
                             .ToListAsync();
         }
 
@@ -89,7 +92,19 @@ namespace Aurora.Infrastructure.Services
                         var hasOptionsToIdRequestId = optionsToId.TryGetValue((website, option), out var requestId);
 
                         if (hasOptionsToIdRequestId == false)
-                            break;
+                        {
+                            var newRequest = new SearchRequest()
+                            {
+                                SearchTerm = request.SearchTerm,
+                                ContentOption = option,
+                                OccurredCount = 0,
+                                Website = website
+                            };
+                            await _context.Request.AddAsync(newRequest);
+                            //id is set by ef
+                            requestId = newRequest.Id;
+                            optionsToId[(website, option)] = requestId;
+                        }
 
                         var searchResult = new SearchResult()
                         {
@@ -111,16 +126,30 @@ namespace Aurora.Infrastructure.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<SearchResultDto>> GetResults(SearchRequestDto request)
+        public async Task<SearchResults> GetResults(SearchRequestDto request, PagingOptions? paging)
         {
-            var storedResults = await _context.Result
+            var filteredResults = _context.Result
                 .Include(x => x.Request)
-                .Where(x => request.SearchTerm == request.SearchTerm
+                .Where(x => request.SearchTerm == x.Request.SearchTerm
                     && request.SearchOptions.Contains(x.Request.ContentOption)
-                    && request.Websites.Contains(x.Request.Website))
+                    && request.Websites.Contains(x.Request.Website));
+            var query = filteredResults;
+            if (paging is not null)
+            {
+                var toSkip = paging.PageSize * paging.PageNumber;
+                query = query
+                    .OrderBy(x => x.Id)
+                    .Skip(toSkip)
+                    .Take(paging.PageSize);
+            }
+            var storedResults = await query
                 .ToListAsync();
 
-            return Convert(storedResults);
+            var results = Convert(storedResults);
+            var count = await filteredResults.CountAsync();
+            var websites = await filteredResults.Select(x => x.Request.Website)
+                                                .ToListAsync();
+            return new SearchResults(results, count, websites);
         }
 
         private static List<SearchResultDto> Convert(List<SearchResult> results)

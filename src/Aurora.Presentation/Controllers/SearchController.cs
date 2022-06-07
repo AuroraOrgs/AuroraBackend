@@ -22,18 +22,22 @@ namespace Aurora.Presentation.Controllers
         }
 
         [HttpPost("search")]
-        public async Task<IActionResult> Search([FromBody] SearchRequestDto searchRequest, CancellationToken token)
+        public async Task<IActionResult> Search(
+            [FromBody] SearchRequestDto searchRequest,
+            [FromQuery] int? pageNumber,
+            [FromQuery] int? pageSize,
+            CancellationToken token)
         {
             SearchCommand command;
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (idClaim is not null)
             {
                 var id = idClaim.Value;
-                command = new SearchCommand(searchRequest, id);
+                command = new SearchCommand(searchRequest, pageNumber, pageSize, id);
             }
             else
             {
-                command = new SearchCommand(searchRequest, null!);
+                command = new SearchCommand(searchRequest, pageNumber, pageSize, null!);
             }
             var result = await _mediator.Send(command, token);
             return Ok(result);
