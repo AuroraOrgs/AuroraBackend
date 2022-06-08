@@ -1,5 +1,4 @@
 ﻿using Aurora.Application.Contracts;
-using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using MediatR;
 using System;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Aurora.Application.Commands
 {
-    public class SearchCommandHandler : IRequestHandler<SearchCommand, List<SearchResultDto>>
+    public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommandResult>
     {
         private readonly ISearchDataService _search;
         private readonly IQueueProvider _queue;
@@ -21,15 +20,16 @@ namespace Aurora.Application.Commands
             _queue = queue;
         }
 
-        public async Task<List<SearchResultDto>> Handle(SearchCommand requestWrapper, CancellationToken cancellationToken)
+        public async Task<SearchCommandResult> Handle(SearchCommand requestWrapper, CancellationToken cancellationToken)
         {
             var request = requestWrapper.SearchRequest;
             await _search.StoreRequest(request);
-            var results = await _search.GetResults(request);
-            var storedWebsites = results.Select(x => x.Website).ToList();
+            var result = await _search.GetResults(request, requestWrapper.Paging);
             List<SupportedWebsite> notCachedWebsites = request.Websites
-                .Except(storedWebsites)
+                .Except(result.ProcessedWebsites)
                 .ToList();
+
+            var resultItems = result.Results;
 
             if (notCachedWebsites.Count > 0)
             {
@@ -54,11 +54,11 @@ namespace Aurora.Application.Commands
 
                 foreach (var webSite in notCachedWebsites)
                 {
-                    results.Add(new SearchResultDto(webSite));
+                    resultItems.Add(new SearchResultDto(webSite));
                 }
             }
 
-            return results;
+            return new SearchCommandResult(resultItems, result.TotalItems);
         }
     }
 }

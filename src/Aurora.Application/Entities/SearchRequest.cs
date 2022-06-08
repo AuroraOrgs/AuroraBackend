@@ -1,5 +1,4 @@
-﻿using Aurora.Application.Enums;
-using Aurora.Application.Models;
+﻿using Aurora.Application.Models;
 using System;
 using System.ComponentModel.DataAnnotations;
 

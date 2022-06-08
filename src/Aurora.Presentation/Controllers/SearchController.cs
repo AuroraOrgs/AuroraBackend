@@ -5,8 +5,7 @@ using System.Threading;
 using Aurora.Application.Commands;
 using MediatR;
 using System.Security.Claims;
-using System;
-using Aurora.Application.Enums;
+using Aurora.Shared.Extensions;
 
 namespace Aurora.Presentation.Controllers
 {
@@ -22,18 +21,22 @@ namespace Aurora.Presentation.Controllers
         }
 
         [HttpPost("search")]
-        public async Task<IActionResult> Search([FromBody] SearchRequestDto searchRequest, CancellationToken token)
+        public async Task<IActionResult> Search(
+            [FromBody] SearchRequestDto searchRequest,
+            [FromQuery] int? pageNumber,
+            [FromQuery] int? pageSize,
+            CancellationToken token)
         {
             SearchCommand command;
             var idClaim = User.FindFirst(ClaimTypes.NameIdentifier);
             if (idClaim is not null)
             {
                 var id = idClaim.Value;
-                command = new SearchCommand(searchRequest, id);
+                command = new SearchCommand(searchRequest, pageNumber, pageSize, id);
             }
             else
             {
-                command = new SearchCommand(searchRequest, null!);
+                command = new SearchCommand(searchRequest, pageNumber, pageSize, null);
             }
             var result = await _mediator.Send(command, token);
             return Ok(result);
@@ -42,7 +45,13 @@ namespace Aurora.Presentation.Controllers
         [HttpGet("supported-websites")]
         public IActionResult SupportedWebsites()
         {
-            return Ok(Enum.GetNames(typeof(SupportedWebsite)));
+            return Ok(EnumHelper.EnumValueToName<SupportedWebsite>());
+        }
+
+        [HttpGet("supported-content-types")]
+        public IActionResult SupportedContentTypes()
+        {
+            return Ok(EnumHelper.EnumValueToName<SearchOption>());
         }
     }
 }

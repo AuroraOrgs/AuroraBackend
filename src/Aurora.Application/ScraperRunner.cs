@@ -58,7 +58,7 @@ namespace Aurora.Application
                     RequestProcessed?.Invoke(this, value);
                 }, errorMessage =>
                 {
-                    _logger.LogWarning(errorMessage);
+                    _logger.LogWarning("Failed to scrap using '{0}' with message '{1}'", scrapper.GetType().Name, errorMessage);
                 });
             }
             finally
