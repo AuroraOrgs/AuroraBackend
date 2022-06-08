@@ -5,9 +5,7 @@ using System.Threading;
 using Aurora.Application.Commands;
 using MediatR;
 using System.Security.Claims;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Aurora.Shared.Extensions;
 
 namespace Aurora.Presentation.Controllers
 {
@@ -38,7 +36,7 @@ namespace Aurora.Presentation.Controllers
             }
             else
             {
-                command = new SearchCommand(searchRequest, pageNumber, pageSize, null!);
+                command = new SearchCommand(searchRequest, pageNumber, pageSize, null);
             }
             var result = await _mediator.Send(command, token);
             return Ok(result);
@@ -47,19 +45,13 @@ namespace Aurora.Presentation.Controllers
         [HttpGet("supported-websites")]
         public IActionResult SupportedWebsites()
         {
-            return Ok(EnumValueToName<SupportedWebsite>());
+            return Ok(EnumHelper.EnumValueToName<SupportedWebsite>());
         }
 
         [HttpGet("supported-content-types")]
         public IActionResult SupportedContentTypes()
         {
-            return Ok(EnumValueToName<SearchOption>());
-        }
-
-        private Dictionary<int, string> EnumValueToName<T>() where T : struct, Enum
-        {
-            var vals = Enum.GetValues<T>();
-            return vals.ToDictionary(x => Int32.Parse(x.ToString("D")), y => y.ToString());
+            return Ok(EnumHelper.EnumValueToName<SearchOption>());
         }
     }
 }

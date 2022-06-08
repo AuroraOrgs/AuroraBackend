@@ -16,6 +16,4 @@ namespace Aurora.Application.Contracts
         Task StoreRequest(SearchRequestDto request);
         Task AddOrUpdateResults(SearchRequestDto request, IEnumerable<SearchResultDto> results);
     }
-
-    public record SearchResults(List<SearchResultDto> Results, long TotalItems, List<SupportedWebsite> ProcessedWebsites);
 }

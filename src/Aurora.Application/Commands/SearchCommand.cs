@@ -1,6 +1,5 @@
 ﻿using Aurora.Application.Models;
 using MediatR;
-using System.Collections.Generic;
 
 namespace Aurora.Application.Commands
 {
@@ -14,7 +13,7 @@ namespace Aurora.Application.Commands
             };
         }
 
-        public SearchCommand(SearchRequestDto searchRequest, int? pageNumber, int? pageSize, string userId)
+        public SearchCommand(SearchRequestDto searchRequest, int? pageNumber, int? pageSize, string? userId)
         {
             SearchRequest = searchRequest;
             if (pageNumber is null && pageSize is null)
@@ -34,7 +33,7 @@ namespace Aurora.Application.Commands
                         pageSize = 25;
                     }
                 }
-                Paging = new PagingOptions(pageNumber.Value!, pageSize.Value!);
+                Paging = new PagingOptions(pageNumber.Value!, pageSize!.Value);
             }
             UserId = userId;
         }
@@ -43,7 +42,4 @@ namespace Aurora.Application.Commands
         public PagingOptions? Paging { get; set; }
         public string? UserId { get; }
     }
-
-    public record PagingOptions(int PageNumber, int PageSize);
-    public record SearchCommandResult(List<SearchResultDto> Results, long ItemsCount);
 }
