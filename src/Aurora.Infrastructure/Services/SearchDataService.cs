@@ -158,6 +158,7 @@ namespace Aurora.Infrastructure.Services
             var results = Convert(storedResults);
             var count = await filteredResults.CountAsync();
             var websites = await filteredResults.Select(x => x.Request.Website)
+                                                .Distinct()
                                                 .ToListAsync();
             _logger.LogRequest(request, $"Loaded '{storedResults.Count}' existing results");
             return new SearchResults(results, count, websites);
