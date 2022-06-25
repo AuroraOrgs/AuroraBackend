@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Aurora.Application.Enums;
 using Aurora.Application.Models;
 using Aurora.Infrastructure.Contracts;
 using Aurora.Shared.Models;

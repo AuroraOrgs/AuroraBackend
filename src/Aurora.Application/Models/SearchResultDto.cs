@@ -1,5 +1,4 @@
-﻿using Aurora.Application.Enums;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace Aurora.Application.Models
 {
