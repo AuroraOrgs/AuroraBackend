@@ -1,26 +1,25 @@
 cd ..
 cd ..
 cd /src
+# docker hub username
 set USERNAME=yaroslavholota
+# image name
 set IMAGE=aurora
+# ensure we're up to date
 git pull
-::Load current location
-for /f %%A in ('cd') do set "pwd=%%A"
-::Bump version
-docker run --rm -v "%PWD%":/app treeder/bump patch
-::Get version
-for /f %%B in ('type VERSION') do set "version=%%B"
-echo version: %version%
-::Build container
-../scripts/Docker/build.cmd
-::Commit
+# bump version
+docker run --rm -v "$PWD":/app treeder/bump patch
+version=`cat VERSION`
+echo "version: $version"
+# run build
+./build.sh
+# tag it
 git add -A
-git commit -m "version %version%"
-git tag -a "%version%" -m "version %version%"
+git commit -m "version $version"
+git tag -a "$version" -m "version $version"
 git push
 git push --tags
-::Tag
-docker tag %USERNAME%/%IMAGE%:latest %USERNAME%/%IMAGE%:%version%
-::Push
-docker push %USERNAME%/%IMAGE%:latest
-docker push %USERNAME%/%IMAGE%:%version%
+docker tag $USERNAME/$IMAGE:latest $USERNAME/$IMAGE:$version
+# push it
+docker push $USERNAME/$IMAGE:latest
+docker push $USERNAME/$IMAGE:$version
