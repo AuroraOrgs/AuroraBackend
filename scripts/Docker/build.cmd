@@ -1,5 +1,5 @@
+# docker hub username
 set USERNAME=yaroslavholota
+# image name
 set IMAGE=aurora
-cd src
 docker build -t %USERNAME%/%IMAGE%:latest .
-cd ..
