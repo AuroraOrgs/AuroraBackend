@@ -1,3 +1,4 @@
+::Go to root
 cd ..
 cd ..
 cd /src
@@ -6,10 +7,9 @@ set IMAGE=aurora
 git pull
 ::Load current location
 for /f %%A in ('cd') do set "pwd=%%A"
-::Bump version
-docker run --rm -v "%PWD%":/app treeder/bump patch
+::TODO: Add auto-bump mechanism
 ::Get version
-for /f %%B in ('type VERSION') do set "version=%%B"
+for /f %%B in ('type version') do set "version=%%B"
 echo version: %version%
 ::Build container
 ../scripts/Docker/build.cmd
@@ -24,3 +24,5 @@ docker tag %USERNAME%/%IMAGE%:latest %USERNAME%/%IMAGE%:%version%
 ::Push
 docker push %USERNAME%/%IMAGE%:latest
 docker push %USERNAME%/%IMAGE%:%version%
+::Go back
+cd /scripts/Docker
