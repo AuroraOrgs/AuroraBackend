@@ -12,7 +12,7 @@ for /f %%A in ('cd') do set "pwd=%%A"
 for /f %%B in ('type version') do set "version=%%B"
 echo version: %version%
 ::Build container
-cmd /c ./scripts/Docker/build.cmd
+cmd /c "cd scripts && cd Docker && build.cmd"
 ::Commit
 git add -A
 git commit -m "version %version%"
