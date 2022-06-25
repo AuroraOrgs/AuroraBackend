@@ -1,8 +1,10 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
 using Aurora.Application.Enums;
+using Aurora.Application.Extensions;
 using Aurora.Application.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +15,12 @@ namespace Aurora.Infrastructure.Services
     public class SearchDataService : ISearchDataService
     {
         private readonly SearchContext _context;
+        private readonly ILogger<SearchDataService> _logger;
 
-        public SearchDataService(SearchContext context)
+        public SearchDataService(SearchContext context, ILogger<SearchDataService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task StoreRequest(SearchRequestDto request)
@@ -38,6 +42,9 @@ namespace Aurora.Infrastructure.Services
                             Website = webSite
                         };
                         newRequests.Add(newRequest);
+                        _logger.LogInformation(
+                            "Creating request with '{0}' option, '{1}' website and '{2} term'",
+                            option, webSite, request.SearchTerm);
                     }
                 }
             }
@@ -119,6 +126,8 @@ namespace Aurora.Infrastructure.Services
                     && request.SearchOptions.Contains(x.Request.ContentOption)
                     && request.Websites.Contains(x.Request.Website))
                 .ToListAsync();
+
+            _logger.LogRequest(request, $"Loaded '{storedResults.Count}' existing results");
 
             return Convert(storedResults);
         }

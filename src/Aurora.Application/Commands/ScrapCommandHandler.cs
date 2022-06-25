@@ -1,5 +1,10 @@
 ﻿using Aurora.Application.Contracts;
+using Aurora.Application.Extensions;
+using Aurora.Application.Models;
 using MediatR;
+using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,12 +15,18 @@ namespace Aurora.Application.Commands
         private readonly IScraperRunner _scraperRunner;
         private readonly ISearchDataService _search;
         private readonly INotificator _notificator;
+        private readonly ILogger<ScrapCommandHandler> _logger;
 
-        public ScrapCommandHandler(IScraperRunner scraperRunner, ISearchDataService search, INotificator notificator)
+        public ScrapCommandHandler(
+            IScraperRunner scraperRunner,
+            ISearchDataService search,
+            INotificator notificator,
+            ILogger<ScrapCommandHandler> logger)
         {
             _scraperRunner = scraperRunner;
             _search = search;
             _notificator = notificator;
+            _logger = logger;
         }
 
         public async Task<Unit> Handle(ScrapCommand requestWrapper, CancellationToken cancellationToken)
@@ -24,14 +35,23 @@ namespace Aurora.Application.Commands
             var userId = requestWrapper.UserId;
             if (userId is not null)
             {
+                _logger.LogRequest(requestWrapper.SearchRequest, $"Notifying {userId}");
                 _scraperRunner.RequestProcessed += (_, req) =>
                 {
                     _notificator.NotifyAboutScrapFinishing(userId, req);
                 };
             }
             var results = await _scraperRunner.Run(request, cancellationToken);
+            _logger.LogRequest(request, $"Got '{results.Count}' results with '{GetProcessedCount(results)}' total count of items");
             await _search.AddOrUpdateResults(request, results);
             return Unit.Value;
+        }
+
+        private static long GetProcessedCount(List<SearchResultDto> results)
+        {
+            return results.Where(x => x.BeenQueued == false)
+                          .SelectMany(x => x.Items)
+                          .LongCount();
         }
     }
 }
