@@ -36,7 +36,7 @@ namespace Aurora.Application.Commands
             List<SupportedWebsite> notCachedWebsites = request.Websites
                 .Except(result.ProcessedWebsites)
                 .ToList();
-            log($"Found '{storedWebsites.CommaSeparate()}' already processed");
+            log($"Found '{result.ProcessedWebsites.CommaSeparate()}' already processed");
             log($"Found '{notCachedWebsites.CommaSeparate()}' not processed");
 
             var resultItems = result.Results;

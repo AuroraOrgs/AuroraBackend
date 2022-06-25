@@ -1,5 +1,4 @@
-﻿using Aurora.Application.Commands;
-using Aurora.Application.Contracts;
+﻿using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
 using Aurora.Application.Extensions;
 using Aurora.Application.Models;
