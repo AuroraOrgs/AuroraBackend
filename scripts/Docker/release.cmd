@@ -1,12 +1,10 @@
-set -ex
-
 cd ..
 cd ..
 cd /src
 # docker hub username
-USERNAME=yaroslavholota
+set USERNAME=yaroslavholota
 # image name
-IMAGE=aurora
+set IMAGE=aurora
 # ensure we're up to date
 git pull
 # bump version
