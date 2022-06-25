@@ -105,6 +105,7 @@ namespace Aurora.Infrastructure.Services
                                 OccurredCount = 0,
                                 Website = website
                             };
+                            _logger.LogRequest(newRequest, "Creating new option ");
                             await _context.Request.AddAsync(newRequest);
                             //id is set by ef
                             requestId = newRequest.Id;
@@ -122,11 +123,15 @@ namespace Aurora.Infrastructure.Services
                 }
             }
             var existingIds = optionsToId.Values;
-            await _context.Result
+
+            _logger.LogInformation("Removing statle search results");
+            var removedRows = await _context.Result
                 .Where(x => existingIds.Contains(x.RequestId))
                 .DeleteFromQueryAsync();
+            _logger.LogInformation("Removed '{0}' rows of stale search results", removedRows);
             await _context.Result
                 .AddRangeAsync(searchResults);
+            _logger.LogInformation("Stored '{0}' rows of new search results", searchResults.Count);
 
             await _context.SaveChangesAsync();
         }
