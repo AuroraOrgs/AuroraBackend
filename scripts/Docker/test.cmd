@@ -1,0 +1,1 @@
+for /f %%A in ('cd') do set "pwd=%%A"
