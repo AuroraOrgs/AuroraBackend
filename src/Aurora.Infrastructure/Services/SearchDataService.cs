@@ -1,8 +1,9 @@
-﻿using Aurora.Application.Commands;
-using Aurora.Application.Contracts;
+﻿using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
+using Aurora.Application.Extensions;
 using Aurora.Application.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,10 +14,12 @@ namespace Aurora.Infrastructure.Services
     public class SearchDataService : ISearchDataService
     {
         private readonly SearchContext _context;
+        private readonly ILogger<SearchDataService> _logger;
 
-        public SearchDataService(SearchContext context)
+        public SearchDataService(SearchContext context, ILogger<SearchDataService> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task StoreRequest(SearchRequestDto request)
@@ -38,6 +41,9 @@ namespace Aurora.Infrastructure.Services
                             Website = webSite
                         };
                         newRequests.Add(newRequest);
+                        _logger.LogInformation(
+                            "Creating request with '{0}' option, '{1}' website and '{2} term'",
+                            option, webSite, request.SearchTerm);
                     }
                 }
             }
@@ -99,6 +105,7 @@ namespace Aurora.Infrastructure.Services
                                 OccurredCount = 0,
                                 Website = website
                             };
+                            _logger.LogRequest(newRequest, "Creating new option ");
                             await _context.Request.AddAsync(newRequest);
                             //id is set by ef
                             requestId = newRequest.Id;
@@ -116,11 +123,15 @@ namespace Aurora.Infrastructure.Services
                 }
             }
             var existingIds = optionsToId.Values;
-            await _context.Result
+
+            _logger.LogInformation("Removing statle search results");
+            var removedRows = await _context.Result
                 .Where(x => existingIds.Contains(x.RequestId))
                 .DeleteFromQueryAsync();
+            _logger.LogInformation("Removed '{0}' rows of stale search results", removedRows);
             await _context.Result
                 .AddRangeAsync(searchResults);
+            _logger.LogInformation("Stored '{0}' rows of new search results", searchResults.Count);
 
             await _context.SaveChangesAsync();
         }
@@ -147,7 +158,9 @@ namespace Aurora.Infrastructure.Services
             var results = Convert(storedResults);
             var count = await filteredResults.CountAsync();
             var websites = await filteredResults.Select(x => x.Request.Website)
+                                                .Distinct()
                                                 .ToListAsync();
+            _logger.LogRequest(request, $"Loaded '{storedResults.Count}' existing results");
             return new SearchResults(results, count, websites);
         }
 

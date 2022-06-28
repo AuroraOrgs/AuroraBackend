@@ -1,0 +1,13 @@
+﻿version: "3.9"
+services:
+    db:
+        image: "mcr.microsoft.com/mssql/server"
+        environment:
+            SA_PASSWORD: "password1!"
+            ACCEPT_EULA: "Y"
+        ports:
+            - "1434:1433"
+    selenium:
+        image: "selenium/standalone-firefox:4.2.2"
+        ports:
+            - "4444:4444"
