@@ -23,6 +23,7 @@ namespace Aurora.Infrastructure
             services.AddScoped<DriverInitializer>();
             services.AddScoped<ISearchDataService, SearchDataService>();
             services.AddScoped<IQueueProvider, QueueProvider>();
+            services.AddScoped<IDateTimeProvider, SystemClockDateTimeProvider>();
             services.AddDistributedMemoryCache();
             services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));
             services.AddSignalR();
