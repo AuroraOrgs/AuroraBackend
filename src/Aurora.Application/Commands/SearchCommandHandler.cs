@@ -31,45 +31,66 @@ namespace Aurora.Application.Commands
             Action<string> log = (prefix) => _logger.LogRequest(request, prefix);
             log("Received request");
 
-            await _search.StoreRequest(request);
-            var result = await _search.GetResults(request, requestWrapper.Paging);
-            List<SupportedWebsite> notCachedWebsites = request.Websites
-                .Except(result.ProcessedWebsites)
-                .ToList();
-            log($"Found '{result.ProcessedWebsites.CommaSeparate()}' already processed");
-            log($"Found '{notCachedWebsites.CommaSeparate()}' not processed");
+            var storedRequest = await _search.FetchRequest(request, true);
+            var websiteStatus = storedRequest.StoredRequests.GroupBy(x => x.Value.RequestStatus)
+                                                               .ToDictionary(x => x.Key, x => x.Select(y => y.Key.Item1).Distinct());
+            var queuedWebsites = websiteStatus.GetOrDefault(SearchRequestStatus.Queued, Enumerable.Empty<SupportedWebsite>());
+            var notFetchedWebsites = websiteStatus.GetOrDefault(SearchRequestStatus.NotFetched, Enumerable.Empty<SupportedWebsite>());
+            var fetchedWebsites = websiteStatus.GetOrDefault(SearchRequestStatus.Fetched, Enumerable.Empty<SupportedWebsite>());
+            log($"Found '{fetchedWebsites.CommaSeparate()}' already processed");
+            log($"Found '{notFetchedWebsites.CommaSeparate()}' not fetched");
+            log($"Found '{queuedWebsites.CommaSeparate()}' queued");
 
-            var resultItems = result.Results;
-
-            if (notCachedWebsites.Count > 0)
+            SearchResults result;
+            if (fetchedWebsites.Any())
             {
-                var childRequest = new SearchRequestDto
-                {
-                    SearchTerm = request.SearchTerm,
-                    SearchOptions = new List<SearchOption>()
-                    {
-                        SearchOption.Image,
-                        SearchOption.Video,
-                        SearchOption.Gif
-                    },
-                    Websites = notCachedWebsites,
-                    //move to config or remove
-                    ResponseItemsMaxCount = 200
-                };
+                result = await _search.GetResults(storedRequest, requestWrapper.Paging);
+            }
+            else
+            {
+                result = new SearchResults(new List<SearchResultDto>(), 0);
+            }
 
-                string websites = String.Join(", ", notCachedWebsites.Select(x => x.ToString()));
-                _queue.Enqueue(
-                    $"Scrapping {websites} for {request.SearchTerm}",
-                    new ScrapCommand(childRequest, requestWrapper.UserId));
+            if (notFetchedWebsites.Any())
+            {
+                await QueueWebsites(requestWrapper.UserId, request.SearchTerm, notFetchedWebsites);
+            }
 
-                foreach (var webSite in notCachedWebsites)
-                {
-                    resultItems.Add(new SearchResultDto(webSite));
-                }
+            var nonCachedWebsites = queuedWebsites.Union(notFetchedWebsites);
+            var resultItems = result.Results;
+            foreach (var website in nonCachedWebsites)
+            {
+                resultItems.Add(new SearchResultDto(website));
             }
 
             log($"Finished processing in {GetType().Name}");
             return new SearchCommandResult(resultItems, result.TotalItems);
+        }
+
+        private static List<SearchOption> AllOptions = new List<SearchOption>()
+                    {
+                        SearchOption.Image,
+                        SearchOption.Video,
+                        SearchOption.Gif
+                    };
+
+        private async Task QueueWebsites(string? userId, string searchTerm, IEnumerable<SupportedWebsite> notFetchedWebsites)
+        {
+            var childRequest = new SearchRequestDto
+            {
+                SearchTerm = searchTerm,
+                SearchOptions = AllOptions,
+                Websites = notFetchedWebsites.ToList(),
+                //move to config or remove
+                ResponseItemsMaxCount = 200
+            };
+
+            string websites = String.Join(", ", notFetchedWebsites.Select(x => x.ToString()));
+            var newState = await _search.FetchRequest(childRequest, false);
+            _queue.Enqueue(
+                $"Scrapping {websites} for {searchTerm}",
+                new ScrapCommand(childRequest, userId));
+            await _search.MarkAsQueued(newState);
         }
     }
 }

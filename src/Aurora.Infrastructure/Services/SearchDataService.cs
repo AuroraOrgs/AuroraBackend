@@ -1,6 +1,5 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
-using Aurora.Application.Extensions;
 using Aurora.Application.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -8,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Aurora.Shared.Extensions;
 
 namespace Aurora.Infrastructure.Services
 {
@@ -24,147 +24,56 @@ namespace Aurora.Infrastructure.Services
             _dateTime = dateTime;
         }
 
-        public async Task StoreRequest(SearchRequestDto request)
+        private async Task<IEnumerable<(SearchRequest Request, SearchRequestStatus Status)>> GetExistingFor(SearchRequestDto request)
         {
-            List<SearchRequest> existingRequests = await GetExistingFor(request);
-
-            List<SearchRequest> newRequests = new List<SearchRequest>();
-            foreach (var webSite in request.Websites)
-            {
-                foreach (var option in request.SearchOptions)
-                {
-                    if (SearchOptionNotCreated(existingRequests, webSite, option))
-                    {
-                        var newRequest = new SearchRequest()
-                        {
-                            ContentOption = option,
-                            OccurredCount = 1,
-                            SearchTerm = request.SearchTerm,
-                            Website = webSite
-                        };
-                        newRequests.Add(newRequest);
-                        _logger.LogInformation(
-                            "Creating request with '{0}' option, '{1}' website and '{2} term'",
-                            option, webSite, request.SearchTerm);
-                    }
-                }
-            }
-
-            await _context.Request
-                .AddRangeAsync(newRequests);
-
-            foreach (var existingRequest in existingRequests)
-            {
-                existingRequest.OccurredCount++;
-            }
-
-            _context.Request.UpdateRange(existingRequests);
-
-            await _context.SaveChangesAsync();
-        }
-
-        private static bool SearchOptionNotCreated(List<SearchRequest> existingRequests, SupportedWebsite webSite, SearchOption option)
-        {
-            return existingRequests.Where(x => x.Website == webSite && x.ContentOption == option).Any() == false;
-        }
-
-        private async Task<List<SearchRequest>> GetExistingFor(SearchRequestDto request)
-        {
-            return await _context.Request
+            //TODO: Include only latest queue item
+            var requests = await _context.Request
+                            .Include(x => x.QueueItems)
                             .Where(x => request.SearchOptions.Contains(x.ContentOption)
                                 && request.Websites.Contains(x.Website)
                                 && request.SearchTerm == x.SearchTerm)
                             .ToListAsync();
+
+            return requests.Select(x => (x, GetStatusFor(x)));
         }
 
-        public async Task AddOrUpdateResults(SearchRequestDto request, IEnumerable<SearchResultDto> resultDtos)
+        private SearchRequestStatus GetStatusFor(SearchRequest request)
         {
-            var webSiteToGroupToResult = resultDtos.GroupBy(x => x.Website)
-                .Select(x =>
-                (WebSite: x.Key, x.SelectMany(x => x.Items)
-                                    .GroupBy(x => x.Option)
-                                    .Select(x => (Option: x.Key, Results: x.ToList()))));
-
-            var existing = await GetExistingFor(request);
-
-            var optionsToId = existing.ToDictionary(x => (x.Website, x.ContentOption), x => x.Id);
-
-            var searchResults = new List<SearchResult>();
-            foreach (var (website, optionToResults) in webSiteToGroupToResult)
+            SearchRequestStatus status;
+            if (request.QueueItems.None())
             {
-                foreach (var (option, results) in optionToResults)
+                status = SearchRequestStatus.NotFetched;
+            }
+            else
+            {
+                var orderedItems = request.QueueItems.OrderByDescending(x => x.QueuedTimeUtc);
+                if (orderedItems.Count() > 1)
                 {
-                    foreach (var result in results)
+                    if (orderedItems.Skip(1).First().IsProcessed)
                     {
-                        var hasOptionsToIdRequestId = optionsToId.TryGetValue((website, option), out var requestId);
-
-                        if (hasOptionsToIdRequestId == false)
-                        {
-                            var newRequest = new SearchRequest()
-                            {
-                                SearchTerm = request.SearchTerm,
-                                ContentOption = option,
-                                OccurredCount = 0,
-                                Website = website
-                            };
-                            _logger.LogRequest(newRequest, "Creating new option ");
-                            await _context.Request.AddAsync(newRequest);
-                            //id is set by ef
-                            requestId = newRequest.Id;
-                            optionsToId[(website, option)] = requestId;
-                        }
-
-                        var searchResult = new SearchResult()
-                        {
-                            ImagePreviewUrl = result.ImagePreviewUrl,
-                            SearchItemUrl = result.SearchItemUrl,
-                            RequestId = requestId,
-                            FoundTimeUtc = _dateTime.UtcNow
-                        };
-                        searchResults.Add(searchResult);
+                        status = SearchRequestStatus.Fetched;
+                    }
+                    else
+                    {
+                        //Should not be possible, but we better be safe
+                        status = SearchRequestStatus.Queued;
+                        _logger.LogInformation("Found two non-processed queue items for {requestId}", request.Id);
+                    }
+                }
+                else
+                {
+                    var latestQueueItem = orderedItems.First();
+                    if (latestQueueItem.IsProcessed)
+                    {
+                        status = SearchRequestStatus.Fetched;
+                    }
+                    else
+                    {
+                        status = SearchRequestStatus.Queued;
                     }
                 }
             }
-            var existingIds = optionsToId.Values;
-
-            _logger.LogInformation("Removing statle search results");
-            var removedRows = await _context.Result
-                .Where(x => existingIds.Contains(x.RequestId))
-                .DeleteFromQueryAsync();
-            _logger.LogInformation("Removed '{0}' rows of stale search results", removedRows);
-            await _context.Result
-                .AddRangeAsync(searchResults);
-            _logger.LogInformation("Stored '{0}' rows of new search results", searchResults.Count);
-
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task<SearchResults> GetResults(SearchRequestDto request, PagingOptions? paging)
-        {
-            var filteredResults = _context.Result
-                .Include(x => x.Request)
-                .Where(x => request.SearchTerm == x.Request.SearchTerm
-                    && request.SearchOptions.Contains(x.Request.ContentOption)
-                    && request.Websites.Contains(x.Request.Website));
-            var query = filteredResults;
-            if (paging is not null)
-            {
-                var toSkip = paging.PageSize * paging.PageNumber;
-                query = query
-                    .OrderBy(x => x.Id)
-                    .Skip(toSkip)
-                    .Take(paging.PageSize);
-            }
-            var storedResults = await query
-                .ToListAsync();
-
-            var results = Convert(storedResults);
-            var count = await filteredResults.CountAsync();
-            var websites = await filteredResults.Select(x => x.Request.Website)
-                                                .Distinct()
-                                                .ToListAsync();
-            _logger.LogRequest(request, $"Loaded '{storedResults.Count}' existing results");
-            return new SearchResults(results, count, websites);
+            return status;
         }
 
         private static List<SearchResultDto> Convert(List<SearchResult> results)
@@ -179,6 +88,137 @@ namespace Aurora.Infrastructure.Services
             return results
                 .Select(result => new SearchItem(result.Request.ContentOption, result.SearchItemUrl, result.ImagePreviewUrl))
                 .ToList();
+        }
+
+        public async Task<SearchRequestState> FetchRequest(SearchRequestDto request, bool isUserGenerated)
+        {
+            var existingRequestsWithStatus = await GetExistingFor(request);
+            var existingRequests = existingRequestsWithStatus.Select(x => x.Request);
+
+            var existingOptions = existingRequests.Select(x => (x.Website, x.ContentOption));
+            List<(SupportedWebsite website, SearchOption option)> requestedOptions = new List<(SupportedWebsite, SearchOption)>();
+            foreach (var website in request.Websites)
+            {
+                foreach (var option in request.SearchOptions)
+                {
+                    requestedOptions.Add((website, option));
+                }
+            }
+            var newOptions = requestedOptions.Where(x => existingOptions.NotContains(x));
+
+            var newRequests = newOptions.Select(newOption =>
+            {
+                var newRequest = new SearchRequest()
+                {
+                    ContentOption = newOption.option,
+                    OccurredCount = 1,
+                    SearchTerm = request.SearchTerm,
+                    Website = newOption.website
+                };
+                _logger.LogInformation(
+                    "Creating request with '{0}' option, '{1}' website and '{2} term'",
+                    newOption.option, newOption.website, request.SearchTerm);
+                return newRequest;
+            });
+
+            await _context.Request
+                .AddRangeAsync(newRequests);
+            if (isUserGenerated)
+            {
+                foreach (var existingRequest in existingRequests)
+                {
+                    existingRequest.OccurredCount++;
+                }
+            }
+           
+            _context.Request.UpdateRange(existingRequests);
+
+            await _context.SaveChangesAsync();
+
+            var allRequests = existingRequestsWithStatus.Union(newRequests.Select(x => (x, SearchRequestStatus.NotFetched)));
+            var result = allRequests.ToDictionary(key => (key.Item1.Website, key.Item1.ContentOption), value => (value.Item1.Id, value.Item2));
+            return new SearchRequestState(result);
+        }
+
+        public async Task<SearchResults> GetResults(SearchRequestState state, PagingOptions paging)
+        {
+            var idsToLoad = state.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.Fetched).Select(x => x.RequestId);
+            SearchResults result;
+            if (idsToLoad.Any())
+            {
+                var filteredResults = _context.Result.Include(x => x.Request)
+                                                     .Where(x => idsToLoad.Contains(x.RequestId));
+                var query = filteredResults;
+                if (paging is not null)
+                {
+                    var toSkip = paging.PageSize * paging.PageNumber;
+                    query = query
+                        .OrderBy(x => x.Id)
+                        .Skip(toSkip)
+                        .Take(paging.PageSize);
+                }
+                var storedResults = await query
+                    .ToListAsync();
+
+                var results = Convert(storedResults);
+                var count = await filteredResults.CountAsync();
+                _logger.LogInformation("Loaded '{resultsCount}' out of total of '{existingCount}'  existing results for requests '[{ids}]'", results.Count, count, idsToLoad.CommaSeparate());
+                result = new SearchResults(results, count);
+            }
+            else
+            {
+                result = new SearchResults(new List<SearchResultDto>(), 0);
+            }
+            return result;
+        }
+
+        public async Task MarkAsQueued(SearchRequestState request)
+        {
+            var itemsToQueue = request.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.NotFetched).Select(x => x.RequestId);
+            var items = itemsToQueue.Select(x => new SearchRequestQueueItem
+            {
+                IsProcessed = false,
+                QueuedTimeUtc = _dateTime.UtcNow,
+                SearchRequestId = x
+            });
+            await _context.Queue.AddRangeAsync(items);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddOrUpdateResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
+        {
+            var existingIds = state.StoredRequests.Values.Select(x => x.RequestId);
+
+            _logger.LogInformation("Removing stale search results");
+            var removedRows = await _context.Result
+                .Where(x => existingIds.Contains(x.RequestId))
+                .DeleteFromQueryAsync();
+            _logger.LogInformation("Removed '{0}' rows of stale search results", removedRows);
+
+            List<SearchResult> finalResults = results.Select(
+                result => result.Items.Select(item => new SearchResult()
+                {
+                    FoundTimeUtc = _dateTime.UtcNow,
+                    ImagePreviewUrl = item.ImagePreviewUrl,
+                    RequestId = state.StoredRequests[(result.Website, item.Option)].RequestId,
+                    SearchItemUrl = item.SearchItemUrl
+                }
+           )).Flatten().ToList();
+
+            await _context.Queue.Where(x => existingIds.Contains(x.SearchRequestId)).UpdateFromQueryAsync(obj =>
+            new SearchRequestQueueItem()
+            {
+                IsProcessed = true,
+                QueuedTimeUtc = obj.QueuedTimeUtc,
+                QueueId = obj.QueueId,
+                SearchRequestId = obj.SearchRequestId
+            });
+
+            await _context.Result
+                .AddRangeAsync(finalResults);
+            _logger.LogInformation("Stored '{0}' rows of new search results", finalResults.Count);
+
+            await _context.SaveChangesAsync();
         }
     }
 }
