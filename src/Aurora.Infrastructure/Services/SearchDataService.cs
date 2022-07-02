@@ -15,11 +15,13 @@ namespace Aurora.Infrastructure.Services
     {
         private readonly SearchContext _context;
         private readonly ILogger<SearchDataService> _logger;
+        private readonly IDateTimeProvider _dateTime;
 
-        public SearchDataService(SearchContext context, ILogger<SearchDataService> logger)
+        public SearchDataService(SearchContext context, ILogger<SearchDataService> logger, IDateTimeProvider dateTime)
         {
             _context = context;
             _logger = logger;
+            _dateTime = dateTime;
         }
 
         public async Task StoreRequest(SearchRequestDto request)
@@ -116,7 +118,8 @@ namespace Aurora.Infrastructure.Services
                         {
                             ImagePreviewUrl = result.ImagePreviewUrl,
                             SearchItemUrl = result.SearchItemUrl,
-                            RequestId = requestId
+                            RequestId = requestId,
+                            FoundTimeUtc = _dateTime.UtcNow
                         };
                         searchResults.Add(searchResult);
                     }
