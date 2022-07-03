@@ -14,15 +14,15 @@ Prono aggregator
 <h2 id="2">2. How to run</h2>
 <h3>To run complete setup locally: </h3>
 <code>
-docker-compose -f docker-all-local.yml
+docker-compose -f docker-all-local.yml up
 </code>
 <h3>To run all of the infrastructure without the application itself (used to debug the app): </h3>
 <code>
-docker-compose -f docker-local.yml
+docker-compose -f docker-local.yml up
 </code>
 <h3>To run release version using docker hub version of the application (used for deployment): </h3>
 <code>
-docker-compose -f docker-all.yml
+docker-compose -f docker-all.yml up
 </code>
 <h2 id="3">3. Deployment</h2>
 <h3>To deploy the docker container of the application do the following: </h3>

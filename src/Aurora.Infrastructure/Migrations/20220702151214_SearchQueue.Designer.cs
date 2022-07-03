@@ -4,6 +4,7 @@ using Aurora.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Aurora.Infrastructure.Migrations
 {
     [DbContext(typeof(SearchContext))]
-    partial class SearchContextModelSnapshot : ModelSnapshot
+    [Migration("20220702151214_SearchQueue")]
+    partial class SearchQueue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,28 +52,6 @@ namespace Aurora.Infrastructure.Migrations
                     b.ToTable("Request");
                 });
 
-            modelBuilder.Entity("Aurora.Application.Entities.SearchRequestQueueItem", b =>
-                {
-                    b.Property<Guid>("QueueId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsProcessed")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("QueuedTimeUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("SearchRequestId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("QueueId");
-
-                    b.HasIndex("SearchRequestId");
-
-                    b.ToTable("Queue");
-                });
-
             modelBuilder.Entity("Aurora.Application.Entities.SearchResult", b =>
                 {
                     b.Property<Guid>("Id")
@@ -97,17 +77,6 @@ namespace Aurora.Infrastructure.Migrations
                     b.ToTable("Result");
                 });
 
-            modelBuilder.Entity("Aurora.Application.Entities.SearchRequestQueueItem", b =>
-                {
-                    b.HasOne("Aurora.Application.Entities.SearchRequest", "SearchRequest")
-                        .WithMany("QueueItems")
-                        .HasForeignKey("SearchRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SearchRequest");
-                });
-
             modelBuilder.Entity("Aurora.Application.Entities.SearchResult", b =>
                 {
                     b.HasOne("Aurora.Application.Entities.SearchRequest", "Request")
@@ -117,11 +86,6 @@ namespace Aurora.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Request");
-                });
-
-            modelBuilder.Entity("Aurora.Application.Entities.SearchRequest", b =>
-                {
-                    b.Navigation("QueueItems");
                 });
 #pragma warning restore 612, 618
         }

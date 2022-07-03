@@ -1,5 +1,6 @@
 ﻿using Aurora.Application.Models;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Aurora.Application.Entities
@@ -15,5 +16,6 @@ namespace Aurora.Application.Entities
         public SearchOption ContentOption { get; set; }
 
         public int OccurredCount { get; set; }
+        public IEnumerable<SearchRequestQueueItem> QueueItems { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using Aurora.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Aurora.Infrastructure.Migrations
 {
     [DbContext(typeof(SearchContext))]
-    partial class SearchContextModelSnapshot : ModelSnapshot
+    [Migration("20220702152701_QueueHistory")]
+    partial class QueueHistory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,7 +71,7 @@ namespace Aurora.Infrastructure.Migrations
 
                     b.HasIndex("SearchRequestId");
 
-                    b.ToTable("Queue");
+                    b.ToTable("SearchRequestQueueItem");
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchResult", b =>

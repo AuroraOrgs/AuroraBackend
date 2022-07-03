@@ -43,7 +43,8 @@ namespace Aurora.Application.Commands
             }
             var results = await _scraperRunner.Run(request, cancellationToken);
             _logger.LogRequest(request, $"Got '{results.Count}' results with '{GetProcessedCount(results)}' total count of items");
-            await _search.AddOrUpdateResults(request, results);
+            var requestStored = await _search.FetchRequest(request, false);
+            await _search.AddOrUpdateResults(requestStored, results);
             return Unit.Value;
         }
 
