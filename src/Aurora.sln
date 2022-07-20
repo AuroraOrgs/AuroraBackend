@@ -9,7 +9,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Infrastructure", "Au
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Presentation", "Aurora.Presentation\Aurora.Presentation.csproj", "{3DDFC0B3-A148-4779-B790-22F7AE7EE138}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Shared", "Aurora.Shared\Aurora.Shared.csproj", "{921C6F4A-2799-4575-A334-8222A6BBE9E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Shared", "Aurora.Shared\Aurora.Shared.csproj", "{921C6F4A-2799-4575-A334-8222A6BBE9E3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compose Files", "Compose Files", "{EF601527-A00E-497C-9F86-7E18FB90B655}"
+	ProjectSection(SolutionItems) = preProject
+		docker-all-local.yml = docker-all-local.yml
+		docker-all.yml = docker-all.yml
+		docker-local.yml = docker-local.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
