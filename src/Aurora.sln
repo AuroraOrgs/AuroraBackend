@@ -13,6 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Shared", "Aurora.Sha
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Compose Files", "Compose Files", "{EF601527-A00E-497C-9F86-7E18FB90B655}"
 	ProjectSection(SolutionItems) = preProject
+		docker-all-local-arm64.yml = docker-all-local-arm64.yml
 		docker-all-local.yml = docker-all-local.yml
 		docker-all.yml = docker-all.yml
 		docker-local.yml = docker-local.yml
