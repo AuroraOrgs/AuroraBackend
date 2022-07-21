@@ -19,8 +19,11 @@ git commit -m "version %version%"
 git tag -a "%version%" -m "version %version%"
 ::Tag
 docker tag %USERNAME%/%IMAGE%:latest %USERNAME%/%IMAGE%:%version%
+docker tag %USERNAME%/%IMAGE%-arm64:latest %USERNAME%/%IMAGE%-arm64:%version%
 ::Push
 docker push %USERNAME%/%IMAGE%:latest
 docker push %USERNAME%/%IMAGE%:%version%
+docker push %USERNAME%/%IMAGE%-arm64:latest
+docker push %USERNAME%/%IMAGE%-arm64:%version%
 ::Go back
 cd scripts/Docker
