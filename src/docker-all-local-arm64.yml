@@ -1,14 +1,18 @@
-﻿version: "3.9"
+﻿version: "3.3"
 services:
     db:
-        image: "mcr.microsoft.com/mssql/server"
-        environment:
-            SA_PASSWORD: "password1!"
-            ACCEPT_EULA: "Y"
-    selenium:
-        image: "selenium/standalone-firefox:4.2.2"
+        image: arm64v8/postgres
         ports:
-            - "4444:4444"
+            - 8001:5432
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password1!
+          POSTGRES_DB: aurora
+
+    selenium:
+        image: seleniarm/standalone-firefox
+        ports:
+            - "8002:4444"
     web:
         build: 
             context: .
@@ -16,8 +20,11 @@ services:
         ports:
             - "8000:80"
         environment:
-            ConnectionStrings:MainDb: Server=db;Database=master;User=SA;Password=password1!;
+            ConnectionStrings:MainDb: User ID=postgres;Password=password1!;Host=db;Port=5432;Database=aurora;
             Selenium:SeleniumLocation: http://selenium:4444/wd/hub
+
         depends_on:
             - db
             - selenium
+
+        restart: on-failure:5

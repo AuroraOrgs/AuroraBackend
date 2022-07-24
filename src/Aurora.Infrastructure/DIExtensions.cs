@@ -5,6 +5,7 @@ using Aurora.Infrastructure.Contracts;
 using Aurora.Infrastructure.Scrapers;
 using Aurora.Infrastructure.Services;
 using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -34,7 +35,7 @@ namespace Aurora.Infrastructure
             services.AddHangfire(configuration =>
             {
                 configuration
-                .UseSqlServerStorage(mainConnectionString)
+                .UsePostgreSqlStorage(mainConnectionString)
                 .UseMediatR();
             });
 
@@ -44,7 +45,7 @@ namespace Aurora.Infrastructure
 
             services.AddDbContext<SearchContext>(x =>
             {
-                x.UseSqlServer(mainConnectionString, b =>
+                x.UseNpgsql(mainConnectionString, b =>
                 {
                     b.MigrationsAssembly("Aurora.Infrastructure");
                 });
