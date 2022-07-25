@@ -52,7 +52,7 @@ namespace Aurora.Presentation
                         loggerConfiguration
                             .ReadFrom.Configuration(hostingContext.Configuration)
                             .Enrich.FromLogContext()
-                            .Enrich.WithProperty("ApplicationName", typeof(Program).Assembly.GetName().Name)
+                            .Enrich.WithProperty("ApplicationName", typeof(Program).Assembly.GetName().Name!)
                             .Enrich.WithProperty("Environment", hostingContext.HostingEnvironment);
                     });
                });
