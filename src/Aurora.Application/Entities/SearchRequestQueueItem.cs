@@ -11,7 +11,5 @@ namespace Aurora.Application.Entities
 
         public DateTime QueuedTimeUtc { get; set; }
         public bool IsProcessed { get; set; }
-
-        public SearchRequest SearchRequest { get; set; } = new SearchRequest();
     }
 }
