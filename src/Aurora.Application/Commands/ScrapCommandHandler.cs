@@ -51,7 +51,7 @@ namespace Aurora.Application.Commands
         private static long GetProcessedCount(List<SearchResultDto> results)
         {
             return results.Where(x => x.BeenQueued == false)
-                          .SelectMany(x => x.Items)
+                          .SelectMany(x => x.Items!)
                           .LongCount();
         }
     }

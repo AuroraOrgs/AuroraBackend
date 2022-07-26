@@ -4,7 +4,7 @@ namespace Aurora.Application.Models
 {
     public class SearchResultDto
     {
-        public List<SearchItem> Items { get; } = new List<SearchItem>();
+        public List<SearchItem>? Items { get; } = null;
         public SupportedWebsite Website { get; set; }
         public bool BeenQueued { get; set; }
 
