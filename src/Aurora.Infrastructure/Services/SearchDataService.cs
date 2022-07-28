@@ -130,7 +130,7 @@ namespace Aurora.Infrastructure.Services
                     existingRequest.OccurredCount++;
                 }
             }
-           
+
             _context.Request.UpdateRange(existingRequests);
 
             await _context.SaveChangesAsync();
@@ -174,14 +174,19 @@ namespace Aurora.Infrastructure.Services
 
         public async Task MarkAsQueued(SearchRequestState request)
         {
-            var itemsToQueue = request.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.NotFetched).Select(x => x.RequestId);
-            var items = itemsToQueue.Select(x => new SearchRequestQueueItem
+            var searchRequestIds = request.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.NotFetched).Select(x => x.RequestId);
+            var removedCount = await _context.Queue.Where(x => searchRequestIds.Contains(x.SearchRequestId)).DeleteFromQueryAsync();
+            _logger.LogInformation("Removed '{itemsCount}' items due to requeue", removedCount);
+            var items = searchRequestIds.Select(searchRequestId => new SearchRequestQueueItem
             {
                 IsProcessed = false,
                 QueuedTimeUtc = _dateTime.UtcNow,
-                SearchRequestId = x
+                SearchRequestId = searchRequestId
             });
-            await _context.Queue.AddRangeAsync(items);
+            if (items.Any())
+            {
+                await _context.Queue.AddRangeAsync(items);
+            }
             await _context.SaveChangesAsync();
         }
 
