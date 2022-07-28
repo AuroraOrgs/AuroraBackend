@@ -12,7 +12,7 @@ jobs:
       - name: send pre-notification to aurora group
         uses: fjogeleit/http-request-action@v1
         with:
-          url: 'https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_TO }}&text=Starting deploy from %27${{github.repository}}%27 repository merging %27${{github.event.pull_request.number}}. ${{github.event.pull_request.title}}%27 pr - ${{github.event.pull_request.html_url }}' 
+          url: 'https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_TO }}&text=Starting deploy from %27${{github.repository}}%27 repository merging %27${{github.event.size}}%27 commits' 
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
       - uses: actions/checkout@v3
@@ -22,13 +22,13 @@ jobs:
       - name: send post-notification to aurora group
         uses: fjogeleit/http-request-action@v1
         with:
-          url: 'https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_TO }}&text=Deployed from %27${{github.repository}}%27 repository merging %27${{github.event.pull_request.number}}. ${{github.event.pull_request.title}}%27 pr - ${{github.event.pull_request.html_url }}' 
+          url: 'https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_TO }}&text=Deployed from %27${{github.repository}}%27 repository merging %27${{github.event.size}}%27 commits' 
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
       - if: failure()
         name: send pre-notification to aurora group
         uses: fjogeleit/http-request-action@v1
         with:
-          url: 'https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_TO }}&text=Failed deploy from %27${{github.repository}}%27 repository merging %27${{github.event.pull_request.number}}. ${{github.event.pull_request.title}}%27 pr - ${{github.event.pull_request.html_url }}' 
+          url: 'https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage?chat_id=${{ secrets.TELEGRAM_TO }}&text=Failed deploy from %27${{github.repository}}%27 repository merging %27${{github.event.size}}%27 commits' 
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
