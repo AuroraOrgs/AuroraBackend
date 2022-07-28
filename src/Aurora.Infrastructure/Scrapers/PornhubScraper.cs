@@ -1,15 +1,16 @@
-﻿using System;
+﻿using Aurora.Application.Models;
+using Aurora.Infrastructure.Contracts;
+using Aurora.Infrastructure.Extensions;
+using Aurora.Infrastructure.Services;
+using Aurora.Shared.Models;
+using HtmlAgilityPack;
+using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Aurora.Application.Models;
-using Aurora.Infrastructure.Contracts;
-using Aurora.Shared.Models;
-using Microsoft.Extensions.Logging;
-using Aurora.Infrastructure.Services;
-using HtmlAgilityPack;
-using System.Net;
 
 namespace Aurora.Infrastructure.Scrapers
 {
@@ -158,37 +159,44 @@ namespace Aurora.Infrastructure.Scrapers
                 var html = client.DownloadString(fullUrl);
                 htmlDocument.LoadHtml(html);
 
-                var photosAlbumSection = htmlDocument.DocumentNode
-                    ?.SelectSingleNode("//*[@id='photosAlbumsSection']");
-                var albumNodes = photosAlbumSection
+                var albumNodes = htmlDocument.DocumentNode
                     ?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
 
                 if (albumNodes is null) continue;
                 if (result.Count >= maxNumberOfImageUrls) break;
 
-                foreach (var albumNode in albumNodes)
+                const string noHref = "none";
+                var albums = albumNodes.Select(x => x.GetAttributeOrDefault("href", noHref))
+                                       .Where(x => x != noHref && x.Contains("album"));
+                foreach (var album in albums)
                 {
-                    var linkUrl = albumNode.Attributes["href"]?.Value;
-
-                    if (linkUrl is null) continue;
                     if (result.Count >= maxNumberOfImageUrls) break;
 
                     await _clientProvider.SetDefaultUserString(client);
-                    var albumUrl = $"{_baseUrl}{linkUrl}";
-                    driver.Navigate().GoToUrl(albumUrl);
-                    var albumHtml = client.DownloadString(driver.PageSource);
+                    var albumUrl = $"{_baseUrl}{album}";
+                    try
+                    {
+                        driver.Navigate().GoToUrl(albumUrl);
+                    }
+                    catch
+                    {
+                        //most likely non-album got found
+                        _logger.LogInformation("Got faulted album link '{album}'", album);
+                        continue;
+                    }
+
+                    var albumHtml = driver.PageSource;
                     htmlDocument.LoadHtml(albumHtml);
 
                     var images = htmlDocument.DocumentNode
-                        ?.SelectSingleNode("//ul[contains(@class, 'photosAlbumsListing')]")
-                        ?.SelectNodes("//li/div");
+                        ?.SelectNodes("//ul[contains(@class, 'photosAlbumsListing')]/li/div");
 
                     if (images is not null)
                     {
-                        foreach (var image in images)
+                        foreach (var image in images.Where(x => x is not null))
                         {
-                            var preview = image.Attributes["data-bkg"].Value;
-                            var url = image.SelectSingleNode("/a").Attributes["href"].Value;
+                            var preview = image.GetAttributeOrDefault("data-bkg");
+                            var url = _baseUrl + image.ChildNodes.Where(x => x.Name == "a").FirstOrDefault().GetAttributeOrDefault("href");
                             result.Add(new SearchItem(SearchOption.Image, preview, url));
                         }
                     }
