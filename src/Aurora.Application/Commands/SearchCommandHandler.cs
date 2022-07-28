@@ -80,9 +80,7 @@ namespace Aurora.Application.Commands
             {
                 SearchTerm = searchTerm,
                 SearchOptions = AllOptions,
-                Websites = notFetchedWebsites.ToList(),
-                //move to config or remove
-                ResponseItemsMaxCount = 200
+                Websites = notFetchedWebsites.ToList()
             };
 
             string websites = String.Join(", ", notFetchedWebsites.Select(x => x.ToString()));
