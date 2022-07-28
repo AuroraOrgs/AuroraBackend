@@ -7,5 +7,6 @@ namespace Aurora.Application.Contracts
     public interface IOptionsScraperCollector
     {
         ValueTask<IEnumerable<IOptionScraper>> CollectFor(IEnumerable<(SupportedWebsite Key, SearchOption value)> keys);
+        IEnumerable<(SupportedWebsite Key, SearchOption value)> AllowedKeys { get; }
     }
 }

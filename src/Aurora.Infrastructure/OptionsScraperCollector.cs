@@ -16,7 +16,15 @@ namespace Aurora.Infrastructure
     {
         private static Dictionary<(SupportedWebsite, SearchOption), List<Type>> _scrapers = null;
 
+        public IEnumerable<(SupportedWebsite Key, SearchOption value)> AllowedKeys => _scrapers.Keys;
+
         private readonly IServiceProvider _provider;
+
+
+        public OptionsScraperCollector(IServiceProvider provider)
+        {
+            _provider = provider;
+        }
 
         public static IEnumerable<Type> DiscoverScrapers(IServiceCollection services)
         {
@@ -42,11 +50,6 @@ namespace Aurora.Infrastructure
             }
             _scrapers = scrapers;
             return types;
-        }
-
-        public OptionsScraperCollector(IServiceProvider provider)
-        {
-            _provider = provider;
         }
 
         public ValueTask<IEnumerable<IOptionScraper>> CollectFor(IEnumerable<(SupportedWebsite Key, SearchOption value)> keys)

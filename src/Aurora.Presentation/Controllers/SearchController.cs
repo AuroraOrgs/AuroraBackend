@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+﻿using Aurora.Application.Commands;
 using Aurora.Application.Models;
-using System.Threading;
-using Aurora.Application.Commands;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using Aurora.Shared.Extensions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Aurora.Presentation.Controllers
 {
@@ -40,18 +39,6 @@ namespace Aurora.Presentation.Controllers
             }
             var result = await _mediator.Send(command, token);
             return Ok(result);
-        }
-
-        [HttpGet("supported-websites")]
-        public IActionResult SupportedWebsites()
-        {
-            return Ok(EnumHelper.EnumValueToName<SupportedWebsite>());
-        }
-
-        [HttpGet("supported-content-types")]
-        public IActionResult SupportedContentTypes()
-        {
-            return Ok(EnumHelper.EnumValueToName<SearchOption>());
         }
     }
 }
