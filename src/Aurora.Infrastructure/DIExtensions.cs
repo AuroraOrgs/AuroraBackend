@@ -17,16 +17,16 @@ namespace Aurora.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
-            services.AddScoped<ISearchScraperCollector, SearchScraperCollector>();
-            services.AddScoped<PornhubScraper>();
-            services.AddScoped<XvideosScraper>();
+            services.AddScoped<IOptionsScraperCollector, OptionsScraperCollector>();
             services.AddScoped<IWebClientService, WebClientService>();
             services.AddScoped<DriverInitializer>();
             services.AddScoped<ISearchDataService, SearchDataService>();
             services.AddScoped<IQueueProvider, QueueProvider>();
             services.AddScoped<IDateTimeProvider, SystemClockDateTimeProvider>();
             services.AddDistributedMemoryCache();
+            //TODO: Move to helper method
             services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));
+            services.Configure<ScrapersConfig>(option => config.GetSection("Scrapers").Bind(option));
             services.AddSignalR();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie();

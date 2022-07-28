@@ -1,6 +1,7 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Extensions;
 using Aurora.Application.Models;
+using Aurora.Application.Scrapers;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
