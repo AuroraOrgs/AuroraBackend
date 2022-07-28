@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Aurora.Application.Contracts;
@@ -15,7 +16,7 @@ namespace Aurora.Infrastructure.Scrapers
     {
         private const string LogFormat = "StatusCode: '{code}', scraper '{scraperName}' {scraperMessage} in {time}";
 
-        private readonly ILogger<ISearchScraper> _logger;
+        protected readonly ILogger<ISearchScraper> _logger;
 
         public ScraperBase(ILogger<ISearchScraper> logger)
         {
@@ -66,49 +67,48 @@ namespace Aurora.Infrastructure.Scrapers
             };
         }
 
+        //Used to prevent excessive allocation
+        private static readonly List<SearchItem> _emptyList = new();
+
         private async Task<SearchResultDto> GetResult(SearchRequestDto request, CancellationToken token)
         {
-            List<SearchItem> items = new();
-            if (request.SearchOptions.Contains(SearchOption.Video))
-            {
-                await ExecuteScraping(items, request, token, (request, token) => SearchVideosInner(request, token));
-            }
-
-            if (request.SearchOptions.Contains(SearchOption.Gif))
-            {
-                await ExecuteScraping(items, request, token, (request, token) => SearchGifsInner(request, token));
-            }
-
-            if (request.SearchOptions.Contains(SearchOption.Image))
-            {
-                await ExecuteScraping(items, request, token, (request, token) => SearchImagesInner(request, token));
-            }
+            var scrapingTasks = request.SearchOptions.Select(
+                option => option switch
+                {
+                    SearchOption.Video => ExecuteScraping(request, token, (request, token) => SearchVideosInner(request, token)),
+                    SearchOption.Image => ExecuteScraping(request, token, (request, token) => SearchGifsInner(request, token)),
+                    SearchOption.Gif => ExecuteScraping(request, token, (request, token) => SearchImagesInner(request, token)),
+                    _ => throw new Exception($"Non-exhaustive switch case for search option {option}")
+                });
+            var results = await Task.WhenAll(scrapingTasks);
+            var items = results
+                .Select(x => x.WithDefault(_emptyList))
+                .Aggregate(new List<SearchItem>(), (currentItems, result) =>
+                {
+                    currentItems.AddRange(result);
+                    return currentItems;
+                });
 
             return new(items, WebSite);
         }
 
-        private async Task ExecuteScraping(
-            List<SearchItem> items,
+        private async Task<ValueOrNull<List<SearchItem>>> ExecuteScraping(
             SearchRequestDto request,
             CancellationToken token,
             Func<SearchRequestDto, CancellationToken, Task<ValueOrNull<List<SearchItem>>>> scrappingFunc
             )
         {
+            ValueOrNull<List<SearchItem>> result;
             try
             {
-                var response = await scrappingFunc(request, token);
-                response.Resolve(responseItems =>
-                {
-                    items.AddRange(responseItems);
-                }, message =>
-                {
-                    _logger.LogWarning("Scrapper returned nothing with message '{message}'", message);
-                });
+                result = await scrappingFunc(request, token);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to scrap with following message '{0}'", ex.Message);
+                result = ValueOrNull<List<SearchItem>>.CreateNull($"Failed to scrap with {ex.Message}");
             }
+            return result;
         }
 
         //TODO: Move those into separate child, because some website may have mixed items

@@ -22,6 +22,20 @@ namespace Aurora.Shared.Models
             }
         }
 
+        public TResult Resolve<TResult>(Func<T, TResult> onValue, Func<string, TResult> onNull)
+        {
+            TResult result;
+            if (HasValue)
+            {
+                result = onValue(Value);
+            }
+            else
+            {
+                result = onNull.Invoke(NullMessage);
+            }
+            return result;
+        }
+
         public static ValueOrNull<T> CreateValue(T value)
         {
             return new ValueOrNull<T>
@@ -48,6 +62,18 @@ namespace Aurora.Shared.Models
                 return CreateNull();
             }
             return CreateValue(value);
+        }
+    }
+
+    public static class ValueOrNullExtensions
+    {
+        public static T WithDefault<T>(this ValueOrNull<T> valueOrNull, T defaultValue, Action<string> onError = null)
+        {
+            return valueOrNull.Resolve<T>(x => x, msg =>
+            {
+                onError?.Invoke(msg);
+                return defaultValue;
+            });
         }
     }
 }
