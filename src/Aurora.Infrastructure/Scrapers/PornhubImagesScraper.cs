@@ -52,8 +52,11 @@ namespace Aurora.Infrastructure.Scrapers
                 var pageNumber = i + 1;
                 var fullUrl = $"{baseUrl}/albums?search={searchTerm.FormatTermToUrl()}&page={pageNumber}";
                 await _clientProvider.SetDefaultUserString(client);
-                var html = client.DownloadString(fullUrl);
-                htmlDocument.LoadHtml(html);
+                bool isEnd = client.LoadDocumentFromUrl(htmlDocument, fullUrl);
+                if (isEnd)
+                {
+                    break;
+                }
 
                 var albumNodes = htmlDocument.DocumentNode
                     ?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
