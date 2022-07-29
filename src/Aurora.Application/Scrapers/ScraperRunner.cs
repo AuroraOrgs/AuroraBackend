@@ -32,22 +32,20 @@ namespace Aurora.Application.Scrapers
         {
             var options = searchRequest.Websites.Select(website => searchRequest.SearchOptions.Select(option => (website, option))).Flatten();
             var scrapers = await _collector.CollectFor(options);
-            IEnumerable<Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)>> scrapingTasks = null;
+            IEnumerable<Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)>> scrapingTasks = null!;
             List<SearchResultDto> result;
             try
             {
-                var scraperTasks = new List<Task>();
                 scrapingTasks = scrapers.Select(scraper => ExecuteScraping(scraper, searchRequest.SearchTerm, token));
                 var results = await Task.WhenAll(scrapingTasks);
                 result = ProcessResults(results);
-
             }
             catch (OperationCanceledException)
             {
                 //if cancelled - process processed records
                 if (scrapingTasks is not null)
                 {
-                    var results = scrapingTasks.Where(x => x.IsCompletedSuccessfully).Select(x => x.Result).ToArray();
+                    var results = scrapingTasks.Where(x => x.IsCompletedSuccessfully).Select(x => x.Result);
                     result = ProcessResults(results);
                 }
                 else
@@ -58,7 +56,7 @@ namespace Aurora.Application.Scrapers
             return result;
         }
 
-        private static List<SearchResultDto> ProcessResults((ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)[] results)
+        private static List<SearchResultDto> ProcessResults(IEnumerable<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> results)
         {
             return results.Select(x => (x.scraper, items: x.result.WithDefault(_emptyList)))
                           .GroupBy(x => x.scraper.Website)
@@ -74,12 +72,15 @@ namespace Aurora.Application.Scrapers
                 _scraperLimiter.WaitOne();
                 result = await scraper.ScrapAsync(term, token);
                 RequestProcessed?.Invoke(this, new SearchResultDto(result.WithDefault(_emptyList), scraper.Website));
-                _scraperLimiter.Release();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to scrap with following message '{0}'", ex.Message);
                 result = ValueOrNull<List<SearchItem>>.CreateNull($"Failed to scrap with {ex.Message}");
+            }
+            finally
+            {
+                _scraperLimiter.Release();
             }
             return (result, scraper);
         }
