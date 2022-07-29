@@ -25,7 +25,7 @@ namespace Aurora.Application.Scrapers
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {
-            var currentScraper = GetType();
+            var currentScraper = _innerScraper.GetType();
             var logger = _loggerFactory.CreateLogger(currentScraper);
             var watch = Stopwatch.StartNew();
             try
