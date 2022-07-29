@@ -1,6 +1,6 @@
 # AuroraBackend
 
-Prono aggregator
+Internet content aggregator
 
 # Table of content:
 <a href="#1">1. Usage pitch</a></br>

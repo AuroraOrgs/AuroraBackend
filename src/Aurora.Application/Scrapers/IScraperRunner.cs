@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Aurora.Application
+namespace Aurora.Application.Scrapers
 {
     public interface IScraperRunner
     {
