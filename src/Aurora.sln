@@ -27,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docker Files", "Docker File
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{30ABB7CB-2FFA-481C-BEE6-EBE31387BEAC}"
 	ProjectSection(SolutionItems) = preProject
-		..\.github\workflows\dotnet.yml = ..\.github\workflows\dotnet.yml
+		..\.github\workflows\dev_deploy.yml = ..\.github\workflows\dev_deploy.yml
 	EndProjectSection
 EndProject
 Global
