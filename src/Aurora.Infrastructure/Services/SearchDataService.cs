@@ -85,7 +85,7 @@ namespace Aurora.Infrastructure.Services
         private static List<SearchItem> ConvertResults(IEnumerable<SearchResult> results)
         {
             return results
-                .Select(result => new SearchItem(result.Request.ContentOption, result.SearchItemUrl, result.ImagePreviewUrl))
+                .Select(result => new SearchItem(result.Request.ContentOption, result.ImagePreviewUrl, result.SearchItemUrl))
                 .ToList();
         }
 
