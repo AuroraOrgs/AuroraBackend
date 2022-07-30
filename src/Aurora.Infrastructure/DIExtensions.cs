@@ -24,7 +24,6 @@ namespace Aurora.Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
             services.AddScoped<IOptionsScraperCollector, OptionsScraperCollector>();
-            services.AddScoped<IWebClientService, WebClientService>();
             services.AddScoped<DriverInitializer>();
             services.AddScoped<ISearchDataService, SearchDataService>();
             services.AddScoped<IQueueProvider, QueueProvider>();
@@ -43,7 +42,7 @@ namespace Aurora.Infrastructure
                 .UseMediatR();
             });
 
-            services.ConfigureHttpClients();
+            services.AddHttpClients();
 
             services.AddTransient<INotificator, Notificator>();
 
@@ -60,7 +59,7 @@ namespace Aurora.Infrastructure
             return services;
         }
 
-        private static void ConfigureHttpClients(this IServiceCollection services)
+        private static void AddHttpClients(this IServiceCollection services)
         {
             services.AddHttpClient();
             services.AddHttpClient(HttpClientNames.PornhubClient, client =>

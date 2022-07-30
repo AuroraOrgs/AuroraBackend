@@ -4,10 +4,9 @@ using Aurora.Infrastructure.Config;
 using Aurora.Infrastructure.Contracts;
 using Aurora.Infrastructure.Extensions;
 using Microsoft.Extensions.Options;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,19 +14,17 @@ namespace Aurora.Infrastructure.Scrapers
 {
     public class PornhubVideosScraper : IOptionScraper
     {
-        private readonly IWebClientService _clientProvider;
+        private readonly IHttpClientFactory _clientProvider;
         private readonly ScrapersConfig _config;
 
-        public PornhubVideosScraper(IWebClientService clientProvider, IOptions<ScrapersConfig> config)
+        public PornhubVideosScraper(IHttpClientFactory clientProvider, IOptions<ScrapersConfig> config)
         {
             _clientProvider = clientProvider;
             _config = config.Value;
         }
 
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
-
-        private List<SearchOption> _supportedOptions = new() { SearchOption.Video };
-        public IEnumerable<SearchOption> Options => _supportedOptions;
+        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption>() { SearchOption.Video };
 
         public async Task<List<SearchItem>> ScrapAsync(string searchTerm, CancellationToken token = default)
         {
@@ -42,7 +39,7 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = await _clientProvider.Provide();
+            using var client = _clientProvider.CreateClient(HttpClientNames.PornhubClient);
             for (var i = 0; i < _config.MaxPagesCount; i++)
             {
                 if (urlsCount >= _config.MaxItemsCount)
@@ -53,17 +50,14 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
                 var searchTermUrlFormatted = searchTerm.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/video/search?search={searchTermUrlFormatted}&page={i + 1}";
-                await _clientProvider.SetDefaultUserString(client);
-                bool isEnd = client.LoadDocumentFromUrl(htmlDocument, searchPageUrl);
+                bool isEnd = await client.LoadDocumentFromUrl(htmlDocument, searchPageUrl);
 
                 if (isEnd)
                 {
                     break;
                 }
 
-                var bodyNode = htmlDocument.DocumentNode
-                    ?.SelectSingleNode("//body");
-                var videoLinksNodes = bodyNode
+                var videoLinksNodes = htmlDocument.DocumentNode
                     ?.SelectNodes("//a[contains(@class, 'videoPreviewBg')]");
 
                 if (videoLinksNodes is not null)
