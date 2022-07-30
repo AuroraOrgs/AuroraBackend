@@ -85,7 +85,7 @@ namespace Aurora.Infrastructure
                 return Policy.Handle<HttpRequestException>()
                     .Or<Exception>()
                     .OrResult<HttpResponseMessage>(r => r.IsSuccessStatusCode == false)
-                    .WaitAndRetryAsync(options.RetryCount, retryAttempt => TimeSpan.FromSeconds(options.WaitFactorMs * retryAttempt), (response, time) =>
+                    .WaitAndRetryAsync(options.RetryCount, retryAttempt => TimeSpan.FromMilliseconds(options.WaitFactorMs * retryAttempt), (response, time) =>
                     {
                         if (response is not null)
                         {
