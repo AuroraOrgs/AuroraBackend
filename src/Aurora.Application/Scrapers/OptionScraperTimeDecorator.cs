@@ -37,7 +37,7 @@ namespace Aurora.Application.Scrapers
                 watch.Stop();
                 var ranFor = watch.Elapsed;
                 var time = ranFor.ToString();
-                var scraperName = GetType().Name;
+                var scraperName = currentScraper.Name;
 
                 logger.LogInformation("Scraper '{scraperName}' finished in '{time}'", scraperName, time);
             }
