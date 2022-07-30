@@ -24,18 +24,6 @@ namespace Aurora.Infrastructure.Services
             _dateTime = dateTime;
         }
 
-        private async Task<IEnumerable<(SearchRequest Request, SearchRequestStatus Status)>> GetExistingFor(SearchRequestDto request)
-        {
-            var requests = await _context.Request
-                            .Include(x => x.QueueItems)
-                            .Where(x => request.SearchOptions.Contains(x.ContentOption)
-                                && request.Websites.Contains(x.Website)
-                                && request.SearchTerm == x.SearchTerm)
-                            .ToListAsync();
-
-            return requests.Select(x => (x, GetStatusFor(x)));
-        }
-
         private SearchRequestStatus GetStatusFor(SearchRequest request)
         {
             SearchRequestStatus status;
@@ -91,7 +79,14 @@ namespace Aurora.Infrastructure.Services
 
         public async Task<SearchRequestState> FetchRequest(SearchRequestDto request, bool isUserGenerated)
         {
-            var existingRequestsWithStatus = await GetExistingFor(request);
+            var requests = await _context.Request
+                            .Include(x => x.QueueItems)
+                            .Where(x => request.SearchOptions.Contains(x.ContentOption)
+                                && request.Websites.Contains(x.Website)
+                                && request.SearchTerm == x.SearchTerm)
+                            .ToListAsync();
+
+            var existingRequestsWithStatus = requests.Select(x => (Request: x, GetStatusFor(x)));
             var existingRequests = existingRequestsWithStatus.Select(x => x.Request);
 
             var existingOptions = existingRequests.Select(x => (x.Website, x.ContentOption));
@@ -118,10 +113,11 @@ namespace Aurora.Infrastructure.Services
                     "Creating request with '{0}' option, '{1}' website and '{2} term'",
                     newOption.option, newOption.website, request.SearchTerm);
                 return newRequest;
-            });
+            })
+                .ToArray();
 
-            await _context.Request
-                .AddRangeAsync(newRequests);
+            _context.Request
+                .AddRange(newRequests);
             if (isUserGenerated)
             {
                 foreach (var existingRequest in existingRequests)
@@ -132,7 +128,8 @@ namespace Aurora.Infrastructure.Services
 
             _context.Request.UpdateRange(existingRequests);
 
-            await _context.SaveChangesAsync();
+            var updatedCount = await _context.SaveChangesAsync();
+            _logger.LogInformation("Updated '{number}' records whilst fetching", updatedCount);
 
             var allRequests = existingRequestsWithStatus.Union(newRequests.Select(x => (x, SearchRequestStatus.NotFetched)));
             var result = allRequests.ToDictionary(key => (key.Item1.Website, key.Item1.ContentOption), value => (value.Item1.Id, value.Item2));
