@@ -52,7 +52,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.xvideos.com/?k=test+value&p=1
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
-                var htmlSearchPage = await client.LoadDocumentFromUrl(htmlDocument, searchPageUrl);
+                var htmlSearchPage = await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
 
                 var videoLinksNodes = htmlDocument.DocumentNode
                     ?.SelectNodes("//a");

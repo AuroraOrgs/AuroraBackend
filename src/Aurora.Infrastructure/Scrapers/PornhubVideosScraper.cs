@@ -50,7 +50,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
                 var searchTermUrlFormatted = searchTerm.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/video/search?search={searchTermUrlFormatted}&page={i + 1}";
-                bool isEnd = await client.LoadDocumentFromUrl(htmlDocument, searchPageUrl);
+                bool isEnd = await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
 
                 if (isEnd)
                 {

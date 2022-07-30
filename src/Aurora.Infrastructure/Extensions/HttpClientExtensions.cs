@@ -6,7 +6,7 @@ namespace Aurora.Infrastructure.Extensions
 {
     public static class HttpClientExtensions
     {
-        public static async Task<bool> LoadDocumentFromUrl(this HttpClient client, HtmlDocument htmlDocument, string url)
+        public static async Task<bool> TryLoadDocumentFromUrl(this HttpClient client, HtmlDocument htmlDocument, string url)
         {
             bool reachedEnd;
             var response = await client.GetAsync(url);
