@@ -26,7 +26,6 @@ namespace Aurora.Infrastructure.Services
 
         private async Task<IEnumerable<(SearchRequest Request, SearchRequestStatus Status)>> GetExistingFor(SearchRequestDto request)
         {
-            //TODO: Include only latest queue item
             var requests = await _context.Request
                             .Include(x => x.QueueItems)
                             .Where(x => request.SearchOptions.Contains(x.ContentOption)
