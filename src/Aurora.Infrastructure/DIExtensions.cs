@@ -65,7 +65,7 @@ namespace Aurora.Infrastructure
             services.AddHttpClient(HttpClientNames.PornhubClient, client =>
             {
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;");
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.134 YaBrowser/22.7.0.1842 Yowser/2.5 Safari/537.36");
             }).AddWaitAndRetryPolicy();
             //needed for xvideos authentification
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
@@ -76,7 +76,7 @@ namespace Aurora.Infrastructure
             }).AddWaitAndRetryPolicy();
         }
 
-        private static IHttpClientBuilder AddWaitAndRetryPolicy(this IHttpClientBuilder clientBuilder)
+        private static IHttpClientBuilder AddWaitAndRetryPolicy(this IHttpClientBuilder clientBuilder, bool failOnNotFound = false)
         {
             return clientBuilder.AddPolicyHandler((services, policy) =>
             {
@@ -84,8 +84,8 @@ namespace Aurora.Infrastructure
                 var logger = services.GetRequiredService<ILogger<HttpClient>>();
                 return Policy.Handle<HttpRequestException>()
                     .Or<Exception>()
-                    .OrResult<HttpResponseMessage>(r => r.IsSuccessStatusCode == false)
-                    .WaitAndRetryAsync(options.RetryCount, retryAttempt => TimeSpan.FromSeconds(options.WaitFactorMs * retryAttempt), (response, time) =>
+                    .OrResult<HttpResponseMessage>(r => r.IsSuccessStatusCode == false && (failOnNotFound || r.StatusCode is not HttpStatusCode.NotFound))
+                    .WaitAndRetryAsync(options.RetryCount, retryAttempt => TimeSpan.FromMilliseconds(options.WaitFactorMs * retryAttempt), (response, time) =>
                     {
                         if (response is not null)
                         {
@@ -100,7 +100,7 @@ namespace Aurora.Infrastructure
                             {
                                 try
                                 {
-                                    logger.LogInformation("Failed to make a request in  '{time} with '{status}' statusCode and '{reason}' reason", time, result.StatusCode, result.ReasonPhrase);
+                                    logger.LogInformation("Failed to make a request in  '{time} with '{status}' statusCode and '{reason}' reason", time, (int)result.StatusCode, result.ReasonPhrase);
                                 }
                                 finally
                                 {
