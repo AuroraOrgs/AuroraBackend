@@ -76,7 +76,7 @@ namespace Aurora.Infrastructure
             }).AddWaitAndRetryPolicy();
         }
 
-        private static IHttpClientBuilder AddWaitAndRetryPolicy(this IHttpClientBuilder clientBuilder)
+        private static IHttpClientBuilder AddWaitAndRetryPolicy(this IHttpClientBuilder clientBuilder, bool failOnNotFound = false)
         {
             return clientBuilder.AddPolicyHandler((services, policy) =>
             {
@@ -84,7 +84,7 @@ namespace Aurora.Infrastructure
                 var logger = services.GetRequiredService<ILogger<HttpClient>>();
                 return Policy.Handle<HttpRequestException>()
                     .Or<Exception>()
-                    .OrResult<HttpResponseMessage>(r => r.IsSuccessStatusCode == false)
+                    .OrResult<HttpResponseMessage>(r => r.IsSuccessStatusCode == false && (failOnNotFound || r.StatusCode is not HttpStatusCode.NotFound))
                     .WaitAndRetryAsync(options.RetryCount, retryAttempt => TimeSpan.FromMilliseconds(options.WaitFactorMs * retryAttempt), (response, time) =>
                     {
                         if (response is not null)
@@ -100,7 +100,7 @@ namespace Aurora.Infrastructure
                             {
                                 try
                                 {
-                                    logger.LogInformation("Failed to make a request in  '{time} with '{status}' statusCode and '{reason}' reason", time, result.StatusCode, result.ReasonPhrase);
+                                    logger.LogInformation("Failed to make a request in  '{time} with '{status}' statusCode and '{reason}' reason", time, (int)result.StatusCode, result.ReasonPhrase);
                                 }
                                 finally
                                 {
