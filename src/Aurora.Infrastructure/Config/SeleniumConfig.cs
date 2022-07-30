@@ -1,6 +1,6 @@
 ﻿namespace Aurora.Infrastructure.Config
 {
-    [ConfigSectionAttribute("Selenium")]
+    [ConfigSection("Selenium")]
     public class SeleniumConfig
     {
         public string SeleniumLocation { get; set; }

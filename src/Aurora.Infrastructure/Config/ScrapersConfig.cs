@@ -1,6 +1,6 @@
 ﻿namespace Aurora.Infrastructure.Config
 {
-    [ConfigSectionAttribute("Scraper")]
+    [ConfigSection("Scraper")]
     public class ScrapersConfig
     {
         public int MaxPagesCount { get; set; } = 5;
