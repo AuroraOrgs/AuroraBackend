@@ -25,7 +25,6 @@ namespace Aurora.Infrastructure.Services
                     break;
                 }
                 intialLength = currentLength;
-
             }
         }
 

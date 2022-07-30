@@ -8,6 +8,7 @@ using HtmlAgilityPack;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,9 +18,9 @@ namespace Aurora.Infrastructure.Scrapers
     {
         private readonly DriverInitializer _initializer;
         private readonly IOptions<ScrapersConfig> _config;
-        private readonly IWebClientService _clientProvider;
+        private readonly IHttpClientFactory _clientProvider;
 
-        public PornhubImagesScraper(DriverInitializer initializer, IOptions<ScrapersConfig> config, IWebClientService clientProvider)
+        public PornhubImagesScraper(DriverInitializer initializer, IOptions<ScrapersConfig> config, IHttpClientFactory clientProvider)
         {
             _initializer = initializer;
             _config = config;
@@ -27,10 +28,7 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
-
-        private IEnumerable<SearchOption> _options = new List<SearchOption> { SearchOption.Image };
-
-        public IEnumerable<SearchOption> Options => _options;
+        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption> { SearchOption.Image };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {
@@ -46,13 +44,12 @@ namespace Aurora.Infrastructure.Scrapers
             var searchTerm = term.FormatTermToUrl();
             var result = new List<SearchItem>();
 
-            using var client = await _clientProvider.Provide();
+            using var client = _clientProvider.CreateClient(HttpClientNames.PornhubClient);
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
                 var pageNumber = i + 1;
                 var fullUrl = $"{baseUrl}/albums?search={searchTerm.FormatTermToUrl()}&page={pageNumber}";
-                await _clientProvider.SetDefaultUserString(client);
-                bool isEnd = client.LoadDocumentFromUrl(htmlDocument, fullUrl);
+                bool isEnd = await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl);
                 if (isEnd)
                 {
                     break;
@@ -71,7 +68,6 @@ namespace Aurora.Infrastructure.Scrapers
                 {
                     if (result.Count >= config.MaxItemsCount) break;
 
-                    await _clientProvider.SetDefaultUserString(client);
                     var albumUrl = $"{baseUrl}{album}";
                     try
                     {

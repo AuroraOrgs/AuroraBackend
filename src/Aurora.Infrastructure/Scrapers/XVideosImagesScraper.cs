@@ -6,6 +6,7 @@ using Aurora.Infrastructure.Extensions;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,10 +14,10 @@ namespace Aurora.Infrastructure.Scrapers
 {
     public class XVideosImagesScraper : IOptionScraper
     {
-        private readonly IWebClientService _clientProvider;
+        private readonly IHttpClientFactory _clientProvider;
         private readonly IOptions<ScrapersConfig> _config;
 
-        public XVideosImagesScraper(IWebClientService clientProvider, IOptions<ScrapersConfig> config)
+        public XVideosImagesScraper(IHttpClientFactory clientProvider, IOptions<ScrapersConfig> config)
         {
             _clientProvider = clientProvider;
             _config = config;
@@ -40,7 +41,7 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = await _clientProvider.Provide();
+            using var client = _clientProvider.CreateClient(HttpClientNames.XVideosClient);
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
                 if (urlsCount >= config.MaxItemsCount)
@@ -51,13 +52,9 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.xvideos.com/?k=test+value&p=1
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
-                await _clientProvider.SetTls12UserString(client);
-                var htmlSearchPage = client.DownloadString(searchPageUrl);
-                htmlDocument.LoadHtml(htmlSearchPage);
+                var htmlSearchPage = await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
 
-                var bodyNode = htmlDocument.DocumentNode
-                    ?.SelectSingleNode("//body");
-                var videoLinksNodes = bodyNode
+                var videoLinksNodes = htmlDocument.DocumentNode
                     ?.SelectNodes("//a");
 
                 if (videoLinksNodes is null)

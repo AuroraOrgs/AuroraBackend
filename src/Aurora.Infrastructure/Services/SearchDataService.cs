@@ -26,7 +26,6 @@ namespace Aurora.Infrastructure.Services
 
         private async Task<IEnumerable<(SearchRequest Request, SearchRequestStatus Status)>> GetExistingFor(SearchRequestDto request)
         {
-            //TODO: Include only latest queue item
             var requests = await _context.Request
                             .Include(x => x.QueueItems)
                             .Where(x => request.SearchOptions.Contains(x.ContentOption)
@@ -86,7 +85,7 @@ namespace Aurora.Infrastructure.Services
         private static List<SearchItem> ConvertResults(IEnumerable<SearchResult> results)
         {
             return results
-                .Select(result => new SearchItem(result.Request.ContentOption, result.SearchItemUrl, result.ImagePreviewUrl))
+                .Select(result => new SearchItem(result.Request.ContentOption, result.ImagePreviewUrl, result.SearchItemUrl))
                 .ToList();
         }
 

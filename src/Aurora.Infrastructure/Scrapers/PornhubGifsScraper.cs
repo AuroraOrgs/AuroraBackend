@@ -7,6 +7,7 @@ using HtmlAgilityPack;
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,18 +17,17 @@ namespace Aurora.Infrastructure.Scrapers
     {
         private const string _dateSourcePhncdn = "https://dl.phncdn.com";
 
-        private readonly IWebClientService _clientProvider;
+        private readonly IHttpClientFactory _clientProvider;
         private readonly IOptions<ScrapersConfig> _config;
 
-        public PornhubGifsScraper(IWebClientService clientProvider, IOptions<ScrapersConfig> config)
+        public PornhubGifsScraper(IHttpClientFactory clientProvider, IOptions<ScrapersConfig> config)
         {
             _clientProvider = clientProvider;
             _config = config;
         }
 
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
-        private IEnumerable<SearchOption> _options = new List<SearchOption>() { SearchOption.Gif };
-        public IEnumerable<SearchOption> Options => _options;
+        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption>() { SearchOption.Gif };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {
@@ -42,7 +42,7 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = await _clientProvider.Provide();
+            using var client = _clientProvider.CreateClient(HttpClientNames.PornhubClient);
 
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
@@ -55,8 +55,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
-                await _clientProvider.SetDefaultUserString(client);
-                bool isEnd = client.LoadDocumentFromUrl(htmlDocument, searchPageUrl);
+                bool isEnd = await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
                 if (isEnd)
                 {
                     break;
