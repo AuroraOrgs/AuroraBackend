@@ -171,55 +171,66 @@ namespace Aurora.Infrastructure.Services
         public async Task MarkAsQueued(SearchRequestState request)
         {
             var searchRequestIds = request.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.NotFetched).Select(x => x.RequestId);
-            var removedCount = await _context.Queue.Where(x => searchRequestIds.Contains(x.SearchRequestId)).DeleteFromQueryAsync();
-            _logger.LogInformation("Removed '{itemsCount}' items due to requeue", removedCount);
-            var items = searchRequestIds.Select(searchRequestId => new SearchRequestQueueItem
+            await using (var transaction = _context.Database.BeginTransaction())
             {
-                IsProcessed = false,
-                QueuedTimeUtc = _dateTime.UtcNow,
-                SearchRequestId = searchRequestId
-            });
-            if (items.Any())
-            {
-                await _context.Queue.AddRangeAsync(items);
+                var removedCount = await _context.Queue.Where(x => searchRequestIds.Contains(x.SearchRequestId)).DeleteFromQueryAsync();
+                _logger.LogInformation("Removed '{itemsCount}' items due to requeue", removedCount);
+                var items = searchRequestIds.Select(searchRequestId => new SearchRequestQueueItem
+                {
+                    IsProcessed = false,
+                    QueuedTimeUtc = _dateTime.UtcNow,
+                    SearchRequestId = searchRequestId
+                });
+                if (items.Any())
+                {
+                    await _context.Queue.AddRangeAsync(items);
+                }
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
-            await _context.SaveChangesAsync();
         }
 
         public async Task AddOrUpdateResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
         {
             var existingIds = state.StoredRequests.Values.Select(x => x.RequestId);
-
-            _logger.LogInformation("Removing stale search results");
-            var removedRows = await _context.Result
-                .Where(x => existingIds.Contains(x.RequestId))
-                .DeleteFromQueryAsync();
-            _logger.LogInformation("Removed '{0}' rows of stale search results", removedRows);
-
-            List<SearchResult> finalResults = results.Select(
-                result => result.Items.Select(item => new SearchResult()
-                {
-                    FoundTimeUtc = _dateTime.UtcNow,
-                    ImagePreviewUrl = item.ImagePreviewUrl,
-                    RequestId = state.StoredRequests[(result.Website, item.Option)].RequestId,
-                    SearchItemUrl = item.SearchItemUrl
-                }
-           )).Flatten().ToList();
-
-            await _context.Queue.Where(x => existingIds.Contains(x.SearchRequestId)).UpdateFromQueryAsync(obj =>
-            new SearchRequestQueueItem()
+            await using (var transaction = _context.Database.BeginTransaction())
             {
-                IsProcessed = true,
-                QueuedTimeUtc = obj.QueuedTimeUtc,
-                QueueId = obj.QueueId,
-                SearchRequestId = obj.SearchRequestId
-            });
+                _logger.LogInformation("Removing stale search results");
+                var removedRows = await _context.Result
+                    .Where(x => existingIds.Contains(x.RequestId))
+                    .DeleteFromQueryAsync();
+                _logger.LogInformation("Removed '{0}' rows of stale search results", removedRows);
 
-            await _context.Result
-                .AddRangeAsync(finalResults);
-            _logger.LogInformation("Stored '{0}' rows of new search results", finalResults.Count);
+                List<SearchResult> finalResults = results.Select(
+                    result => result.Items.Select(item => new SearchResult()
+                    {
+                        FoundTimeUtc = _dateTime.UtcNow,
+                        ImagePreviewUrl = item.ImagePreviewUrl,
+                        RequestId = state.StoredRequests[(result.Website, item.Option)].RequestId,
+                        SearchItemUrl = item.SearchItemUrl
+                    }
+                    ))
+                    .Flatten()
+                    .ToList();
 
-            await _context.SaveChangesAsync();
+                await _context.Queue
+                    .Where(x => existingIds.Contains(x.SearchRequestId))
+                    .UpdateFromQueryAsync(obj =>
+                        new SearchRequestQueueItem()
+                        {
+                            IsProcessed = true,
+                            QueuedTimeUtc = obj.QueuedTimeUtc,
+                            QueueId = obj.QueueId,
+                            SearchRequestId = obj.SearchRequestId
+                        });
+
+                await _context.Result
+                    .AddRangeAsync(finalResults);
+                _logger.LogInformation("Stored '{0}' rows of new search results", finalResults.Count);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
         }
     }
 }
