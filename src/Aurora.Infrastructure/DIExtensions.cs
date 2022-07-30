@@ -65,7 +65,7 @@ namespace Aurora.Infrastructure
             services.AddHttpClient(HttpClientNames.PornhubClient, client =>
             {
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;");
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.134 YaBrowser/22.7.0.1842 Yowser/2.5 Safari/537.36");
             }).AddWaitAndRetryPolicy();
             //needed for xvideos authentification
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
