@@ -1,8 +1,7 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Infrastructure.Bridge;
-using Aurora.Infrastructure.Config;
 using Aurora.Infrastructure.Contracts;
-using Aurora.Infrastructure.Scrapers;
+using Aurora.Infrastructure.Extensions;
 using Aurora.Infrastructure.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -24,9 +23,7 @@ namespace Aurora.Infrastructure
             services.AddScoped<IQueueProvider, QueueProvider>();
             services.AddScoped<IDateTimeProvider, SystemClockDateTimeProvider>();
             services.AddDistributedMemoryCache();
-            //TODO: Move to helper method
-            services.Configure<SeleniumConfig>(option => config.GetSection("Selenium").Bind(option));
-            services.Configure<ScrapersConfig>(option => config.GetSection("Scrapers").Bind(option));
+            services.BindConfigSections(config);
             services.AddSignalR();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie();
