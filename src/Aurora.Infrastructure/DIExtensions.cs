@@ -62,7 +62,7 @@ namespace Aurora.Infrastructure
         private static void AddHttpClients(this IServiceCollection services)
         {
             services.AddHttpClient();
-            services.AddHttpClient(HttpClientNames.PornhubClient, client =>
+            services.AddHttpClient(HttpClientNames.DefaultClient, client =>
             {
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
                 client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.134 YaBrowser/22.7.0.1842 Yowser/2.5 Safari/537.36");
