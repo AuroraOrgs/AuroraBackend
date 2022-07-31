@@ -49,8 +49,7 @@ namespace Aurora.Infrastructure.Scrapers
             {
                 var pageNumber = i + 1;
                 var fullUrl = $"{baseUrl}/albums?search={searchTerm.FormatTermToUrl()}&page={pageNumber}";
-                bool isEnd = await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl);
-                if (isEnd)
+                if (await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl) == false)
                 {
                     break;
                 }

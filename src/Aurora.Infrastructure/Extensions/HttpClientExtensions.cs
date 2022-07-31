@@ -8,19 +8,19 @@ namespace Aurora.Infrastructure.Extensions
     {
         public static async Task<bool> TryLoadDocumentFromUrl(this HttpClient client, HtmlDocument htmlDocument, string url)
         {
-            bool reachedEnd;
+            bool succeeded;
             var response = await client.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 var htmlContent = await response.Content.ReadAsStringAsync();
                 htmlDocument.LoadHtml(htmlContent);
-                reachedEnd = false;
+                succeeded = true;
             }
             else
             {
-                reachedEnd = true;
+                succeeded = false;
             }
-            return reachedEnd;
+            return succeeded;
         }
     }
 }

@@ -53,9 +53,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.xvideos.com/?k=test+value&p=1
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
-                var shouldEnd = await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
-
-                if (shouldEnd)
+                if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
                 {
                     break;
                 }
