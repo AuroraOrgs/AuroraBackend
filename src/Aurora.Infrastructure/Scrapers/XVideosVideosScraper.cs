@@ -23,7 +23,7 @@ namespace Aurora.Infrastructure.Scrapers
             _config = config;
         }
 
-        public SupportedWebsite Website => SupportedWebsite.Xvideos;
+        public SupportedWebsite Website => SupportedWebsite.XVideos;
         public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption>() { SearchOption.Video };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
@@ -43,9 +43,10 @@ namespace Aurora.Infrastructure.Scrapers
             var urlsCount = 0;
 
             using var client = _clientProvider.CreateClient(HttpClientNames.XVideosClient);
+            //TODO: Implement scraping of all pages
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
-                if (urlsCount >= config.MaxItemsCount)
+                if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
                 {
                     break;
                 }
@@ -53,9 +54,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.xvideos.com/?k=test+value&p=1
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
-                var shouldEnd = await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
-
-                if (shouldEnd)
+                if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
                 {
                     break;
                 }

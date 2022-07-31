@@ -39,10 +39,11 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = _clientProvider.CreateClient(HttpClientNames.PornhubClient);
+            using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
+            //TODO: Implement scraping of all pages
             for (var i = 0; i < _config.MaxPagesCount; i++)
             {
-                if (urlsCount >= _config.MaxItemsCount)
+                if (_config.UseLimitations && urlsCount >= _config.MaxItemsCount)
                 {
                     break;
                 }
@@ -50,9 +51,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.pornhub.com/video/search?search=test+value&page=1
                 var searchTermUrlFormatted = searchTerm.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/video/search?search={searchTermUrlFormatted}&page={i + 1}";
-                bool isEnd = await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
-
-                if (isEnd)
+                if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
                 {
                     break;
                 }

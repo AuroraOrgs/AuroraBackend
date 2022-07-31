@@ -44,13 +44,13 @@ namespace Aurora.Infrastructure.Scrapers
             var searchTerm = term.FormatTermToUrl();
             var result = new List<SearchItem>();
 
-            using var client = _clientProvider.CreateClient(HttpClientNames.PornhubClient);
+            using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
+            //TODO: Implement scraping of all pages
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
                 var pageNumber = i + 1;
                 var fullUrl = $"{baseUrl}/albums?search={searchTerm.FormatTermToUrl()}&page={pageNumber}";
-                bool isEnd = await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl);
-                if (isEnd)
+                if (await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl) == false)
                 {
                     break;
                 }
@@ -59,14 +59,13 @@ namespace Aurora.Infrastructure.Scrapers
                     ?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
 
                 if (albumNodes is null) continue;
-                if (result.Count >= config.MaxItemsCount) break;
 
                 const string noHref = "none";
                 var albums = albumNodes.Select(x => x.GetAttributeOrDefault("href", noHref))
                                        .Where(x => x != noHref && x.Contains("album"));
                 foreach (var album in albums)
                 {
-                    if (result.Count >= config.MaxItemsCount) break;
+                    if (config.UseLimitations && result.Count >= config.MaxItemsCount) break;
 
                     var albumUrl = $"{baseUrl}{album}";
                     try

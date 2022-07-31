@@ -42,11 +42,12 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = _clientProvider.CreateClient(HttpClientNames.PornhubClient);
+            using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
 
+            //TODO: Implement scraping of all pages
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
-                if (urlsCount >= config.MaxItemsCount)
+                if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
                 {
                     break;
                 }
@@ -55,8 +56,7 @@ namespace Aurora.Infrastructure.Scrapers
                 // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
-                bool isEnd = await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
-                if (isEnd)
+                if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
                 {
                     break;
                 }
