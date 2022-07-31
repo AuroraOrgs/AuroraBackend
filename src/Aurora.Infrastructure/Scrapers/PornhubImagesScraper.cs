@@ -44,7 +44,7 @@ namespace Aurora.Infrastructure.Scrapers
             var searchTerm = term.FormatTermToUrl();
             var result = new List<SearchItem>();
 
-            using var client = _clientProvider.CreateClient(HttpClientNames.PornhubClient);
+            using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
                 var pageNumber = i + 1;

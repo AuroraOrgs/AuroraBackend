@@ -3,6 +3,7 @@
     public enum SupportedWebsite
     {
         Pornhub = 0,
-        Xvideos = 1
+        XVideos = 1,
+        FootFetishBooru = 2
     }
 }

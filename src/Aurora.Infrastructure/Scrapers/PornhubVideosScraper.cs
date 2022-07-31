@@ -39,7 +39,7 @@ namespace Aurora.Infrastructure.Scrapers
 
             var urlsCount = 0;
 
-            using var client = _clientProvider.CreateClient(HttpClientNames.PornhubClient);
+            using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
             for (var i = 0; i < _config.MaxPagesCount; i++)
             {
                 if (urlsCount >= _config.MaxItemsCount)

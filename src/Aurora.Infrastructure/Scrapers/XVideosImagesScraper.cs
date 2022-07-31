@@ -23,7 +23,7 @@ namespace Aurora.Infrastructure.Scrapers
             _config = config;
         }
 
-        public SupportedWebsite Website => SupportedWebsite.Xvideos;
+        public SupportedWebsite Website => SupportedWebsite.XVideos;
         public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption> { SearchOption.Image };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
