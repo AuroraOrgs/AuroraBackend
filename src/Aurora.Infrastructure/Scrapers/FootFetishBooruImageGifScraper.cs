@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 
 namespace Aurora.Infrastructure.Scrapers
 {
@@ -115,7 +116,7 @@ namespace Aurora.Infrastructure.Scrapers
                 foreach (var post in posts)
                 {
                     var hrefValue = post.GetAttributeValue("href", "none");
-                    var location = $"{baseUrl}/{hrefValue}";
+                    var location = $"{baseUrl}/{hrefValue}".Replace("&amp;", "&");
                     var previewImage = post.ChildNodes.Where(x => x.Name == "img").FirstOrDefault();
                     var previewSrc = previewImage.GetAttributeValue("src", "none");
                     SearchOption option;
