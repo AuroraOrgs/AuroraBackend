@@ -63,12 +63,20 @@ namespace Aurora.Infrastructure.Scrapers
                         if (lastPidStr is not null && Int32.TryParse(lastPidStr, out int lastPid))
                         {
                             var pagesCount = lastPid / _itemsPerPage + 1;
-                            var lastPageIndex = Math.Min(pagesCount, config.MaxPagesCount);
+                            int lastPageIndex;
+                            if (config.UseLimitations)
+                            {
+                                lastPageIndex = Math.Min(pagesCount, config.MaxPagesCount);
+                            }
+                            else
+                            {
+                                lastPageIndex = pagesCount;
+                            }
                             var items = new List<SearchItem>();
                             for (int i = 0; i < lastPageIndex; i++)
                             {
                                 items.AddRange(await LoadPageAsync(term, client, i));
-                                if (items.Count > config.MaxItemsCount)
+                                if (config.UseLimitations && items.Count > config.MaxItemsCount)
                                 {
                                     break;
                                 }

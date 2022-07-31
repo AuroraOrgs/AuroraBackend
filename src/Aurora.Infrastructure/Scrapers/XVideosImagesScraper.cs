@@ -42,9 +42,10 @@ namespace Aurora.Infrastructure.Scrapers
             var urlsCount = 0;
 
             using var client = _clientProvider.CreateClient(HttpClientNames.XVideosClient);
+            //TODO: Implement scraping of all pages
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
-                if (urlsCount >= config.MaxItemsCount)
+                if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
                 {
                     break;
                 }

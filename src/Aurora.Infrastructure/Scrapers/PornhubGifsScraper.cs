@@ -44,9 +44,10 @@ namespace Aurora.Infrastructure.Scrapers
 
             using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
 
+            //TODO: Implement scraping of all pages
             for (var i = 0; i < config.MaxPagesCount; i++)
             {
-                if (urlsCount >= config.MaxItemsCount)
+                if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
                 {
                     break;
                 }
