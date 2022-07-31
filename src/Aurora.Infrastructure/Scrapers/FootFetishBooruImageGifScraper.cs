@@ -58,7 +58,7 @@ namespace Aurora.Infrastructure.Scrapers
                     {
                         const string defVal = "none";
                         var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
-                        var pidPart = lastButtonReference.Split('&').Where(x => x.StartsWith("pid")).FirstOrDefault();
+                        var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
                         var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
                         if (lastPidStr is not null && Int32.TryParse(lastPidStr, out int lastPid))
                         {
@@ -110,7 +110,8 @@ namespace Aurora.Infrastructure.Scrapers
             var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={TermToUrlFormat(term)}&pid={pageNumber * _itemsPerPage}";
             if (await client.TryLoadDocumentFromUrl(htmlDocument, pageUrl))
             {
-                var posts = htmlDocument.DocumentNode.SelectNodes("//a[@id]").Where(x => x.Attributes["id"].Value.StartsWith('p'));
+                var posts = htmlDocument.DocumentNode.SelectNodes("//a[@id]")
+                    .Where(x => x.Id.StartsWith("p") && x.Id != "pi");
                 foreach (var post in posts)
                 {
                     var hrefValue = post.GetAttributeValue("href", "none");
