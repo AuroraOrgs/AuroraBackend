@@ -1,5 +1,5 @@
-﻿using Aurora.Application.Contracts;
-using Aurora.Application.Models;
+﻿using Aurora.Application.Models;
+using Aurora.Application.Scrapers;
 using Aurora.Shared.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;

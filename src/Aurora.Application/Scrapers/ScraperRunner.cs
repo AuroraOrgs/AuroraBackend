@@ -1,5 +1,4 @@
-﻿using Aurora.Application.Contracts;
-using Aurora.Application.Models;
+﻿using Aurora.Application.Models;
 using Aurora.Shared.Extensions;
 using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
