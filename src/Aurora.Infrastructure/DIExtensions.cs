@@ -1,4 +1,5 @@
 ﻿using Aurora.Application.Contracts;
+using Aurora.Application.Scrapers;
 using Aurora.Infrastructure.Bridge;
 using Aurora.Infrastructure.Config;
 using Aurora.Infrastructure.Contracts;

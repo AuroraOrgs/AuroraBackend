@@ -1,5 +1,5 @@
-﻿using Aurora.Application.Contracts;
-using Aurora.Application.Models;
+﻿using Aurora.Application.Models;
+using Aurora.Application.Scrapers;
 using Aurora.Infrastructure.Config;
 using Aurora.Infrastructure.Contracts;
 using Aurora.Infrastructure.Extensions;
