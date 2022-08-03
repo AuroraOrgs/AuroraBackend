@@ -61,7 +61,7 @@ namespace Aurora.Infrastructure.Scrapers
                 if (albumNodes is null) continue;
 
                 const string noHref = "none";
-                var albums = albumNodes.Select(x => x.GetAttributeOrDefault("href", noHref))
+                var albums = albumNodes.Select(x => x.GetAttributeValue("href", noHref))
                                        .Where(x => x != noHref && x.Contains("album"));
                 foreach (var album in albums)
                 {
@@ -88,8 +88,8 @@ namespace Aurora.Infrastructure.Scrapers
                     {
                         foreach (var image in images.Where(x => x is not null))
                         {
-                            var preview = image.GetAttributeOrDefault("data-bkg");
-                            var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").FirstOrDefault().GetAttributeOrDefault("href");
+                            var preview = image.GetAttributeValue("data-bkg");
+                            var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").FirstOrDefault().GetAttributeValue("href");
                             result.Add(new SearchItem(SearchOption.Image, preview, url));
                         }
                     }

@@ -2,7 +2,7 @@
 {
     public static class HttpClientNames
     {
-        public static string DefaultClient = "DefaultClient";
-        public static string XVideosClient = "Tls12Client";
+        public static string DefaultClient { get; } = "DefaultClient";
+        public static string XVideosClient { get; } = "XVideosClient";
     }
 }
