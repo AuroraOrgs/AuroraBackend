@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Aurora.Infrastructure.Config
 {
     [ConfigSection(ScrapersConfig.SectionName, nameof(ScrapersConfig.Total))]
-    public class TotalScraperConfig
+    public class TotalScrapersConfig
     {
         /// <summary>
         /// Job Cron expression used, when no other is provided

@@ -24,7 +24,7 @@ namespace Aurora.Presentation.Extensions
         /// </summary>
         public static IServiceProvider StartRecurringJobs(this IServiceProvider provider)
         {
-            var totalConfig = provider.GetRequiredService<IOptions<TotalScraperConfig>>().Value;
+            var totalConfig = provider.GetRequiredService<IOptions<TotalScrapersConfig>>().Value;
             var scrapers = OptionsScraperCollector.TotalScrapers;
             foreach (var scraper in scrapers)
             {
