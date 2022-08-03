@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using System;
 
 namespace Aurora.Presentation
 {
@@ -44,8 +45,13 @@ namespace Aurora.Presentation
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aurora", Version = "v1" });
             });
 
-            var scrapers = OptionsScraperCollector.DiscoverScrapers(services);
-            foreach (var scraper in scrapers)
+            var (optionScrapers, totalScrapers) = OptionsScraperCollector.DiscoverScrapers(services);
+            foreach (var scraper in optionScrapers)
+            {
+                services.AddTransient(scraper);
+            }
+
+            foreach (var scraper in totalScrapers)
             {
                 services.AddTransient(scraper);
             }

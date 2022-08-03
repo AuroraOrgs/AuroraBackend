@@ -36,18 +36,13 @@ namespace Aurora.Infrastructure
                 .AddCookie();
 
             string mainConnectionString = config.GetConnectionString("MainDb");
-            services.AddHangfire(configuration =>
-            {
-                configuration
-                .UsePostgreSqlStorage(mainConnectionString)
-                .UseMediatR();
-            });
 
             services.AddHttpClients();
 
             services.AddTransient<INotificator, Notificator>();
 
-            services.AddHangfireServer();
+            services.AddHangfireServer()
+                .AddHangfire(mainConnectionString);
 
             services.AddDbContext<SearchContext>(x =>
             {
@@ -56,6 +51,24 @@ namespace Aurora.Infrastructure
                     b.MigrationsAssembly("Aurora.Infrastructure");
                 });
             });
+
+            return services;
+        }
+
+        private static IServiceCollection AddHangfire(this IServiceCollection services, string mainConnectionString)
+        {
+            var sqlOptions = new PostgreSqlStorageOptions()
+            {
+                PrepareSchemaIfNecessary = true,
+                SchemaName = "hangfire"
+            };
+            services.AddHangfire(configuration =>
+            {
+                configuration
+                .UsePostgreSqlStorage(mainConnectionString, sqlOptions)
+                .UseMediatR();
+            });
+            JobStorage.Current = new PostgreSqlStorage(mainConnectionString, sqlOptions);
 
             return services;
         }

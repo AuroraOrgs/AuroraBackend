@@ -14,6 +14,8 @@ namespace Aurora.Infrastructure.Services
     public class OptionsScraperCollector : IOptionsScraperCollector
     {
         private static Dictionary<(SupportedWebsite, SearchOption), List<Type>> _scrapers = null;
+        private static List<Type> _totalScrapers = null;
+        public static List<Type> TotalScrapers => _totalScrapers;
 
         public IEnumerable<(SupportedWebsite Key, SearchOption value)> AllowedKeys => _scrapers.Keys;
 
@@ -25,30 +27,44 @@ namespace Aurora.Infrastructure.Services
             _provider = provider;
         }
 
-        public static IEnumerable<Type> DiscoverScrapers(IServiceCollection services)
+        public static (IEnumerable<Type> OptionScrapers, IEnumerable<Type> TotalScrapers) DiscoverScrapers(IServiceCollection services)
         {
             Dictionary<(SupportedWebsite, SearchOption), List<Type>> scrapers = new();
             var baseScraperType = typeof(IOptionScraper);
-            var types = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsAssignableTo(baseScraperType));
+            var baseTotalScraperType = typeof(ITotalScraper);
+            var types = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsAssignableTo(baseScraperType) || x.IsAssignableTo(baseTotalScraperType));
             var provider = services.BuildServiceProvider();
+            var optionScrapers = new List<Type>();
+            var totalScrapers = new List<Type>();
             foreach (var type in types)
             {
-                var instance = ActivatorUtilities.CreateInstance(provider, type) as IOptionScraper;
-                foreach (var option in instance.Options)
+                if (type.IsAssignableTo(baseScraperType))
                 {
-                    var key = (instance.Website, option);
-                    if (scrapers.ContainsKey(key))
+                    var instance = ActivatorUtilities.CreateInstance(provider, type) as IOptionScraper;
+                    foreach (var option in instance.Options)
                     {
-                        scrapers[key].Add(type);
+                        var key = (instance.Website, option);
+                        if (scrapers.ContainsKey(key))
+                        {
+                            scrapers[key].Add(type);
+                        }
+                        else
+                        {
+                            scrapers[key] = new() { type };
+                        }
                     }
-                    else
-                    {
-                        scrapers[key] = new() { type };
-                    }
+                    optionScrapers.Add(type);
+                }
+                else
+                {
+                    totalScrapers.Add(type);
                 }
             }
+
             _scrapers = scrapers;
-            return types;
+            _totalScrapers = totalScrapers;
+
+            return (optionScrapers, totalScrapers);
         }
 
         public ValueTask<IEnumerable<IOptionScraper>> CollectFor(IEnumerable<(SupportedWebsite Key, SearchOption value)> keys)
