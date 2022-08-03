@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Aurora.Infrastructure.Config
 {
-    [ConfigSection("Scraper", "Total")]
+    [ConfigSection(ScrapersConfig.SectionName, nameof(ScrapersConfig.Total))]
     public class TotalScraperConfig
     {
         /// <summary>
