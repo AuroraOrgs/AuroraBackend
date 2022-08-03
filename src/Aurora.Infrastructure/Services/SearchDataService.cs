@@ -63,11 +63,26 @@ namespace Aurora.Infrastructure.Services
             return status;
         }
 
-        private static List<SearchResultDto> Convert(List<SearchResult> results)
+        private static List<SearchResultDto> Convert(IEnumerable<SearchResult> results)
         {
             return results.GroupBy(result => result.Request.Website)
                 .Select(resultsByWebsite => new SearchResultDto(ConvertResults(resultsByWebsite), resultsByWebsite.Key))
                 .ToList();
+        }
+
+        private List<SearchResult> Convert(IEnumerable<SearchResultDto> results, SearchRequestState state)
+        {
+            return results.Select(
+                    result => result.Items.Select(item => new SearchResult()
+                    {
+                        FoundTimeUtc = _dateTime.UtcNow,
+                        ImagePreviewUrl = item.ImagePreviewUrl,
+                        RequestId = state.StoredRequests[(result.Website, item.Option)].RequestId,
+                        SearchItemUrl = item.SearchItemUrl
+                    }
+                    ))
+                    .Flatten()
+                    .ToList();
         }
 
         private static List<SearchItem> ConvertResults(IEnumerable<SearchResult> results)
@@ -201,17 +216,7 @@ namespace Aurora.Infrastructure.Services
                     .DeleteFromQueryAsync();
                 _logger.LogInformation("Removed '{0}' rows of stale search results", removedRows);
 
-                List<SearchResult> finalResults = results.Select(
-                    result => result.Items.Select(item => new SearchResult()
-                    {
-                        FoundTimeUtc = _dateTime.UtcNow,
-                        ImagePreviewUrl = item.ImagePreviewUrl,
-                        RequestId = state.StoredRequests[(result.Website, item.Option)].RequestId,
-                        SearchItemUrl = item.SearchItemUrl
-                    }
-                    ))
-                    .Flatten()
-                    .ToList();
+                List<SearchResult> finalResults = Convert(results, state);
 
                 await _context.Queue
                     .Where(x => existingIds.Contains(x.SearchRequestId))
