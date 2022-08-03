@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure
+namespace Aurora.Infrastructure.Services
 {
     public class OptionsScraperCollector : IOptionsScraperCollector
     {
