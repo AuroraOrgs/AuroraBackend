@@ -6,6 +6,7 @@ namespace Aurora.Infrastructure.Config
     [ConfigSection(ScrapersConfig.SectionName, nameof(ScrapersConfig.Total))]
     public class TotalScrapersConfig
     {
+        public bool UseRecurringJob { get; set; } = false;
         /// <summary>
         /// Job Cron expression used, when no other is provided
         /// </summary>

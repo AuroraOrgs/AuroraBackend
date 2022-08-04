@@ -34,8 +34,14 @@ namespace Aurora.Presentation.Extensions
                 {
                     cron = totalConfig.BaseJobCron;
                 }
-                RecurringJob.RemoveIfExists(jobId);
-                RecurringJob.AddOrUpdate<ITotalScraperRunner>(runner => runner.RunTotalScraper(scraper), cron);
+                if (totalConfig.UseRecurringJob)
+                {
+                    RecurringJob.AddOrUpdate<ITotalScraperRunner>(jobId, runner => runner.RunTotalScraper(scraper), cron);
+                }
+                else
+                {
+                    RecurringJob.RemoveIfExists(jobId);
+                }
             }
 
             //TODO: Add refresh job
