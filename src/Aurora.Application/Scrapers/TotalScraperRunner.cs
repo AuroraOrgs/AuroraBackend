@@ -3,7 +3,6 @@ using Aurora.Application.Models;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Aurora.Application.Scrapers
@@ -30,18 +29,18 @@ namespace Aurora.Application.Scrapers
                 var results = await fullScraper.Scrap();
                 foreach (var result in results)
                 {
-                    var options = result.Items.Select(x => x.Option).Distinct().ToList();
                     var request = new SearchRequestDto()
                     {
                         Websites = new List<SupportedWebsite>()
                         {
                             website
                         },
-                        SearchOptions = options,
+                        SearchOptions = SearchOptionsContext.AllOptions,
                         SearchTerm = result.Term
                     };
                     var resultDto = new SearchResultDto(result.Items, website);
                     var state = await _search.FetchRequest(request, false);
+                    await _search.MarkAsQueued(state);
                     await _search.AddOrUpdateResults(state, new[] { resultDto });
                 }
             }
