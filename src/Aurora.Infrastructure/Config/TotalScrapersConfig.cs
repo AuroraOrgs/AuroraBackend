@@ -14,5 +14,8 @@ namespace Aurora.Infrastructure.Config
         /// Job Cron expression override based on the scraper type name
         /// </summary>
         public Dictionary<string, string> ScraperJobCrons { get; set; } = new Dictionary<string, string>();
+
+        public bool UseLimitations { get; set; } = true;
+        public int MaxPagesCount { get; set; } = 100;
     }
 }
