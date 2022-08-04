@@ -44,14 +44,7 @@ namespace Aurora.Infrastructure.Services
                     foreach (var option in instance.Options)
                     {
                         var key = (instance.Website, option);
-                        if (scrapers.ContainsKey(key))
-                        {
-                            scrapers[key].Add(type);
-                        }
-                        else
-                        {
-                            scrapers[key] = new() { type };
-                        }
+                        scrapers.AddList(key, type);
                     }
                     optionScrapers.Add(type);
                 }
