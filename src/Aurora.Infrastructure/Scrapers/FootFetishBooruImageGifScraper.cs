@@ -3,6 +3,7 @@ using Aurora.Application.Scrapers;
 using Aurora.Infrastructure.Config;
 using Aurora.Infrastructure.Contracts;
 using Aurora.Infrastructure.Extensions;
+using Aurora.Shared.Models;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,7 +18,7 @@ namespace Aurora.Infrastructure.Scrapers
 {
     public class FootFetishBooruImageGifScraper : IOptionScraper
     {
-        private const int _itemsPerPage = 20;
+        internal const int _itemsPerPage = 20;
 
         private static List<SearchItem> _emptyResult = new List<SearchItem>();
 
@@ -49,60 +50,61 @@ namespace Aurora.Infrastructure.Scrapers
             List<SearchItem> result;
             if (await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl))
             {
-                var paginator = htmlDocument.DocumentNode.SelectSingleNode("//div[@id='paginator']");
-                if (paginator is not null)
+                var pageResult = ExtractPagesCount(htmlDocument);
+                result = await pageResult.ResolveAsync(async pagesCount =>
                 {
-                    var lastButton = paginator.ChildNodes.Last();
-                    //multiple pages
-                    if (lastButton is not null && lastButton.GetAttributeValue("alt", "none") == "last page")
+                    int lastPageIndex;
+                    if (config.UseLimitations)
                     {
-                        const string defVal = "none";
-                        var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
-                        var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
-                        var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
-                        if (lastPidStr is not null && Int32.TryParse(lastPidStr, out int lastPid))
-                        {
-                            var pagesCount = lastPid / _itemsPerPage + 1;
-                            int lastPageIndex;
-                            if (config.UseLimitations)
-                            {
-                                lastPageIndex = Math.Min(pagesCount, config.MaxPagesCount);
-                            }
-                            else
-                            {
-                                lastPageIndex = pagesCount;
-                            }
-                            var items = new List<SearchItem>();
-                            for (int i = 0; i < lastPageIndex; i++)
-                            {
-                                items.AddRange(await LoadPageAsync(term, client, i));
-                                if (config.UseLimitations && items.Count > config.MaxItemsCount)
-                                {
-                                    break;
-                                }
-                            }
-                            result = items;
-                        }
-                        else
-                        {
-                            _logger.LogInformation("Failed to parse index of the last image for term '{term}' at '{url}'", term, fullUrl);
-                            result = await LoadPageAsync(term, client, 0);
-                        }
+                        lastPageIndex = Math.Min(pagesCount, config.MaxPagesCount);
                     }
-                    //single page
                     else
                     {
-                        result = await LoadPageAsync(term, client, 0);
+                        lastPageIndex = pagesCount;
                     }
-                }
-                else
-                {
-                    result = _emptyResult;
-                }
+                    var items = new List<SearchItem>();
+                    for (int i = 0; i < lastPageIndex; i++)
+                    {
+                        items.AddRange(await LoadPageAsync(term, client, i));
+                        if (config.UseLimitations && items.Count > config.MaxItemsCount)
+                        {
+                            break;
+                        }
+                    }
+                    return items;
+                },
+                _ => Task.FromResult(_emptyResult));
             }
             else
             {
                 result = _emptyResult;
+            }
+            return result;
+        }
+
+        internal static ValueOrNull<int> ExtractPagesCount(HtmlDocument searchPage)
+        {
+            ValueOrNull<int> result;
+            var paginator = searchPage.DocumentNode.SelectSingleNode("//div[@id='paginator']");
+            var lastButton = paginator.ChildNodes.Last();
+            if (lastButton is not null && lastButton.GetAttributeValue("alt", "none") == "last page")
+            {
+                const string defVal = "none";
+                var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
+                var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
+                var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
+                if (lastPidStr is not null && Int32.TryParse(lastPidStr, out int lastPid))
+                {
+                    result = lastPid / _itemsPerPage + 1;
+                }
+                else
+                {
+                    result = 1;
+                }
+            }
+            else
+            {
+                result = ValueOrNull<int>.CreateNull();
             }
             return result;
         }
