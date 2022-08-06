@@ -34,15 +34,20 @@ namespace Aurora.Application.Commands
         {
             var request = requestWrapper.SearchRequest;
             var userId = requestWrapper.UserId;
-            if (userId is not null)
+            var results = await _scraperRunner.Run(request, result =>
             {
-                _logger.LogRequest(requestWrapper.SearchRequest, $"Notifying {userId}");
-                _scraperRunner.RequestProcessed += (_, req) =>
+                Task task;
+                if (userId is not null)
                 {
-                    _notificator.NotifyAboutScrapFinishing(userId, req);
-                };
-            }
-            var results = await _scraperRunner.Run(request, cancellationToken);
+                    _logger.LogRequest(requestWrapper.SearchRequest, $"Notifying {userId}");
+                    task = _notificator.NotifyAboutScrapFinishing(userId, result);
+                }
+                else
+                {
+                    task = Task.CompletedTask;
+                }
+                return task;
+            }, cancellationToken);
             _logger.LogRequest(request, $"Got '{results.Count}' results with '{GetProcessedCount(results)}' total count of items");
             var requestStored = await _search.FetchRequest(request, false);
             await _search.AddOrUpdateResults(requestStored, results);

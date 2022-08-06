@@ -19,15 +19,13 @@ namespace Aurora.Application.Scrapers
         private readonly IOptionsScraperCollector _collector;
         private readonly ILogger<ScraperRunner> _logger;
 
-        public event EventHandler<SearchResultDto>? RequestProcessed;
-
         public ScraperRunner(IOptionsScraperCollector collector, ILogger<ScraperRunner> logger)
         {
             _collector = collector;
             _logger = logger;
         }
 
-        public async Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, CancellationToken token = default)
+        public async Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default)
         {
             var options = searchRequest.Websites.Select(website => searchRequest.SearchOptions.Select(option => (website, option))).Flatten();
             var scrapers = await _collector.CollectFor(options);
@@ -35,7 +33,7 @@ namespace Aurora.Application.Scrapers
             List<SearchResultDto> result;
             try
             {
-                scrapingTasks = scrapers.Select(scraper => ExecuteScraping(scraper, searchRequest.SearchTerm, token));
+                scrapingTasks = scrapers.Select(scraper => ExecuteScraping(scraper, searchRequest.SearchTerm, onProcessed, token));
                 var results = await Task.WhenAll(scrapingTasks);
                 result = ProcessResults(results);
             }
@@ -63,14 +61,14 @@ namespace Aurora.Application.Scrapers
                           .ToList();
         }
 
-        private async Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> ExecuteScraping(IOptionScraper scraper, string term, CancellationToken token)
+        private async Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> ExecuteScraping(IOptionScraper scraper, string term, Func<SearchResultDto, Task>? onProcessed, CancellationToken token)
         {
             ValueOrNull<List<SearchItem>> result;
             try
             {
                 _scraperLimiter.WaitOne();
                 result = await scraper.ScrapAsync(term, token);
-                RequestProcessed?.Invoke(this, new SearchResultDto(result.WithDefault(_emptyList), scraper.Website));
+                onProcessed?.Invoke(new SearchResultDto(result.WithDefault(_emptyList), scraper.Website));
             }
             catch (Exception ex)
             {
