@@ -54,7 +54,7 @@ namespace Aurora.Infrastructure.Scrapers
                     Dictionary<string, List<SearchItem>> items = new();
                     for (int i = 0; i < pagesCount; i++)
                     {
-                        var pageUrl = $"{fullUrl}&pid={i * FootFetishBooruImageGifScraper._itemsPerPage}";
+                        var pageUrl = $"{fullUrl}&pid={i * ScraperConstants.FootFetishBooruPostsPerPage}";
                         if (await client.TryLoadDocumentFromUrl(htmlDocument, pageUrl))
                         {
                             var posts = htmlDocument.DocumentNode.SelectNodes("//a[@id]").Where(x => x.Id.StartsWith("p") && x.Id != "pi");

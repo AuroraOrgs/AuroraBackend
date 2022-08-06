@@ -18,8 +18,6 @@ namespace Aurora.Infrastructure.Scrapers
 {
     public class FootFetishBooruImageGifScraper : IOptionScraper
     {
-        internal const int _itemsPerPage = 20;
-
         private static List<SearchItem> _emptyResult = new List<SearchItem>();
 
         private readonly IHttpClientFactory _clientFactory;
@@ -95,7 +93,7 @@ namespace Aurora.Infrastructure.Scrapers
                 var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
                 if (lastPidStr is not null && Int32.TryParse(lastPidStr, out int lastPid))
                 {
-                    result = lastPid / _itemsPerPage + 1;
+                    result = lastPid / ScraperConstants.FootFetishBooruPostsPerPage + 1;
                 }
                 else
                 {
@@ -117,7 +115,7 @@ namespace Aurora.Infrastructure.Scrapers
             };
             var baseUrl = Website.GetBaseUrl();
             var items = new List<SearchItem>();
-            var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={TermToUrlFormat(term)}&pid={pageNumber * _itemsPerPage}";
+            var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={TermToUrlFormat(term)}&pid={pageNumber * ScraperConstants.FootFetishBooruPostsPerPage}";
             if (await client.TryLoadDocumentFromUrl(htmlDocument, pageUrl))
             {
                 var posts = htmlDocument.DocumentNode.SelectNodes("//a[@id]")
