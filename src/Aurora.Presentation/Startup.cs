@@ -44,7 +44,7 @@ namespace Aurora.Presentation
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aurora", Version = "v1" });
             });
 
-            var (optionScrapers, totalScrapers) = OptionsScraperCollector.DiscoverScrapers(services);
+            var (optionScrapers, totalScrapers) = ScrapersContext.DiscoverScrapers(services);
             foreach (var scraper in optionScrapers)
             {
                 services.AddTransient(scraper);

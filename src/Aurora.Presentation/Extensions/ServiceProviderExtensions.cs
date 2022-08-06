@@ -25,7 +25,7 @@ namespace Aurora.Presentation.Extensions
         public static IServiceProvider StartRecurringJobs(this IServiceProvider provider)
         {
             var totalConfig = provider.GetRequiredService<IOptions<TotalScrapersConfig>>().Value;
-            var scrapers = OptionsScraperCollector.TotalScrapers;
+            var scrapers = ScrapersContext.TotalScrapers;
             foreach (var scraper in scrapers)
             {
                 var jobId = scraper.Name;
