@@ -3,8 +3,6 @@ using Microsoft.Extensions.Options;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Remote;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Aurora.Infrastructure.Services

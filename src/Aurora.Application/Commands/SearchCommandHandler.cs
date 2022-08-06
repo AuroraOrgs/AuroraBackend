@@ -67,19 +67,12 @@ namespace Aurora.Application.Commands
             return new SearchCommandResult(resultItems, result.TotalItems);
         }
 
-        private static List<SearchOption> AllOptions = new List<SearchOption>()
-                    {
-                        SearchOption.Image,
-                        SearchOption.Video,
-                        SearchOption.Gif
-                    };
-
         private async Task QueueWebsites(string? userId, string searchTerm, IEnumerable<SupportedWebsite> notFetchedWebsites)
         {
             var childRequest = new SearchRequestDto
             {
                 SearchTerm = searchTerm,
-                SearchOptions = AllOptions,
+                SearchOptions = SearchOptionsContext.AllOptions,
                 Websites = notFetchedWebsites.ToList()
             };
 

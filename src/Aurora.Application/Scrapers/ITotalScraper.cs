@@ -7,7 +7,6 @@ namespace Aurora.Application.Scrapers
     public interface ITotalScraper
     {
         SupportedWebsite Website { get; }
-        IEnumerable<SearchOption> Options { get; }
-        Task<(string Term, List<SearchItem> Items)> Scrap();
+        Task<IEnumerable<(string Term, List<SearchItem> Items)>> Scrap();
     }
 }

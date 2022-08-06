@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Aurora.Shared.Models
 {
@@ -25,6 +26,20 @@ namespace Aurora.Shared.Models
         public TResult Resolve<TResult>(Func<T, TResult> onValue, Func<string, TResult> onNull)
         {
             TResult result;
+            if (HasValue)
+            {
+                result = onValue(Value);
+            }
+            else
+            {
+                result = onNull.Invoke(NullMessage);
+            }
+            return result;
+        }
+
+        public Task<TResult> ResolveAsync<TResult>(Func<T, Task<TResult>> onValue, Func<string, Task<TResult>> onNull)
+        {
+            Task<TResult> result;
             if (HasValue)
             {
                 result = onValue(Value);

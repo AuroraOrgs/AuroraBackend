@@ -1,6 +1,5 @@
-using Aurora.Infrastructure;
+using Aurora.Presentation.Extensions;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
@@ -17,8 +16,8 @@ namespace Aurora.Presentation
                 using IHost host = CreateHostBuilder(args).Build();
                 using (var scope = host.Services.CreateScope())
                 {
-                    var db = scope.ServiceProvider.GetRequiredService<SearchContext>();
-                    db.Database.Migrate();
+                    scope.ServiceProvider.MigrateDatabase();
+                    scope.ServiceProvider.StartRecurringJobs();
                 }
                 host.Run();
             }
