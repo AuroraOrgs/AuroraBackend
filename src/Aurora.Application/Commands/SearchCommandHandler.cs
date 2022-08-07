@@ -72,7 +72,7 @@ namespace Aurora.Application.Commands
             var childRequest = new SearchRequestDto
             {
                 SearchTerm = searchTerm,
-                SearchOptions = SearchOptionsContext.AllOptions,
+                ContentTypes = ContentTypeContext.ContentTypes,
                 Websites = notFetchedWebsites.ToList()
             };
 

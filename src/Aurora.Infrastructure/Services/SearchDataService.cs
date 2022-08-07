@@ -77,7 +77,7 @@ namespace Aurora.Infrastructure.Services
                     {
                         FoundTimeUtc = _dateTime.UtcNow,
                         ImagePreviewUrl = item.ImagePreviewUrl,
-                        RequestId = state.StoredRequests[(result.Website, item.Option)].RequestId,
+                        RequestId = state.StoredRequests[(result.Website, item.ContentType)].RequestId,
                         SearchItemUrl = item.SearchItemUrl
                     }
                     ))
@@ -96,7 +96,7 @@ namespace Aurora.Infrastructure.Services
         {
             var requests = await _context.Request
                             .Include(x => x.QueueItems)
-                            .Where(x => request.SearchOptions.Contains(x.ContentOption)
+                            .Where(x => request.ContentTypes.Contains(x.ContentOption)
                                 && request.Websites.Contains(x.Website)
                                 && request.SearchTerm == x.SearchTerm)
                             .ToListAsync();
@@ -105,10 +105,10 @@ namespace Aurora.Infrastructure.Services
             var existingRequests = existingRequestsWithStatus.Select(x => x.Request);
 
             var existingOptions = existingRequests.Select(x => (x.Website, x.ContentOption));
-            List<(SupportedWebsite website, SearchOption option)> requestedOptions = new List<(SupportedWebsite, SearchOption)>();
+            List<(SupportedWebsite website, ContentType option)> requestedOptions = new List<(SupportedWebsite, ContentType)>();
             foreach (var website in request.Websites)
             {
-                foreach (var option in request.SearchOptions)
+                foreach (var option in request.ContentTypes)
                 {
                     requestedOptions.Add((website, option));
                 }

@@ -20,7 +20,7 @@ namespace Aurora.Application.Scrapers
 
         public SupportedWebsite Website => _innerScraper.Website;
 
-        public IEnumerable<SearchOption> Options => _innerScraper.Options;
+        public IEnumerable<ContentType> ContentTypes => _innerScraper.ContentTypes;
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {

@@ -24,7 +24,7 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public SupportedWebsite Website => SupportedWebsite.XVideos;
-        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption>() { SearchOption.Video };
+        public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Video };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {
@@ -85,7 +85,7 @@ namespace Aurora.Infrastructure.Scrapers
                                 string searchItemUrl = $"{baseUrl}{videoLink}";
                                 if (searchItemUrl is not null && imagePreviewUrl is not null)
                                 {
-                                    videoItems.Add(new(SearchOption.Video, imagePreviewUrl, searchItemUrl));
+                                    videoItems.Add(new(ContentType.Video, imagePreviewUrl, searchItemUrl));
                                 }
                             }
                         }

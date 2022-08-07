@@ -11,15 +11,15 @@ namespace Aurora.Infrastructure.Services
 {
     public class ScrapersContext
     {
-        private static Dictionary<(SupportedWebsite, SearchOption), List<Type>> _scrapers;
-        public static Dictionary<(SupportedWebsite, SearchOption), List<Type>> Scrapers => _scrapers;
+        private static Dictionary<(SupportedWebsite, ContentType), List<Type>> _scrapers;
+        public static Dictionary<(SupportedWebsite, ContentType), List<Type>> Scrapers => _scrapers;
 
         private static List<Type> _totalScrapers;
         public static List<Type> TotalScrapers => _totalScrapers;
 
         public static (IEnumerable<Type> OptionScrapers, IEnumerable<Type> TotalScrapers) DiscoverScrapers(IServiceCollection services)
         {
-            Dictionary<(SupportedWebsite, SearchOption), List<Type>> scrapers = new();
+            Dictionary<(SupportedWebsite, ContentType), List<Type>> scrapers = new();
             var baseScraperType = typeof(IOptionScraper);
             var baseTotalScraperType = typeof(ITotalScraper);
             var types = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsAssignableTo(baseScraperType) || x.IsAssignableTo(baseTotalScraperType));
@@ -31,9 +31,9 @@ namespace Aurora.Infrastructure.Services
                 if (type.IsAssignableTo(baseScraperType))
                 {
                     var instance = ActivatorUtilities.CreateInstance(provider, type) as IOptionScraper;
-                    foreach (var option in instance.Options)
+                    foreach (var contentType in instance.ContentTypes)
                     {
-                        var key = (instance.Website, option);
+                        var key = (instance.Website, contentType);
                         scrapers.AddList(key, type);
                     }
                     optionScrapers.Add(type);

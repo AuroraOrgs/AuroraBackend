@@ -11,10 +11,10 @@ namespace Aurora.Application.Extensions
         public static void LogRequest(this ILogger logger, SearchRequestDto request, string prefix)
         {
             logger.LogInformation(
-            "{prefix} for request for '{term}' term with '{options}' options in '{websites}' websites",
+            "{prefix} for request for '{term}' term with '{types}' types in '{websites}' websites",
             prefix,
             request.SearchTerm,
-            request.SearchOptions.CommaSeparate(),
+            request.ContentTypes.CommaSeparate(),
             request.Websites.CommaSeparate()
            );
         }
@@ -22,7 +22,7 @@ namespace Aurora.Application.Extensions
         public static void LogRequest(this ILogger logger, SearchRequest request, string prefix)
         {
             logger.LogInformation(
-            "{prefix} with request for '{term}' term with '{option}' option in '{website}' website",
+            "{prefix} with request for '{term}' term with '{type}' type in '{website}' website",
             prefix,
             request.SearchTerm,
             request.ContentOption,

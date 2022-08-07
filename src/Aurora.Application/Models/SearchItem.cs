@@ -1,4 +1,4 @@
 ﻿namespace Aurora.Application.Models
 {
-    public record SearchItem(SearchOption Option, string ImagePreviewUrl, string SearchItemUrl);
+    public record SearchItem(ContentType ContentType, string ImagePreviewUrl, string SearchItemUrl);
 }

@@ -8,7 +8,7 @@ namespace Aurora.Application.Scrapers
     public interface IOptionScraper
     {
         SupportedWebsite Website { get; }
-        IEnumerable<SearchOption> Options { get; }
+        IEnumerable<ContentType> ContentTypes { get; }
         Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default);
     }
 }

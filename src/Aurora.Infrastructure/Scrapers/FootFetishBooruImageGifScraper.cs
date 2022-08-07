@@ -32,7 +32,7 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public SupportedWebsite Website => SupportedWebsite.FootFetishBooru;
-        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption> { SearchOption.Image, SearchOption.Gif };
+        public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image, ContentType.Gif };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {
@@ -126,16 +126,16 @@ namespace Aurora.Infrastructure.Scrapers
                     var location = $"{baseUrl}/{hrefValue}".Replace("&amp;", "&");
                     var previewImage = post.ChildNodes.Where(x => x.Name == "img").FirstOrDefault();
                     var previewSrc = previewImage.GetAttributeValue("src", "none");
-                    SearchOption option;
+                    ContentType type;
                     if (previewSrc.EndsWith("gif"))
                     {
-                        option = SearchOption.Gif;
+                        type = ContentType.Gif;
                     }
                     else
                     {
-                        option = SearchOption.Image;
+                        type = ContentType.Image;
                     }
-                    var item = new SearchItem(option, previewSrc, location);
+                    var item = new SearchItem(type, previewSrc, location);
                     items.Add(item);
                 }
             }

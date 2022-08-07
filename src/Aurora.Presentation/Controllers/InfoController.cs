@@ -26,7 +26,7 @@ namespace Aurora.Presentation.Controllers
         [HttpGet("supported-content-types")]
         public IActionResult SupportedContentTypes()
         {
-            return Ok(EnumHelper.EnumValueToName<SearchOption>());
+            return Ok(EnumHelper.EnumValueToName<ContentType>());
         }
 
         [HttpGet("supported-search-options")]

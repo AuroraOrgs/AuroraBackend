@@ -24,7 +24,7 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public SupportedWebsite Website => SupportedWebsite.XVideos;
-        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption> { SearchOption.Image };
+        public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {
@@ -77,7 +77,7 @@ namespace Aurora.Infrastructure.Scrapers
                         string imageUrl = currentLinkImageAttributes["data-src"]?.Value;
                         if (imageUrl is not null)
                         {
-                            imageItems.Add(new(SearchOption.Image, imageUrl, imageUrl));
+                            imageItems.Add(new(ContentType.Image, imageUrl, imageUrl));
                         }
                     }
 
