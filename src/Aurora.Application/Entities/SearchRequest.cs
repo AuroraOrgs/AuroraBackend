@@ -13,7 +13,7 @@ namespace Aurora.Application.Entities
         [MaxLength(255)]
         public string SearchTerm { get; set; }
         public SupportedWebsite Website { get; set; }
-        public ContentType ContentOption { get; set; }
+        public ContentType ContentType { get; set; }
 
         public int OccurredCount { get; set; }
         public IEnumerable<SearchRequestQueueItem> QueueItems { get; set; }

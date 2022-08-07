@@ -88,7 +88,7 @@ namespace Aurora.Infrastructure.Services
         private static List<SearchItem> ConvertResults(IEnumerable<SearchResult> results)
         {
             return results
-                .Select(result => new SearchItem(result.Request.ContentOption, result.ImagePreviewUrl, result.SearchItemUrl))
+                .Select(result => new SearchItem(result.Request.ContentType, result.ImagePreviewUrl, result.SearchItemUrl))
                 .ToList();
         }
 
@@ -96,7 +96,7 @@ namespace Aurora.Infrastructure.Services
         {
             var requests = await _context.Request
                             .Include(x => x.QueueItems)
-                            .Where(x => request.ContentTypes.Contains(x.ContentOption)
+                            .Where(x => request.ContentTypes.Contains(x.ContentType)
                                 && request.Websites.Contains(x.Website)
                                 && request.SearchTerm == x.SearchTerm)
                             .ToListAsync();
@@ -104,7 +104,7 @@ namespace Aurora.Infrastructure.Services
             var existingRequestsWithStatus = requests.Select(x => (Request: x, GetStatusFor(x)));
             var existingRequests = existingRequestsWithStatus.Select(x => x.Request);
 
-            var existingOptions = existingRequests.Select(x => (x.Website, x.ContentOption));
+            var existingOptions = existingRequests.Select(x => (x.Website, ContentOption:x.ContentType));
             List<(SupportedWebsite website, ContentType option)> requestedOptions = new List<(SupportedWebsite, ContentType)>();
             foreach (var website in request.Websites)
             {
@@ -119,7 +119,7 @@ namespace Aurora.Infrastructure.Services
             {
                 var newRequest = new SearchRequest()
                 {
-                    ContentOption = newOption.option,
+                    ContentType = newOption.option,
                     OccurredCount = 1,
                     SearchTerm = request.SearchTerm,
                     Website = newOption.website
@@ -147,7 +147,7 @@ namespace Aurora.Infrastructure.Services
             _logger.LogInformation("Updated '{number}' records whilst fetching", updatedCount);
 
             var allRequests = existingRequestsWithStatus.Union(newRequests.Select(x => (x, SearchRequestStatus.NotFetched)));
-            var result = allRequests.ToDictionary(key => (key.Item1.Website, key.Item1.ContentOption), value => (value.Item1.Id, value.Item2));
+            var result = allRequests.ToDictionary(key => (key.Item1.Website, ContentOption:key.Item1.ContentType), value => (value.Item1.Id, value.Item2));
             return new SearchRequestState(result);
         }
 

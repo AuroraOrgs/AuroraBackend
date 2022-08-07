@@ -25,7 +25,7 @@ namespace Aurora.Application.Extensions
             "{prefix} with request for '{term}' term with '{type}' type in '{website}' website",
             prefix,
             request.SearchTerm,
-            request.ContentOption,
+            request.ContentType,
             request.Website
            );
         }
