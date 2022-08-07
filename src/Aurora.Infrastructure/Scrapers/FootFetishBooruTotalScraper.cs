@@ -72,16 +72,16 @@ namespace Aurora.Infrastructure.Scrapers
 
                                     var hrefValue = post.GetAttributeValue("href", "none");
                                     var location = $"{baseUrl}/{hrefValue}".Replace("&amp;", "&");
-                                    SearchOption option;
+                                    ContentType type;
                                     if (previewSrc.EndsWith("gif"))
                                     {
-                                        option = SearchOption.Gif;
+                                        type = ContentType.Gif;
                                     }
                                     else
                                     {
-                                        option = SearchOption.Image;
+                                        type = ContentType.Image;
                                     }
-                                    var item = new SearchItem(option, previewSrc, location);
+                                    var item = new SearchItem(type, previewSrc, location);
                                     foreach (var term in terms)
                                     {
                                         items.AddList(term, item);

@@ -28,7 +28,7 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
-        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption> { SearchOption.Image };
+        public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {
@@ -90,7 +90,7 @@ namespace Aurora.Infrastructure.Scrapers
                         {
                             var preview = image.GetAttributeValue("data-bkg");
                             var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").FirstOrDefault().GetAttributeValue("href");
-                            result.Add(new SearchItem(SearchOption.Image, preview, url));
+                            result.Add(new SearchItem(ContentType.Image, preview, url));
                         }
                     }
                 }

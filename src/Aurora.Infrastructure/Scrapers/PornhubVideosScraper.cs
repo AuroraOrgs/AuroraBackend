@@ -24,7 +24,7 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
-        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption>() { SearchOption.Video };
+        public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Video };
 
         public async Task<List<SearchItem>> ScrapAsync(string searchTerm, CancellationToken token = default)
         {
@@ -78,7 +78,7 @@ namespace Aurora.Infrastructure.Scrapers
                         string itemUrl = $"{baseUrl}{currentLinkAttributes["href"].Value}";
 
                         urlsCount++;
-                        videoItems.Add(new(SearchOption.Video, previewImage, itemUrl));
+                        videoItems.Add(new(ContentType.Video, previewImage, itemUrl));
                     }
                 }
 

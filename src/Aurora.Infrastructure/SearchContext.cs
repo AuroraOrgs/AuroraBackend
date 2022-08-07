@@ -14,7 +14,7 @@ namespace Aurora.Infrastructure
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<SearchRequest>()
-               .HasIndex(p => new { p.SearchTerm, p.Website, p.ContentOption }).IsUnique();
+               .HasIndex(p => new { p.SearchTerm, p.Website, p.ContentType }).IsUnique();
         }
     }
 }

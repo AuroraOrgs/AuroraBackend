@@ -27,7 +27,7 @@ namespace Aurora.Application.Scrapers
 
         public async Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default)
         {
-            var options = searchRequest.Websites.Select(website => searchRequest.SearchOptions.Select(option => (website, option))).Flatten();
+            var options = searchRequest.Websites.Select(website => searchRequest.ContentTypes.Select(option => (website, option))).Flatten();
             var scrapers = await _collector.CollectFor(options);
             IEnumerable<Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)>> scrapingTasks = null!;
             List<SearchResultDto> result;

@@ -27,7 +27,7 @@ namespace Aurora.Infrastructure.Scrapers
         }
 
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
-        public IEnumerable<SearchOption> Options { get; init; } = new List<SearchOption>() { SearchOption.Gif };
+        public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Gif };
 
         public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
         {
@@ -77,7 +77,7 @@ namespace Aurora.Infrastructure.Scrapers
                             var currentLinkImageAttributes = currentLinkGifNode.Attributes;
                             string imagePreviewUrl = $"{baseUrl}{currentLinkImageAttributes["href"].Value}";
                             string searchItemUrl = $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
-                            gifItems.Add(new(SearchOption.Gif, imagePreviewUrl, searchItemUrl));
+                            gifItems.Add(new(ContentType.Gif, imagePreviewUrl, searchItemUrl));
                         }
 
                         urlsCount++;

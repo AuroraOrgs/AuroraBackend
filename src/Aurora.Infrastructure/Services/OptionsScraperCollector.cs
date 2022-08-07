@@ -12,7 +12,7 @@ namespace Aurora.Infrastructure.Services
 {
     public class OptionsScraperCollector : IOptionsScraperCollector
     {
-        public IEnumerable<(SupportedWebsite Key, SearchOption value)> AllowedKeys => ScrapersContext.Scrapers.Keys;
+        public IEnumerable<(SupportedWebsite Key, ContentType value)> AllowedKeys => ScrapersContext.Scrapers.Keys;
 
         private readonly IServiceProvider _provider;
 
@@ -21,7 +21,7 @@ namespace Aurora.Infrastructure.Services
             _provider = provider;
         }
 
-        public ValueTask<IEnumerable<IOptionScraper>> CollectFor(IEnumerable<(SupportedWebsite Key, SearchOption value)> keys)
+        public ValueTask<IEnumerable<IOptionScraper>> CollectFor(IEnumerable<(SupportedWebsite Key, ContentType value)> keys)
         {
             var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
 

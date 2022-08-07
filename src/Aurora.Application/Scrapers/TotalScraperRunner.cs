@@ -35,7 +35,7 @@ namespace Aurora.Application.Scrapers
                         {
                             website
                         },
-                        SearchOptions = SearchOptionsContext.AllOptions,
+                        ContentTypes = ContentTypeContext.ContentTypes,
                         SearchTerm = result.Term
                     };
                     var resultDto = new SearchResultDto(result.Items, website);
