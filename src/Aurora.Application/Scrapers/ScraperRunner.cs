@@ -43,6 +43,7 @@ namespace Aurora.Application.Scrapers
                 if (scrapingTasks is not null)
                 {
                     var results = scrapingTasks.Where(x => x.IsCompletedSuccessfully).Select(x => x.Result);
+                    //TODO: update scraping process to scrap multiple tags and store them instead of reusing tags from request
                     result = ProcessResults(results, searchRequest.SearchTerms);
                 }
                 else
