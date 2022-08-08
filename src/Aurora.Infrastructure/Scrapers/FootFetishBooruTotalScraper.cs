@@ -28,7 +28,7 @@ namespace Aurora.Infrastructure.Scrapers
 
         public SupportedWebsite Website => SupportedWebsite.FootFetishBooru;
 
-        public async Task<IEnumerable<(string Term, List<SearchItem> Items)>> Scrap()
+        public async Task<IEnumerable<(List<string> Terms, List<SearchItem> Items)>> Scrap()
         {
             var config = _options.Value;
             var htmlDocument = new HtmlDocument
@@ -36,7 +36,7 @@ namespace Aurora.Infrastructure.Scrapers
                 OptionFixNestedTags = true
             };
 
-            List<(string Term, List<SearchItem> Items)> result;
+            List<(List<string> Terms, List<SearchItem> Items)> result;
             using var client = _clientFactory.CreateClient(HttpClientNames.DefaultClient);
 
             var baseUrl = Website.GetBaseUrl();
@@ -51,7 +51,7 @@ namespace Aurora.Infrastructure.Scrapers
                     {
                         pagesCount = Math.Min(config.MaxPagesCount, pagesCount);
                     }
-                    Dictionary<string, List<SearchItem>> items = new();
+                    Dictionary<List<string>, List<SearchItem>> items = new();
                     for (int i = 0; i < pagesCount; i++)
                     {
                         var pageUrl = $"{fullUrl}&pid={i * ScraperConstants.FootFetishBooruPostsPerPage}";
@@ -68,7 +68,8 @@ namespace Aurora.Infrastructure.Scrapers
                                     var specialTerms = new string[] { "score", "rating" };
                                     var terms = termsStr.Split(" ").Select(x => x.Trim())
                                         .Where(term => specialTerms.Where(special => term.StartsWith(special)).None())
-                                        .Where(term => term.IsNotEmpty());
+                                        .Where(term => term.IsNotEmpty())
+                                        .ToList();
 
                                     var hrefValue = post.GetAttributeValue("href", "none");
                                     var location = $"{baseUrl}/{hrefValue}".Replace("&amp;", "&");
@@ -82,10 +83,7 @@ namespace Aurora.Infrastructure.Scrapers
                                         type = ContentType.Image;
                                     }
                                     var item = new SearchItem(type, previewSrc, location);
-                                    foreach (var term in terms)
-                                    {
-                                        items.AddList(term, item);
-                                    }
+                                    items.AddList(terms, item);
                                 }
                             }
                         }

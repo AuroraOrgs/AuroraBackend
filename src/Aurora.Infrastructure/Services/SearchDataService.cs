@@ -69,36 +69,36 @@ namespace Aurora.Infrastructure.Services
                             .Include(x => x.QueueItems)
                             .Where(x => request.ContentTypes.Contains(x.ContentType)
                                 && request.Websites.Contains(x.Website)
-                                && request.SearchTerm == x.SearchTerm)
+                                && request.SearchTerms.Contains(x.SearchTerm))
                             .ToListAsync();
 
             var existingRequestsWithStatus = requests.Select(x => (Request: x, GetStatusFor(x)));
             var existingRequests = existingRequestsWithStatus.Select(x => x.Request);
 
-            var existingOptions = existingRequests.Select(x => (x.Website, ContentOption: x.ContentType));
-            List<(SupportedWebsite website, ContentType option)> requestedOptions = new List<(SupportedWebsite, ContentType)>();
+            var existingOptions = existingRequests.Select(x => (x.Website, x.ContentType, x.SearchTerm));
+            List<(SupportedWebsite website, ContentType type, string term)> requestedOptions = new List<(SupportedWebsite, ContentType, string)>();
             foreach (var website in request.Websites)
             {
                 foreach (var option in request.ContentTypes)
                 {
-                    requestedOptions.Add((website, option));
+                    foreach (var term in request.SearchTerms)
+                    {
+                        requestedOptions.Add((website, option, term));
+                    }
                 }
             }
             var newOptions = requestedOptions.Where(x => existingOptions.NotContains(x));
-
-            var newRequests = newOptions.Select(newOption =>
+            _logger.LogInformation(
+                  "Creating new requests with '{0}' contentTypes, '{1}' websites and '{2} terms'",
+                  newOptions.Select(x => x.type).CommaSeparate(),
+                  newOptions.Select(x => x.website).CommaSeparate(),
+                  newOptions.Select(x => x.term).CommaSeparate());
+            var newRequests = newOptions.Select(newOption => new SearchRequest()
             {
-                var newRequest = new SearchRequest()
-                {
-                    ContentType = newOption.option,
-                    OccurredCount = 1,
-                    SearchTerm = request.SearchTerm,
-                    Website = newOption.website
-                };
-                _logger.LogInformation(
-                    "Creating request with '{0}' option, '{1}' website and '{2} term'",
-                    newOption.option, newOption.website, request.SearchTerm);
-                return newRequest;
+                ContentType = newOption.type,
+                OccurredCount = 1,
+                SearchTerm = newOption.term,
+                Website = newOption.website
             })
                 .ToArray();
 
@@ -118,7 +118,7 @@ namespace Aurora.Infrastructure.Services
             _logger.LogInformation("Updated '{number}' records whilst fetching", updatedCount);
 
             var allRequests = existingRequestsWithStatus.Union(newRequests.Select(x => (x, SearchRequestStatus.NotFetched)));
-            var result = allRequests.ToDictionary(key => (key.Item1.Website, ContentOption: key.Item1.ContentType), value => (value.Item1.Id, value.Item2));
+            var result = allRequests.ToDictionary(key => (key.Item1.Website, key.Item1.ContentType, key.Item1.SearchTerm), value => (value.Item1.Id, value.Item2));
             return new SearchRequestState(result);
         }
 
@@ -144,10 +144,15 @@ namespace Aurora.Infrastructure.Services
                 var storedResults = await query
                     .ToListAsync();
 
+                var terms = state.StoredRequests.Keys.Select(x => x.Term).Distinct().ToList();
+
                 var results = storedResults.GroupBy(res => res.Requests.Where(x => idsToLoad.Contains(x.SearchRequestId))
                                                          .Select(x => x.SearchRequest)
                                                          .FirstOrDefault())
-                    .Select(group => new SearchResultDto(group.Select(item => new SearchItem(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl)).ToList(), group.Key.Website))
+                    .Select(group => new SearchResultDto(
+                        group.Select(item => new SearchItem(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl)).ToList(),
+                        terms,
+                        group.Key.Website))
                     .ToList();
                 var count = await filteredResults.CountAsync();
                 _logger.LogInformation("Loaded '{resultsCount}' out of total of '{existingCount}'  existing results for requests '[{ids}]'", results.Count, count, idsToLoad.CommaSeparate());
@@ -230,27 +235,30 @@ namespace Aurora.Infrastructure.Services
 
         private async Task StoreResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
         {
-            var resultToId = results.Select(result => result.Items.Select(item =>
-                                   (state.StoredRequests[(result.Website, item.ContentType)].RequestId, new SearchResult()
+            var resultToIds = results.Select(result => result.Items.Select(item =>
+                                   (result.Terms.Select(term => state.StoredRequests[(result.Website, item.ContentType, term)].RequestId), new SearchResult()
                                    {
                                        FoundTimeUtc = _dateTime.UtcNow,
                                        ImagePreviewUrl = item.ImagePreviewUrl,
                                        SearchItemUrl = item.SearchItemUrl
                                    })))
                                .Flatten()
-                               .ToDictionary(x => x.Item2, x => x.RequestId);
+                               .ToDictionary(x => x.Item2, x => x.Item1);
 
-            var newResults = resultToId.Keys.ToList();
+            var newResults = resultToIds.Keys.ToList();
             await _context.Result.AddRangeAsync(newResults);
-            var relations = newResults.Select(result => new SearchRequestToResult()
-            {
-                SearchRequestId = resultToId[result],
-                SearchResultId = result.Id
-            }).ToList();
+            var relations = newResults
+                .SelectMany(result => 
+                    resultToIds[result].Select(requestId => new SearchRequestToResult()
+                    {
+                        SearchRequestId = requestId,
+                        SearchResultId = result.Id
+                    }))
+                .ToList();
 
             await _context.RequestToResult.AddRangeAsync(relations);
 
-            _logger.LogInformation("Stored '{0}' rows of new search results and create '{1}' relations", newResults.Count, relations.Count);
+            _logger.LogInformation("Stored '{0}' rows of new search results and created '{1}' relations", newResults.Count, relations.Count);
         }
     }
 }

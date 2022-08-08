@@ -36,9 +36,9 @@ namespace Aurora.Application.Scrapers
                             website
                         },
                         ContentTypes = ContentTypeContext.ContentTypes,
-                        SearchTerm = result.Term
+                        SearchTerms = result.Terms
                     };
-                    var resultDto = new SearchResultDto(result.Items, website);
+                    var resultDto = new SearchResultDto(result.Items, result.Terms, website);
                     var state = await _search.FetchRequest(request, false);
                     await _search.MarkAsQueued(state);
                     await _search.AddOrUpdateResults(state, new[] { resultDto });
