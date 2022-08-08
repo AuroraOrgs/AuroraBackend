@@ -33,9 +33,9 @@ namespace Aurora.Application.Scrapers
             List<SearchResultDto> result;
             try
             {
-                scrapingTasks = scrapers.Select(scraper => ExecuteScraping(scraper, searchRequest.SearchTerm, onProcessed, token));
+                scrapingTasks = scrapers.Select(scraper => ExecuteScraping(scraper, searchRequest.SearchTerms, onProcessed, token));
                 var results = await Task.WhenAll(scrapingTasks);
-                result = ProcessResults(results);
+                result = ProcessResults(results, searchRequest.SearchTerms);
             }
             catch (OperationCanceledException)
             {
@@ -43,7 +43,8 @@ namespace Aurora.Application.Scrapers
                 if (scrapingTasks is not null)
                 {
                     var results = scrapingTasks.Where(x => x.IsCompletedSuccessfully).Select(x => x.Result);
-                    result = ProcessResults(results);
+                    //TODO: update scraping process to scrap multiple tags and store them instead of reusing tags from request
+                    result = ProcessResults(results, searchRequest.SearchTerms);
                 }
                 else
                 {
@@ -53,22 +54,22 @@ namespace Aurora.Application.Scrapers
             return result;
         }
 
-        private static List<SearchResultDto> ProcessResults(IEnumerable<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> results)
+        private static List<SearchResultDto> ProcessResults(IEnumerable<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> results, List<string> terms)
         {
             return results.Select(x => (x.scraper, items: x.result.WithDefault(_emptyList)))
                           .GroupBy(x => x.scraper.Website)
-                          .Select(x => new SearchResultDto(x.Select(x => x.items).Flatten().ToList(), x.Key))
+                          .Select(x => new SearchResultDto(x.Select(x => x.items).Flatten().ToList(), terms, x.Key))
                           .ToList();
         }
 
-        private async Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> ExecuteScraping(IOptionScraper scraper, string term, Func<SearchResultDto, Task>? onProcessed, CancellationToken token)
+        private async Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> ExecuteScraping(IOptionScraper scraper, List<string> terms, Func<SearchResultDto, Task>? onProcessed, CancellationToken token)
         {
             ValueOrNull<List<SearchItem>> result;
             try
             {
                 _scraperLimiter.WaitOne();
-                result = await scraper.ScrapAsync(term, token);
-                onProcessed?.Invoke(new SearchResultDto(result.WithDefault(_emptyList), scraper.Website));
+                result = await scraper.ScrapAsync(terms, token);
+                onProcessed?.Invoke(new SearchResultDto(result.WithDefault(_emptyList), terms, scraper.Website));
             }
             catch (Exception ex)
             {

@@ -6,6 +6,7 @@ using Aurora.Infrastructure.Extensions;
 using Aurora.Infrastructure.Services;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -30,7 +31,7 @@ namespace Aurora.Infrastructure.Scrapers
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
         public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image };
 
-        public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
+        public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
         {
             var config = _config.Value;
             var baseUrl = Website.GetBaseUrl();
@@ -41,6 +42,7 @@ namespace Aurora.Infrastructure.Scrapers
             };
 
             var driver = await _initializer.Initialize();
+            var term = String.Join(" ", terms);
             var searchTerm = term.FormatTermToUrl();
             var result = new List<SearchItem>();
 

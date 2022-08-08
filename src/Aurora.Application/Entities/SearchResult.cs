@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace Aurora.Application.Entities
@@ -11,7 +12,6 @@ namespace Aurora.Application.Entities
         public string? SearchItemUrl { get; set; }
         public DateTime FoundTimeUtc { get; set; }
 
-        public Guid RequestId { get; set; }
-        public SearchRequest Request { get; set; }
+        public IEnumerable<SearchRequestToResult> Requests { get; set; } = null!;
     }
 }

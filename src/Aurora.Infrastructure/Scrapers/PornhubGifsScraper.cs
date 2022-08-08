@@ -5,6 +5,7 @@ using Aurora.Infrastructure.Contracts;
 using Aurora.Infrastructure.Extensions;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -29,7 +30,7 @@ namespace Aurora.Infrastructure.Scrapers
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
         public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Gif };
 
-        public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
+        public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
         {
             var config = _config.Value;
             var baseUrl = Website.GetBaseUrl();
@@ -54,6 +55,7 @@ namespace Aurora.Infrastructure.Scrapers
 
                 var currentPageNumber = i + 1;
                 // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
+                var term = String.Join(" ", terms);
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
                 if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)

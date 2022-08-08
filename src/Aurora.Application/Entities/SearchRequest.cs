@@ -11,11 +11,11 @@ namespace Aurora.Application.Entities
         public Guid Id { get; set; }
 
         [MaxLength(255)]
-        public string SearchTerm { get; set; }
+        public string SearchTerm { get; set; } = null!;
         public SupportedWebsite Website { get; set; }
         public ContentType ContentType { get; set; }
 
         public int OccurredCount { get; set; }
-        public IEnumerable<SearchRequestQueueItem> QueueItems { get; set; }
+        public IEnumerable<SearchRequestQueueItem> QueueItems { get; set; } = null!;
     }
 }

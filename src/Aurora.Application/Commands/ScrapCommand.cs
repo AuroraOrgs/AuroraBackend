@@ -1,5 +1,6 @@
 ﻿using Aurora.Application.Models;
 using MediatR;
+using System.Collections.Generic;
 
 namespace Aurora.Application.Commands
 {
@@ -9,7 +10,7 @@ namespace Aurora.Application.Commands
         {
             SearchRequest = new()
             {
-                SearchTerm = "Haha - default is written by hand!"
+                SearchTerms = new List<string>()
             };
         }
 

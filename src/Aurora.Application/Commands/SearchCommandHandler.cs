@@ -53,25 +53,25 @@ namespace Aurora.Application.Commands
 
             if (notFetchedWebsites.Any())
             {
-                await QueueWebsites(requestWrapper.UserId, request.SearchTerm, notFetchedWebsites);
+                await QueueWebsites(requestWrapper.UserId, request.SearchTerms, notFetchedWebsites);
             }
 
             var nonCachedWebsites = queuedWebsites.Union(notFetchedWebsites);
             var resultItems = result.Results;
             foreach (var website in nonCachedWebsites)
             {
-                resultItems.Add(new SearchResultDto(website));
+                resultItems.Add(new SearchResultDto(request.SearchTerms, website));
             }
 
             log($"Finished processing in {GetType().Name}");
             return new SearchCommandResult(resultItems, result.TotalItems);
         }
 
-        private async Task QueueWebsites(string? userId, string searchTerm, IEnumerable<SupportedWebsite> notFetchedWebsites)
+        private async Task QueueWebsites(string? userId, List<string> searchTerms, IEnumerable<SupportedWebsite> notFetchedWebsites)
         {
             var childRequest = new SearchRequestDto
             {
-                SearchTerm = searchTerm,
+                SearchTerms = searchTerms,
                 ContentTypes = ContentTypeContext.ContentTypes,
                 Websites = notFetchedWebsites.ToList()
             };
@@ -79,7 +79,7 @@ namespace Aurora.Application.Commands
             string websites = String.Join(", ", notFetchedWebsites.Select(x => x.ToString()));
             var newState = await _search.FetchRequest(childRequest, false);
             _queue.Enqueue(
-                $"Scrapping {websites} for {searchTerm}",
+                $"Scrapping {websites} for {searchTerms.CommaSeparate()}",
                 new ScrapCommand(childRequest, userId));
             await _search.MarkAsQueued(newState);
         }

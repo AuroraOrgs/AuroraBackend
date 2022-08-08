@@ -22,14 +22,14 @@ namespace Aurora.Application.Scrapers
 
         public IEnumerable<ContentType> ContentTypes => _innerScraper.ContentTypes;
 
-        public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
+        public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
         {
             var currentScraper = _innerScraper.GetType();
             var logger = _loggerFactory.CreateLogger(currentScraper);
             var watch = Stopwatch.StartNew();
             try
             {
-                return await _innerScraper.ScrapAsync(term, token);
+                return await _innerScraper.ScrapAsync(terms, token);
             }
             finally
             {

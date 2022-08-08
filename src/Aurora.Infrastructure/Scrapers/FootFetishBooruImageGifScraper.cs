@@ -34,12 +34,13 @@ namespace Aurora.Infrastructure.Scrapers
         public SupportedWebsite Website => SupportedWebsite.FootFetishBooru;
         public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image, ContentType.Gif };
 
-        public async Task<List<SearchItem>> ScrapAsync(string term, CancellationToken token = default)
+        public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
         {
             var config = _config.Value;
             using var client = _clientFactory.CreateClient(HttpClientNames.DefaultClient);
             var baseUrl = Website.GetBaseUrl();
-            var fullUrl = $"{baseUrl}/index.php?page=post&s=list&tags={TermToUrlFormat(term)}";
+            string term = String.Join(" ", terms.Select(TermToUrlFormat));
+            var fullUrl = $"{baseUrl}/index.php?page=post&s=list&tags={term}";
             var htmlDocument = new HtmlDocument
             {
                 OptionFixNestedTags = true
@@ -115,7 +116,7 @@ namespace Aurora.Infrastructure.Scrapers
             };
             var baseUrl = Website.GetBaseUrl();
             var items = new List<SearchItem>();
-            var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={TermToUrlFormat(term)}&pid={pageNumber * ScraperConstants.FootFetishBooruPostsPerPage}";
+            var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={term}&pid={pageNumber * ScraperConstants.FootFetishBooruPostsPerPage}";
             if (await client.TryLoadDocumentFromUrl(htmlDocument, pageUrl))
             {
                 var posts = htmlDocument.DocumentNode.SelectNodes("//a[@id]")

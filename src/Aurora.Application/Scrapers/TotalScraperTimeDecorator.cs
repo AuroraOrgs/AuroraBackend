@@ -19,7 +19,7 @@ namespace Aurora.Application.Scrapers
 
         public SupportedWebsite Website => _innerScraper.Website;
 
-        public async Task<IEnumerable<(string Term, List<SearchItem> Items)>> Scrap()
+        public async Task<IEnumerable<(List<string> Terms, List<SearchItem> Items)>> Scrap()
         {
             var currentScraper = _innerScraper.GetType();
             var logger = _factory.CreateLogger(currentScraper);
