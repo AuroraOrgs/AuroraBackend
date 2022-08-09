@@ -1,5 +1,4 @@
-﻿using Aurora.Shared.Extensions;
-using OpenQA.Selenium;
+﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
 
 namespace Aurora.Scrapers.Extensions
@@ -44,9 +43,9 @@ namespace Aurora.Scrapers.Extensions
             return result;
         }
 
-        public static IWebElement FindElementOrNull(this ISearchContext context, By by)
+        public static IWebElement? FindElementOrNull(this ISearchContext context, By by)
         {
-            IWebElement result;
+            IWebElement? result;
             try
             {
                 result = context.FindElement(by);
@@ -89,7 +88,7 @@ namespace Aurora.Scrapers.Extensions
         public static void FindAndClickIfExists(this ISearchContext context, By by)
         {
             var element = context.FindElementOrNull(by);
-            if (element.IsNotNull())
+            if (element is not null)
             {
                 try
                 {

@@ -3,29 +3,27 @@ using Aurora.Application.Scrapers;
 using Aurora.Shared.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Services
+namespace Aurora.Scrapers.Discovery
 {
     public class OptionsScraperCollector : IOptionsScraperCollector
     {
-        public IEnumerable<(SupportedWebsite Key, ContentType value)> AllowedKeys => ScrapersContext.Scrapers.Keys;
+        public IEnumerable<(SupportedWebsite Key, ContentType value)> AllowedKeys => _ctx.Scrapers.Keys;
 
         private readonly IServiceProvider _provider;
+        private readonly OptionScraperContext _ctx;
 
-        public OptionsScraperCollector(IServiceProvider provider)
+        public OptionsScraperCollector(IServiceProvider provider, OptionScraperContext ctx)
         {
             _provider = provider;
+            _ctx = ctx;
         }
 
         public ValueTask<IEnumerable<IOptionScraper>> CollectFor(IEnumerable<(SupportedWebsite Key, ContentType value)> keys)
         {
             var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
 
-            var scrapers = keys.Select(key => GetScrapersOrEmpty(ScrapersContext.Scrapers, key))
+            var scrapers = keys.Select(key => GetScrapersOrEmpty(_ctx.Scrapers, key))
                                .Flatten()
                                .Distinct()
                                .Select(_provider.GetService)

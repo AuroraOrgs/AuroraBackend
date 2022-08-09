@@ -1,11 +1,14 @@
-﻿using Aurora.Scrapers.Config;
+﻿using Aurora.Application.Scrapers;
+using Aurora.Scrapers.Config;
 using Aurora.Scrapers.Contracts;
+using Aurora.Scrapers.Discovery;
 using Aurora.Scrapers.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 using System.Net;
+using System.Reflection;
 
 namespace Aurora.Scrapers
 {
@@ -15,7 +18,44 @@ namespace Aurora.Scrapers
         {
             services.AddScoped<DriverInitializer>();
             services.AddHttpClients();
+            var (optionScrapers, totalScrapers) = DiscoverScrapers();
+            foreach (var scraper in optionScrapers)
+            {
+                services.AddTransient(scraper);
+            }
+
+            foreach (var scraper in totalScrapers)
+            {
+                services.AddTransient(scraper);
+            }
+
+            var scrapersContext = new ScrapersContext(totalScrapers, optionScrapers);
+            services.AddSingleton(scrapersContext);
+            services.AddSingleton<OptionScraperContext>();
+            services.AddScoped<IOptionsScraperCollector, OptionsScraperCollector>();
+
             return services;
+        }
+
+        private static (List<Type> Option, List<Type> Total) DiscoverScrapers()
+        {
+            var baseScraperType = typeof(IOptionScraper);
+            var baseTotalScraperType = typeof(ITotalScraper);
+            var types = Assembly.GetExecutingAssembly().GetTypes().Where(x => x.IsAssignableTo(baseScraperType) || x.IsAssignableTo(baseTotalScraperType));
+            var optionScrapers = new List<Type>();
+            var totalScrapers = new List<Type>();
+            foreach (var type in types)
+            {
+                if (type.IsAssignableTo(baseScraperType))
+                {
+                    optionScrapers.Add(type);
+                }
+                else
+                {
+                    totalScrapers.Add(type);
+                }
+            }
+            return (optionScrapers, totalScrapers);
         }
 
         private static void AddHttpClients(this IServiceCollection services)

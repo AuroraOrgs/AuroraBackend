@@ -2,6 +2,7 @@ using Aurora.Application;
 using Aurora.Infrastructure;
 using Aurora.Infrastructure.Services;
 using Aurora.Presentation.Services;
+using Aurora.Scrapers;
 using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -25,7 +26,8 @@ namespace Aurora.Presentation
         {
             services
                 .AddApplication()
-                .AddInfrastructure(Configuration);
+                .AddInfrastructure(Configuration)
+                .AddScrapers();
 
             services.AddControllers();
 
@@ -43,17 +45,6 @@ namespace Aurora.Presentation
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aurora", Version = "v1" });
             });
-
-            var (optionScrapers, totalScrapers) = ScrapersContext.DiscoverScrapers(services);
-            foreach (var scraper in optionScrapers)
-            {
-                services.AddTransient(scraper);
-            }
-
-            foreach (var scraper in totalScrapers)
-            {
-                services.AddTransient(scraper);
-            }
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

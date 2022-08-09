@@ -16,7 +16,6 @@ namespace Aurora.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
         {
-            services.AddScoped<IOptionsScraperCollector, OptionsScraperCollector>();
             services.AddScoped<ISearchDataService, SearchDataService>();
             services.AddScoped<IQueueProvider, QueueProvider>();
             services.AddScoped<IDateTimeProvider, SystemClockDateTimeProvider>();

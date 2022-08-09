@@ -1,7 +1,7 @@
 ﻿using Aurora.Application.Scrapers;
 using Aurora.Infrastructure;
-using Aurora.Infrastructure.Services;
 using Aurora.Scrapers.Config;
+using Aurora.Scrapers.Discovery;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +25,8 @@ namespace Aurora.Presentation.Extensions
         public static IServiceProvider StartRecurringJobs(this IServiceProvider provider)
         {
             var totalConfig = provider.GetRequiredService<IOptions<TotalScrapersConfig>>().Value;
-            var scrapers = ScrapersContext.TotalScrapers;
+            var ctx = provider.GetRequiredService<ScrapersContext>();
+            var scrapers = ctx.TotalScrapers;
             foreach (var scraper in scrapers)
             {
                 var jobId = scraper.Name;
