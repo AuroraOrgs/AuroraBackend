@@ -1,8 +1,9 @@
 ﻿using Aurora.Application.Models;
 using Aurora.Application.Scrapers;
-using Aurora.Infrastructure.Config;
-using Aurora.Infrastructure.Contracts;
-using Aurora.Infrastructure.Extensions;
+using Aurora.Scrapers.Config;
+using Aurora.Scrapers.Contracts;
+using Aurora.Scrapers.Extensions;
+using Aurora.Scrapers.Option;
 using Aurora.Shared.Extensions;
 using Aurora.Shared.Models;
 using HtmlAgilityPack;
@@ -13,7 +14,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Scrapers
+namespace Aurora.Scrapers.Total
 {
     public class FootFetishBooruTotalScraper : ITotalScraper
     {

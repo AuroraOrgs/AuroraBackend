@@ -1,17 +1,11 @@
 ﻿using Aurora.Application.Models;
 using Aurora.Application.Scrapers;
-using Aurora.Infrastructure.Config;
-using Aurora.Infrastructure.Contracts;
-using Aurora.Infrastructure.Extensions;
+using Aurora.Scrapers.Config;
+using Aurora.Scrapers.Contracts;
+using Aurora.Scrapers.Extensions;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Scrapers
+namespace Aurora.Scrapers.Option
 {
     public class XVideosVideosScraper : IOptionScraper
     {
@@ -53,7 +47,7 @@ namespace Aurora.Infrastructure.Scrapers
                 }
 
                 // e.g: https://www.xvideos.com/?k=test+value&p=1
-                var term = String.Join(" ", terms);
+                var term = string.Join(" ", terms);
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
                 if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)

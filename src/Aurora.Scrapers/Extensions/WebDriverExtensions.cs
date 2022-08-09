@@ -1,11 +1,8 @@
 ﻿using Aurora.Shared.Extensions;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Extensions
+namespace Aurora.Scrapers.Extensions
 {
     public static class WebDriverExtensions
     {

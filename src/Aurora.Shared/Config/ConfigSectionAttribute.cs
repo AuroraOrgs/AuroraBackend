@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Aurora.Infrastructure.Config
+namespace Aurora.Shared.Config
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class ConfigSectionAttribute : Attribute

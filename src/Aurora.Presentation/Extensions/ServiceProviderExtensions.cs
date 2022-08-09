@@ -1,7 +1,7 @@
 ﻿using Aurora.Application.Scrapers;
 using Aurora.Infrastructure;
-using Aurora.Infrastructure.Config;
 using Aurora.Infrastructure.Services;
+using Aurora.Scrapers.Config;
 using Hangfire;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

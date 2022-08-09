@@ -1,19 +1,13 @@
 ﻿using Aurora.Application.Models;
 using Aurora.Application.Scrapers;
-using Aurora.Infrastructure.Config;
-using Aurora.Infrastructure.Contracts;
-using Aurora.Infrastructure.Extensions;
-using Aurora.Infrastructure.Services;
+using Aurora.Scrapers.Config;
+using Aurora.Scrapers.Contracts;
+using Aurora.Scrapers.Extensions;
+using Aurora.Scrapers.Services;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Scrapers
+namespace Aurora.Scrapers.Option
 {
     public class PornhubImagesScraper : IOptionScraper
     {
@@ -42,7 +36,7 @@ namespace Aurora.Infrastructure.Scrapers
             };
 
             var driver = await _initializer.Initialize();
-            var term = String.Join(" ", terms);
+            var term = string.Join(" ", terms);
             var searchTerm = term.FormatTermToUrl();
             var result = new List<SearchItem>();
 

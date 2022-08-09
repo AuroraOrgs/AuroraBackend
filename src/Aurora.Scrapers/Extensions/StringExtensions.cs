@@ -1,4 +1,4 @@
-﻿namespace Aurora.Infrastructure.Extensions
+﻿namespace Aurora.Scrapers.Extensions
 {
     internal static class StringExtensions
     {

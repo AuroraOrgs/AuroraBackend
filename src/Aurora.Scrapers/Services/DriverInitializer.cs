@@ -1,11 +1,9 @@
-﻿using Aurora.Infrastructure.Config;
+﻿using Aurora.Scrapers.Config;
 using Microsoft.Extensions.Options;
 using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Remote;
-using System;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Services
+namespace Aurora.Scrapers.Services
 {
     public class DriverInitializer
     {

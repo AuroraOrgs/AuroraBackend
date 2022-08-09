@@ -1,8 +1,6 @@
 ﻿using HtmlAgilityPack;
-using System.Net.Http;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Extensions
+namespace Aurora.Scrapers.Extensions
 {
     public static class HttpClientExtensions
     {

@@ -1,6 +1,6 @@
 ﻿using HtmlAgilityPack;
 
-namespace Aurora.Infrastructure.Extensions
+namespace Aurora.Scrapers.Extensions
 {
     public static class HtmlNodeExtensions
     {

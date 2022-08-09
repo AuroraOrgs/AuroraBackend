@@ -1,33 +1,24 @@
 ﻿using Aurora.Application.Models;
 using Aurora.Application.Scrapers;
-using Aurora.Infrastructure.Config;
-using Aurora.Infrastructure.Contracts;
-using Aurora.Infrastructure.Extensions;
+using Aurora.Scrapers.Config;
+using Aurora.Scrapers.Contracts;
+using Aurora.Scrapers.Extensions;
 using Aurora.Shared.Models;
 using HtmlAgilityPack;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Scrapers
+namespace Aurora.Scrapers.Option
 {
     public class FootFetishBooruImageGifScraper : IOptionScraper
     {
         private static List<SearchItem> _emptyResult = new List<SearchItem>();
 
         private readonly IHttpClientFactory _clientFactory;
-        private readonly ILogger<FootFetishBooruImageGifScraper> _logger;
         private readonly IOptions<ScrapersConfig> _config;
 
-        public FootFetishBooruImageGifScraper(IHttpClientFactory clientFactory, ILogger<FootFetishBooruImageGifScraper> logger, IOptions<ScrapersConfig> config)
+        public FootFetishBooruImageGifScraper(IHttpClientFactory clientFactory, IOptions<ScrapersConfig> config)
         {
             _clientFactory = clientFactory;
-            _logger = logger;
             _config = config;
         }
 
@@ -39,7 +30,7 @@ namespace Aurora.Infrastructure.Scrapers
             var config = _config.Value;
             using var client = _clientFactory.CreateClient(HttpClientNames.DefaultClient);
             var baseUrl = Website.GetBaseUrl();
-            string term = String.Join(" ", terms.Select(TermToUrlFormat));
+            string term = string.Join("+", terms.Select(TermToUrlFormat));
             var fullUrl = $"{baseUrl}/index.php?page=post&s=list&tags={term}";
             var htmlDocument = new HtmlDocument
             {
@@ -92,7 +83,7 @@ namespace Aurora.Infrastructure.Scrapers
                 var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
                 var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
                 var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
-                if (lastPidStr is not null && Int32.TryParse(lastPidStr, out int lastPid))
+                if (lastPidStr is not null && int.TryParse(lastPidStr, out int lastPid))
                 {
                     result = lastPid / ScraperConstants.FootFetishBooruPostsPerPage + 1;
                 }
