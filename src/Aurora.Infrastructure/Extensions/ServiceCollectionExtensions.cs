@@ -1,4 +1,4 @@
-﻿using Aurora.Infrastructure.Config;
+﻿using Aurora.Shared.Config;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;

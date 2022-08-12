@@ -1,18 +1,12 @@
 ﻿using Aurora.Application.Models;
 using Aurora.Application.Scrapers;
-using Aurora.Infrastructure.Config;
-using Aurora.Infrastructure.Contracts;
-using Aurora.Infrastructure.Extensions;
+using Aurora.Scrapers.Config;
+using Aurora.Scrapers.Contracts;
+using Aurora.Scrapers.Extensions;
 using HtmlAgilityPack;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Scrapers
+namespace Aurora.Scrapers.Option
 {
     public class PornhubGifsScraper : IOptionScraper
     {
@@ -55,7 +49,7 @@ namespace Aurora.Infrastructure.Scrapers
 
                 var currentPageNumber = i + 1;
                 // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
-                var term = String.Join(" ", terms);
+                var term = string.Join(" ", terms);
                 var searchTermUrlFormatted = term.FormatTermToUrl();
                 var searchPageUrl = $"{baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
                 if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)

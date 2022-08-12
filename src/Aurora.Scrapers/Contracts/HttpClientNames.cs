@@ -1,4 +1,4 @@
-﻿namespace Aurora.Infrastructure.Contracts
+﻿namespace Aurora.Scrapers.Contracts
 {
     public static class HttpClientNames
     {

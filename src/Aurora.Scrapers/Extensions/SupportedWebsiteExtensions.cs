@@ -1,7 +1,6 @@
 ﻿using Aurora.Application.Models;
-using System;
 
-namespace Aurora.Infrastructure.Extensions
+namespace Aurora.Scrapers.Extensions
 {
     public static class SupportedWebsiteExtensions
     {

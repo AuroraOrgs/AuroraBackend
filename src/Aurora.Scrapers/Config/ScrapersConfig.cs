@@ -1,4 +1,6 @@
-﻿namespace Aurora.Infrastructure.Config
+﻿using Aurora.Shared.Config;
+
+namespace Aurora.Scrapers.Config
 {
     [ConfigSection(SectionName)]
     public class ScrapersConfig

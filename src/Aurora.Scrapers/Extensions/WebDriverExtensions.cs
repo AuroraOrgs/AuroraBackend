@@ -1,11 +1,7 @@
-﻿using Aurora.Shared.Extensions;
-using OpenQA.Selenium;
+﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Interactions;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 
-namespace Aurora.Infrastructure.Extensions
+namespace Aurora.Scrapers.Extensions
 {
     public static class WebDriverExtensions
     {
@@ -47,9 +43,9 @@ namespace Aurora.Infrastructure.Extensions
             return result;
         }
 
-        public static IWebElement FindElementOrNull(this ISearchContext context, By by)
+        public static IWebElement? FindElementOrNull(this ISearchContext context, By by)
         {
-            IWebElement result;
+            IWebElement? result;
             try
             {
                 result = context.FindElement(by);
@@ -92,7 +88,7 @@ namespace Aurora.Infrastructure.Extensions
         public static void FindAndClickIfExists(this ISearchContext context, By by)
         {
             var element = context.FindElementOrNull(by);
-            if (element.IsNotNull())
+            if (element is not null)
             {
                 try
                 {

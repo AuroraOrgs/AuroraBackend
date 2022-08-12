@@ -1,7 +1,7 @@
-﻿using Hangfire;
-using System.Collections.Generic;
+﻿using Aurora.Shared.Config;
+using Hangfire;
 
-namespace Aurora.Infrastructure.Config
+namespace Aurora.Scrapers.Config
 {
     [ConfigSection(ScrapersConfig.SectionName, nameof(ScrapersConfig.Total))]
     public class TotalScrapersConfig
