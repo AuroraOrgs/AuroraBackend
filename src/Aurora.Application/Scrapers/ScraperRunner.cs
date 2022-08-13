@@ -13,7 +13,7 @@ namespace Aurora.Application.Scrapers
     public class ScraperRunner : IScraperRunner
     {
         //Used to prevent excessive allocation
-        private static readonly List<SearchItem> _emptyList = new();
+        private static readonly List<SearchItem<SearchResultData>> _emptyList = new();
         //TODO: Add configuration of maximum semaphore count
         private Semaphore _scraperLimiter = new Semaphore(1, 5);
         private readonly IOptionsScraperCollector _collector;
@@ -29,7 +29,7 @@ namespace Aurora.Application.Scrapers
         {
             var options = searchRequest.Websites.Select(website => searchRequest.ContentTypes.Select(option => (website, option))).Flatten();
             var scrapers = await _collector.CollectFor(options);
-            IEnumerable<Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)>> scrapingTasks = null!;
+            IEnumerable<Task<(ValueOrNull<List<SearchItem<SearchResultData>>> result, IOptionScraper scraper)>> scrapingTasks = null!;
             List<SearchResultDto> result;
             try
             {
@@ -54,7 +54,7 @@ namespace Aurora.Application.Scrapers
             return result;
         }
 
-        private static List<SearchResultDto> ProcessResults(IEnumerable<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> results, List<string> terms)
+        private static List<SearchResultDto> ProcessResults(IEnumerable<(ValueOrNull<List<SearchItem<SearchResultData>>> result, IOptionScraper scraper)> results, List<string> terms)
         {
             return results.Select(x => (x.scraper, items: x.result.WithDefault(_emptyList)))
                           .GroupBy(x => x.scraper.Website)
@@ -62,9 +62,9 @@ namespace Aurora.Application.Scrapers
                           .ToList();
         }
 
-        private async Task<(ValueOrNull<List<SearchItem>> result, IOptionScraper scraper)> ExecuteScraping(IOptionScraper scraper, List<string> terms, Func<SearchResultDto, Task>? onProcessed, CancellationToken token)
+        private async Task<(ValueOrNull<List<SearchItem<SearchResultData>>> result, IOptionScraper scraper)> ExecuteScraping(IOptionScraper scraper, List<string> terms, Func<SearchResultDto, Task>? onProcessed, CancellationToken token)
         {
-            ValueOrNull<List<SearchItem>> result;
+            ValueOrNull<List<SearchItem<SearchResultData>>> result;
             try
             {
                 _scraperLimiter.WaitOne();
@@ -74,7 +74,7 @@ namespace Aurora.Application.Scrapers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to scrap with following message '{0}'", ex.Message);
-                result = ValueOrNull<List<SearchItem>>.CreateNull($"Failed to scrap with {ex.Message}");
+                result = ValueOrNull<List<SearchItem<SearchResultData>>>.CreateNull($"Failed to scrap with {ex.Message}");
             }
             finally
             {
