@@ -1,21 +1,31 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Aurora.Shared.Extensions
 {
     public static class JsonExtensions
     {
-
         private static JsonSerializerSettings _jsonSettings = new()
         {
             TypeNameHandling = TypeNameHandling.All
         };
 
+        public static JObject? ToJObject<T>(this T? obj)
+        {
+            JObject? result;
+            if (obj is not null)
+            {
+                var converter = JsonSerializer.Create(_jsonSettings);
+                result = JObject.FromObject(obj, converter);
+            }
+            else
+            {
+                result = null;
+            }
+            return result;
+        }
 
-        public static T? GetData<T>(this JObject? obj)
+        public static T? ToData<T>(this JObject? obj)
         {
             T? result;
             if (obj is null)

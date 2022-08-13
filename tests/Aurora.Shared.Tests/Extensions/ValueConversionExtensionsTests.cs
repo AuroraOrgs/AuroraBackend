@@ -32,11 +32,10 @@ public class ValueConversionExtensionsTests
         {
             TypeNameHandling = TypeNameHandling.All
         };
-        var converter = JsonSerializer.Create(jsonSettings);
-        var jobj = JObject.FromObject(obj, converter);
+        var jobj = obj.ToJObject();
         var str = jobj.ConvertToString();
         var jobj2 = str.ParseNullableJson();
-        var result = jobj2.GetData<Child>();
+        var result = jobj2.ToData<Child>();
 
         //Assert
         result.Should().NotBeNull().And.BeAssignableTo<Child>().And.BeEquivalentTo(obj);
