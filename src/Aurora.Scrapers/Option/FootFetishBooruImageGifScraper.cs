@@ -76,20 +76,27 @@ namespace Aurora.Scrapers.Option
         {
             ValueOrNull<int> result;
             var paginator = searchPage.DocumentNode.SelectSingleNode("//div[@id='paginator']");
-            var lastButton = paginator.ChildNodes.Last();
-            if (lastButton is not null && lastButton.GetAttributeValue("alt", "none") == "last page")
+            if (paginator is not null)
             {
-                const string defVal = "none";
-                var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
-                var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
-                var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
-                if (lastPidStr is not null && int.TryParse(lastPidStr, out int lastPid))
+                var lastButton = paginator.ChildNodes.Last();
+                if (lastButton is not null && lastButton.GetAttributeValue("alt", "none") == "last page")
                 {
-                    result = lastPid / ScraperConstants.FootFetishBooruPostsPerPage + 1;
+                    const string defVal = "none";
+                    var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
+                    var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
+                    var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
+                    if (lastPidStr is not null && int.TryParse(lastPidStr, out int lastPid))
+                    {
+                        result = lastPid / ScraperConstants.FootFetishBooruPostsPerPage + 1;
+                    }
+                    else
+                    {
+                        result = 1;
+                    }
                 }
                 else
                 {
-                    result = 1;
+                    result = ValueOrNull<int>.CreateNull();
                 }
             }
             else
