@@ -9,8 +9,8 @@ namespace Aurora.Application.Entities
     {
         [Key]
         public Guid Id { get; set; }
-        public string? ImagePreviewUrl { get; set; }
-        public string? SearchItemUrl { get; set; }
+        public string ImagePreviewUrl { get; set; } = "";
+        public string SearchItemUrl { get; set; } = "";
         public DateTime FoundTimeUtc { get; set; }
         public JObject? AdditionalData { get; set; } = null;
 
