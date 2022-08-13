@@ -21,6 +21,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Aurora.Infrastructure.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Aurora.Application\Aurora.Application.csproj" />
     <ProjectReference Include="..\Aurora.Shared\Aurora.Shared.csproj" />
   </ItemGroup>

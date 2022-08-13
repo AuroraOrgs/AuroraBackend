@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using Aurora.Application.Models;
+using Aurora.Infrastructure.Tests.Base;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Aurora.Infrastructure.Tests.Dependencies;
@@ -22,7 +24,7 @@ public class JObjectTests
     public void WhenConvertingWithTypeNameHandling_ShouldPreserveChildType()
     {
         //Arrange
-        var obj = new Child(69, 420);
+        var obj = new TestResultData(69);
         var settings = new JsonSerializerSettings()
         {
             TypeNameHandling = TypeNameHandling.All
@@ -30,43 +32,20 @@ public class JObjectTests
 
         //Act 
         var json = JsonConvert.SerializeObject(obj, settings);
-        var result = JsonConvert.DeserializeObject<Parent>(json, settings);
+        var result = JsonConvert.DeserializeObject<SearchResultData>(json, settings);
 
         //Assert
-        Assert.IsType<Child>(result);
+        Assert.IsType<TestResultData>(result);
     }
 
     [Fact]
-    public void WhenConvertingWithoutTypeNameHandling_ShouldNotPreserveChildType()
+    public void WhenSerializingNull_ShouldReturnNullString()
     {
         //Arrange
-        var obj = new Child(69, 420);
-
+        JObject? obj = null;
         //Act 
-        var json = JsonConvert.SerializeObject(obj);
-        var result = JsonConvert.DeserializeObject<Parent>(json);
-
+        var str = JsonConvert.SerializeObject(obj);
         //Assert
-        Assert.IsType<Parent>(result);
-    }
-
-    private class Parent
-    {
-        public Parent(int parentProp)
-        {
-            ParentProp = parentProp;
-        }
-
-        public int ParentProp { get; }
-    }
-
-    private class Child : Parent
-    {
-        public Child(int childProp, int parentProp) : base(parentProp)
-        {
-            ChildProp = childProp;
-        }
-
-        public int ChildProp { get; set; }
+        Assert.Equal("null", str);
     }
 }
