@@ -14,9 +14,7 @@ namespace Aurora.Infrastructure.Services
             _context = context;
         }
 
-        public Task NotifyAboutScrapFinishing(string userId, SearchResultDto result)
-        {
-            return _context.Clients.User(userId)?.SendAsync("ScrapFinished", result);
-        }
+        public Task NotifyAboutScrapFinishing(string userId, SearchResultDto result) => 
+            _context.Clients.User(userId).SendAsync("ScrapFinished", result);
     }
 }

@@ -14,7 +14,7 @@ namespace Aurora.Infrastructure.Services
 
         public override object ActivateJob(Type type)
         {
-            return _serviceProvider.GetService(type);
+            return _serviceProvider.GetService(type)!;
         }
     }
 }
