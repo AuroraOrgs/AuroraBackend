@@ -27,11 +27,7 @@ public class ValueConversionExtensionsTests
         //Arrange
         var obj = new Child(69, 420);
 
-        //Act 
-        JsonSerializerSettings jsonSettings = new()
-        {
-            TypeNameHandling = TypeNameHandling.All
-        };
+        //Act
         var jobj = obj.ToJObject();
         var str = jobj.ConvertToString();
         var jobj2 = str.ParseNullableJson();
