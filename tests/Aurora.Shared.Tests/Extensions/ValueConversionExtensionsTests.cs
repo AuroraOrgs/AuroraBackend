@@ -1,9 +1,10 @@
-using Aurora.Infrastructure.Extensions;
-using Aurora.Infrastructure.Tests.Base;
+using Aurora.Shared.Extensions;
+using Aurora.Shared.Tests.Base;
+using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Aurora.Infrastructure.Tests.Extensions;
+namespace Aurora.Shared.Tests.Extensions;
 
 public class ValueConversionExtensionsTests
 {
@@ -17,14 +18,14 @@ public class ValueConversionExtensionsTests
         var obj = str.ParseNullableJson();
 
         //Assert
-        Assert.Null(obj);
+        obj.Should().BeNull();
     }
 
     [Fact]
     public void GetData_ShouldPreserveType_WhenChildTypeIsUsed()
     {
         //Arrange
-        var obj = new TestResultData(69);
+        var obj = new Child(69, 420);
 
         //Act 
         JsonSerializerSettings jsonSettings = new()
@@ -35,10 +36,9 @@ public class ValueConversionExtensionsTests
         var jobj = JObject.FromObject(obj, converter);
         var str = jobj.ConvertToString();
         var jobj2 = str.ParseNullableJson();
-        var result = jobj2.GetData();
+        var result = jobj2.GetData<Child>();
 
         //Assert
-        Assert.NotNull(result);
-        Assert.IsType<TestResultData>(result);
+        result.Should().NotBeNull().And.BeAssignableTo<Child>().And.BeEquivalentTo(obj);
     }
 }

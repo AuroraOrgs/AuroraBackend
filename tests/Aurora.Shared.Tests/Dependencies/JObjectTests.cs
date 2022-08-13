@@ -1,9 +1,9 @@
-﻿using Aurora.Application.Models;
-using Aurora.Infrastructure.Tests.Base;
+﻿using Aurora.Shared.Tests.Base;
+using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Aurora.Infrastructure.Tests.Dependencies;
+namespace Aurora.Shared.Tests.Dependencies;
 
 public class JObjectTests
 {
@@ -24,7 +24,7 @@ public class JObjectTests
     public void WhenConvertingWithTypeNameHandling_ShouldPreserveChildType()
     {
         //Arrange
-        var obj = new TestResultData(69);
+        var obj = new Child(69, 420);
         var settings = new JsonSerializerSettings()
         {
             TypeNameHandling = TypeNameHandling.All
@@ -32,10 +32,10 @@ public class JObjectTests
 
         //Act 
         var json = JsonConvert.SerializeObject(obj, settings);
-        var result = JsonConvert.DeserializeObject<SearchResultData>(json, settings);
+        var result = JsonConvert.DeserializeObject<Parent>(json, settings);
 
         //Assert
-        Assert.IsType<TestResultData>(result);
+        result.Should().BeAssignableTo<Child>();
     }
 
     [Fact]
@@ -46,6 +46,6 @@ public class JObjectTests
         //Act 
         var str = JsonConvert.SerializeObject(obj);
         //Assert
-        Assert.Equal("null", str);
+        str.Should().BeEquivalentTo("null");
     }
 }

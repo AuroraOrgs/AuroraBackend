@@ -32,7 +32,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Scrapers", "Aurora.Scrapers\Aurora.Scrapers.csproj", "{A2F622AD-C742-450D-9DC4-CFF1B256A9F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Infrastructure.Tests", "..\tests\Aurora.Infrastructure.Tests\Aurora.Infrastructure.Tests.csproj", "{9C813FB0-C28F-49BD-9731-F22683010459}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Shared.Tests", "..\tests\Aurora.Shared.Tests\Aurora.Shared.Tests.csproj", "{9C813FB0-C28F-49BD-9731-F22683010459}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A4A00DB3-1A98-4255-8376-7320CFA8BDA6}"
 EndProject
