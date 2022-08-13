@@ -8,7 +8,7 @@ namespace Aurora.Shared.Extensions
     {
         public static string CommaSeparate<T>(this IEnumerable<T> items)
         {
-            return String.Join(", ", items.Select(x => x.ToString()));
+            return String.Join(", ", items.Select(x => x?.ToString() ?? ""));
         }
     }
 }
