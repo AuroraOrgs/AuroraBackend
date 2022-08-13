@@ -71,7 +71,7 @@ namespace Aurora.Scrapers.Option
                     if (currentLinkImageNode is not null)
                     {
                         var currentLinkImageAttributes = currentLinkImageNode.Attributes;
-                        string imagePreviewUrl = currentLinkImageAttributes["data-src"]?.Value;
+                        string imagePreviewUrl = currentLinkImageAttributes["data-src"]?.Value ?? "";
                         if (imagePreviewUrl is not null)
                         {
                             var currentLinkAttributes = videoLinkNode.Attributes;

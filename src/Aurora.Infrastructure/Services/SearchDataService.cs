@@ -235,7 +235,7 @@ namespace Aurora.Infrastructure.Services
 
         private async Task StoreResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
         {
-            var resultToIds = results.Select(result => result!.Items.Select(item =>
+            var resultToIds = results.Select(result => result.Items!.Select(item =>
                                    (
                                         result.Terms.Select(term => state.StoredRequests[(result.Website, item.ContentType, term)].RequestId),
                                         new SearchResult()

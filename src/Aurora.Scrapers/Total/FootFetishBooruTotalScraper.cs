@@ -61,7 +61,7 @@ namespace Aurora.Scrapers.Total
                             var posts = htmlDocument.DocumentNode.SelectNodes("//a[@id]").Where(x => x.Id.StartsWith("p") && x.Id != "pi");
                             foreach (var post in posts)
                             {
-                                var previewImage = post.ChildNodes.Where(x => x.Name == "img").FirstOrDefault();
+                                var previewImage = post.ChildNodes.Where(x => x.Name == "img").First();
                                 var previewSrc = previewImage.GetAttributeValue("src", "none");
                                 var termsStr = previewImage.GetAttributeValue("title");
                                 if (termsStr is not null)

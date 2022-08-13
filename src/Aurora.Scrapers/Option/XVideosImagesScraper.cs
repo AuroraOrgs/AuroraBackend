@@ -70,7 +70,7 @@ namespace Aurora.Scrapers.Option
                     if (currentLinkImageNode is not null)
                     {
                         var currentLinkImageAttributes = currentLinkImageNode.Attributes;
-                        string imageUrl = currentLinkImageAttributes["data-src"]?.Value;
+                        string imageUrl = currentLinkImageAttributes["data-src"]?.Value ?? "";
                         if (imageUrl is not null)
                         {
                             imageItems.Add(new(ContentType.Image, imageUrl, imageUrl));
