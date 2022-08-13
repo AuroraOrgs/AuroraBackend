@@ -33,7 +33,7 @@ namespace Aurora.Presentation.Extensions
                     var section = sectionNames.Aggregate(config, (currentConfig, sectionName) => currentConfig.GetSection(sectionName));
                     var binder = Activator.CreateInstance(currentBinderType, section);
                     var bindActionType = actionType.MakeGenericType(type);
-                    var bindAction = Delegate.CreateDelegate(bindActionType, binder, "Bind");
+                    var bindAction = Delegate.CreateDelegate(bindActionType, binder!, "Bind");
                     currentConfigureMethod.Invoke(null, new object[] { services, bindAction });
                 }
             }
