@@ -5,7 +5,7 @@
         public bool IsSuccessfull { get; set; }
         public bool IsFailure => !IsSuccessfull;
 
-        public string FailureMessage { get; set; }
+        public string? FailureMessage { get; set; }
 
         public static SuccessOrFailure CreateSuccess()
         {
@@ -15,7 +15,7 @@
             };
         }
 
-        public static SuccessOrFailure CreateFailure(string failureMessage = null)
+        public static SuccessOrFailure CreateFailure(string? failureMessage = null)
         {
             return new SuccessOrFailure
             {

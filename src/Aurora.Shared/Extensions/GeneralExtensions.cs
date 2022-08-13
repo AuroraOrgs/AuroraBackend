@@ -32,7 +32,7 @@ namespace Aurora.Shared.Extensions
         }
 
         public static TProperty With<T, TProperty>(this T self, Func<T, TProperty> propertyFunction,
-            TProperty defaultValue = default) where T : class
+            TProperty defaultValue = default!) where T : class
         {
             TProperty result;
             if (self == default(T))
