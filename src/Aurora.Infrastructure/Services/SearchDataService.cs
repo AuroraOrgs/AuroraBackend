@@ -148,9 +148,9 @@ namespace Aurora.Infrastructure.Services
 
                 var results = storedResults.GroupBy(res => res.Requests.Where(x => idsToLoad.Contains(x.SearchRequestId))
                                                          .Select(x => x.SearchRequest)
-                                                         .FirstOrDefault())
+                                                         .First())
                     .Select(group => new SearchResultDto(
-                        group.Select(item => new SearchItem<SearchResultData>(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl)).ToList(),
+                        group.Select(item => new SearchItem<SearchResultData>(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
                         terms,
                         group.Key.Website))
                     .ToList();
@@ -242,7 +242,8 @@ namespace Aurora.Infrastructure.Services
                                         {
                                             FoundTimeUtc = _dateTime.UtcNow,
                                             ImagePreviewUrl = item.ImagePreviewUrl,
-                                            SearchItemUrl = item.SearchItemUrl
+                                            SearchItemUrl = item.SearchItemUrl,
+                                            AdditionalData = item.Data.ToJObject()
                                         })))
                                .Flatten()
                                .ToDictionary(x => x.Item2, x => x.Item1);
