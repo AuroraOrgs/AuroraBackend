@@ -1,4 +1,5 @@
 ﻿using Aurora.Application.Entities;
+using Aurora.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aurora.Infrastructure
@@ -19,6 +20,10 @@ namespace Aurora.Infrastructure
 
             modelBuilder.Entity<SearchRequestToResult>()
                 .HasIndex(p => new { p.SearchResultId, p.SearchRequestId }).IsUnique();
+
+            modelBuilder.Entity<SearchResult>()
+                .Property(p => p.AdditionalData)
+                .HasJsonConversion();
         }
     }
 }
