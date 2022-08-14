@@ -6,20 +6,20 @@ namespace Aurora.Shared.Models
     public struct ValueOrNull<T>
     {
         public bool IsNull { get; set; }
-        private T Value { get; set; }
+        private T? Value { get; set; }
 
         public bool HasValue => !IsNull;
-        public string NullMessage { get; set; }
+        public string? NullMessage { get; set; }
 
-        public void Resolve(Action<T> onValue, Action<string> onNull = null)
+        public void Resolve(Action<T> onValue, Action<string>? onNull = null)
         {
             if (HasValue)
             {
-                onValue(Value);
+                onValue(Value!);
             }
             else
             {
-                onNull?.Invoke(NullMessage);
+                onNull?.Invoke(NullMessage ?? "");
             }
         }
 
@@ -28,11 +28,11 @@ namespace Aurora.Shared.Models
             TResult result;
             if (HasValue)
             {
-                result = onValue(Value);
+                result = onValue(Value!);
             }
             else
             {
-                result = onNull.Invoke(NullMessage);
+                result = onNull.Invoke(NullMessage ?? "");
             }
             return result;
         }
@@ -42,11 +42,11 @@ namespace Aurora.Shared.Models
             Task<TResult> result;
             if (HasValue)
             {
-                result = onValue(Value);
+                result = onValue(Value!);
             }
             else
             {
-                result = onNull.Invoke(NullMessage);
+                result = onNull.Invoke(NullMessage ?? "");
             }
             return result;
         }
@@ -60,7 +60,7 @@ namespace Aurora.Shared.Models
             };
         }
 
-        public static ValueOrNull<T> CreateNull(string nullMessage = null)
+        public static ValueOrNull<T> CreateNull(string? nullMessage = null)
         {
             return new ValueOrNull<T>
             {
@@ -82,7 +82,7 @@ namespace Aurora.Shared.Models
 
     public static class ValueOrNullExtensions
     {
-        public static T WithDefault<T>(this ValueOrNull<T> valueOrNull, T defaultValue, Action<string> onError = null)
+        public static T WithDefault<T>(this ValueOrNull<T> valueOrNull, T defaultValue, Action<string>? onError = null)
         {
             return valueOrNull.Resolve<T>(x => x, msg =>
             {

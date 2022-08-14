@@ -1,23 +1,27 @@
 ﻿using Aurora.Shared.Config;
+using Aurora.Shared.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Reflection;
 
-namespace Aurora.Infrastructure.Extensions
+namespace Aurora.Presentation.Extensions
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection BindConfigSections(this IServiceCollection services, IConfiguration config)
+        public static IServiceCollection BindConfigSections(this IServiceCollection services, IConfiguration config, params Assembly[] assemblies)
         {
             var serviceExtensionsType = typeof(OptionsServiceCollectionExtensions);
             var attributeType = typeof(ConfigSectionAttribute);
             var binderType = typeof(GenericConfigBinder<>);
             var actionType = typeof(Action<>);
-            var types = Assembly.GetExecutingAssembly().GetTypes().Where(type => Attribute.IsDefined(type, attributeType));
+            var allTypes = assemblies.Select(assembly => assembly.GetTypes()).Flatten();
+            var types = allTypes.Where(type => Attribute.IsDefined(type, attributeType));
 
-            var configureMethod = serviceExtensionsType.GetMethods(BindingFlags.Static | BindingFlags.Public).SingleOrDefault(x => x.Name == "Configure" && x.GetParameters().Length == 2);
+            MethodInfo configureMethod = serviceExtensionsType
+                .GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .Single(x => x.Name == "Configure" && x.GetParameters().Length == 2);
             foreach (var type in types)
             {
                 var currentBinderType = binderType.MakeGenericType(type);
@@ -29,7 +33,7 @@ namespace Aurora.Infrastructure.Extensions
                     var section = sectionNames.Aggregate(config, (currentConfig, sectionName) => currentConfig.GetSection(sectionName));
                     var binder = Activator.CreateInstance(currentBinderType, section);
                     var bindActionType = actionType.MakeGenericType(type);
-                    var bindAction = Delegate.CreateDelegate(bindActionType, binder, "Bind");
+                    var bindAction = Delegate.CreateDelegate(bindActionType, binder!, "Bind");
                     currentConfigureMethod.Invoke(null, new object[] { services, bindAction });
                 }
             }

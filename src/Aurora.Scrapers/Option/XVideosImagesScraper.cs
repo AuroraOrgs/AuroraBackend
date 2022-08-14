@@ -21,11 +21,11 @@ namespace Aurora.Scrapers.Option
         public SupportedWebsite Website => SupportedWebsite.XVideos;
         public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image };
 
-        public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
+        public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
         {
             var config = _config.Value;
             var baseUrl = Website.GetBaseUrl();
-            List<SearchItem> imageItems = new();
+            List<SearchItem<SearchResultData>> imageItems = new();
 
             var htmlDocument = new HtmlAgilityPack.HtmlDocument
             {

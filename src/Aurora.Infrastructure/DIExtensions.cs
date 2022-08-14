@@ -1,7 +1,5 @@
 ﻿using Aurora.Application.Contracts;
-using Aurora.Application.Scrapers;
 using Aurora.Infrastructure.Bridge;
-using Aurora.Infrastructure.Extensions;
 using Aurora.Infrastructure.Services;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -20,7 +18,6 @@ namespace Aurora.Infrastructure
             services.AddScoped<IQueueProvider, QueueProvider>();
             services.AddScoped<IDateTimeProvider, SystemClockDateTimeProvider>();
             services.AddDistributedMemoryCache();
-            services.BindConfigSections(config);
             services.AddSignalR();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie();

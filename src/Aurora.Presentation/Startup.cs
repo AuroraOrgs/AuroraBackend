@@ -1,6 +1,7 @@
 using Aurora.Application;
 using Aurora.Infrastructure;
 using Aurora.Infrastructure.Services;
+using Aurora.Presentation.Extensions;
 using Aurora.Presentation.Services;
 using Aurora.Scrapers;
 using Hangfire;
@@ -9,6 +10,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using System.Linq;
+using System.Reflection;
 
 namespace Aurora.Presentation
 {
@@ -24,7 +27,14 @@ namespace Aurora.Presentation
 
         public void ConfigureServices(IServiceCollection services)
         {
+            //TODO: Reuse those assemblies in other discovery classes
+            var auroraAssemblies = Assembly.GetExecutingAssembly()
+                .GetReferencedAssemblies()
+                .Where(assembly => assembly.Name is not null && assembly.Name.StartsWith(nameof(Aurora)))
+                .Select(name => Assembly.Load(name))
+                .ToArray();
             services
+                .BindConfigSections(Configuration, auroraAssemblies)
                 .AddApplication()
                 .AddInfrastructure(Configuration)
                 .AddScrapers();

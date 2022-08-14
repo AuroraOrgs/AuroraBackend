@@ -9,6 +9,7 @@ namespace Aurora.Application.Scrapers
     {
         SupportedWebsite Website { get; }
         IEnumerable<ContentType> ContentTypes { get; }
-        Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default);
+        //TODO: Add generic type preservation
+        Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default);
     }
 }

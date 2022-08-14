@@ -11,7 +11,7 @@ namespace Aurora.Scrapers.Option
 {
     public class FootFetishBooruImageGifScraper : IOptionScraper
     {
-        private static List<SearchItem> _emptyResult = new List<SearchItem>();
+        private static List<SearchItem<SearchResultData>> _emptyResult = new List<SearchItem<SearchResultData>>();
 
         private readonly IHttpClientFactory _clientFactory;
         private readonly IOptions<ScrapersConfig> _config;
@@ -25,7 +25,7 @@ namespace Aurora.Scrapers.Option
         public SupportedWebsite Website => SupportedWebsite.FootFetishBooru;
         public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image, ContentType.Gif };
 
-        public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
+        public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
         {
             var config = _config.Value;
             using var client = _clientFactory.CreateClient(HttpClientNames.DefaultClient);
@@ -37,7 +37,7 @@ namespace Aurora.Scrapers.Option
                 OptionFixNestedTags = true
             };
 
-            List<SearchItem> result;
+            List<SearchItem<SearchResultData>> result;
             if (await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl))
             {
                 var pageResult = ExtractPagesCount(htmlDocument);
@@ -52,7 +52,7 @@ namespace Aurora.Scrapers.Option
                     {
                         lastPageIndex = pagesCount;
                     }
-                    var items = new List<SearchItem>();
+                    var items = new List<SearchItem<SearchResultData>>();
                     for (int i = 0; i < lastPageIndex; i++)
                     {
                         items.AddRange(await LoadPageAsync(term, client, i));
@@ -76,20 +76,27 @@ namespace Aurora.Scrapers.Option
         {
             ValueOrNull<int> result;
             var paginator = searchPage.DocumentNode.SelectSingleNode("//div[@id='paginator']");
-            var lastButton = paginator.ChildNodes.Last();
-            if (lastButton is not null && lastButton.GetAttributeValue("alt", "none") == "last page")
+            if (paginator is not null)
             {
-                const string defVal = "none";
-                var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
-                var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
-                var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
-                if (lastPidStr is not null && int.TryParse(lastPidStr, out int lastPid))
+                var lastButton = paginator.ChildNodes.Last();
+                if (lastButton is not null && lastButton.GetAttributeValue("alt", "none") == "last page")
                 {
-                    result = lastPid / ScraperConstants.FootFetishBooruPostsPerPage + 1;
+                    const string defVal = "none";
+                    var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
+                    var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
+                    var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
+                    if (lastPidStr is not null && int.TryParse(lastPidStr, out int lastPid))
+                    {
+                        result = lastPid / ScraperConstants.FootFetishBooruPostsPerPage + 1;
+                    }
+                    else
+                    {
+                        result = 1;
+                    }
                 }
                 else
                 {
-                    result = 1;
+                    result = ValueOrNull<int>.CreateNull();
                 }
             }
             else
@@ -99,14 +106,14 @@ namespace Aurora.Scrapers.Option
             return result;
         }
 
-        private async Task<List<SearchItem>> LoadPageAsync(string term, HttpClient client, int pageNumber)
+        private async Task<List<SearchItem<SearchResultData>>> LoadPageAsync(string term, HttpClient client, int pageNumber)
         {
             var htmlDocument = new HtmlDocument
             {
                 OptionFixNestedTags = true
             };
             var baseUrl = Website.GetBaseUrl();
-            var items = new List<SearchItem>();
+            var items = new List<SearchItem<SearchResultData>>();
             var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={term}&pid={pageNumber * ScraperConstants.FootFetishBooruPostsPerPage}";
             if (await client.TryLoadDocumentFromUrl(htmlDocument, pageUrl))
             {
@@ -127,7 +134,7 @@ namespace Aurora.Scrapers.Option
                     {
                         type = ContentType.Image;
                     }
-                    var item = new SearchItem(type, previewSrc, location);
+                    var item = new SearchItem<SearchResultData>(type, previewSrc, location);
                     items.Add(item);
                 }
             }

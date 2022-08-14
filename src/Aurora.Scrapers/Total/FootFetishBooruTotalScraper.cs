@@ -29,7 +29,7 @@ namespace Aurora.Scrapers.Total
 
         public SupportedWebsite Website => SupportedWebsite.FootFetishBooru;
 
-        public async Task<IEnumerable<(List<string> Terms, List<SearchItem> Items)>> Scrap()
+        public async Task<IEnumerable<(List<string> Terms, List<SearchItem<SearchResultData>> Items)>> Scrap()
         {
             var config = _options.Value;
             var htmlDocument = new HtmlDocument
@@ -37,7 +37,7 @@ namespace Aurora.Scrapers.Total
                 OptionFixNestedTags = true
             };
 
-            List<(List<string> Terms, List<SearchItem> Items)> result;
+            List<(List<string> Terms, List<SearchItem<SearchResultData>> Items)> result;
             using var client = _clientFactory.CreateClient(HttpClientNames.DefaultClient);
 
             var baseUrl = Website.GetBaseUrl();
@@ -52,7 +52,7 @@ namespace Aurora.Scrapers.Total
                     {
                         pagesCount = Math.Min(config.MaxPagesCount, pagesCount);
                     }
-                    Dictionary<List<string>, List<SearchItem>> items = new();
+                    Dictionary<List<string>, List<SearchItem<SearchResultData>>> items = new();
                     for (int i = 0; i < pagesCount; i++)
                     {
                         var pageUrl = $"{fullUrl}&pid={i * ScraperConstants.FootFetishBooruPostsPerPage}";
@@ -83,7 +83,7 @@ namespace Aurora.Scrapers.Total
                                     {
                                         type = ContentType.Image;
                                     }
-                                    var item = new SearchItem(type, previewSrc, location);
+                                    var item = new SearchItem<SearchResultData>(type, previewSrc, location);
                                     items.AddList(terms, item);
                                 }
                             }

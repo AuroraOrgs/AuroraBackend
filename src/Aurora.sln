@@ -30,7 +30,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{
 		..\.github\workflows\dev_deploy.yml = ..\.github\workflows\dev_deploy.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Scrapers", "Aurora.Scrapers\Aurora.Scrapers.csproj", "{A2F622AD-C742-450D-9DC4-CFF1B256A9F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Scrapers", "Aurora.Scrapers\Aurora.Scrapers.csproj", "{A2F622AD-C742-450D-9DC4-CFF1B256A9F6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Shared.Tests", "..\tests\Aurora.Shared.Tests\Aurora.Shared.Tests.csproj", "{9C813FB0-C28F-49BD-9731-F22683010459}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A4A00DB3-1A98-4255-8376-7320CFA8BDA6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -58,9 +62,16 @@ Global
 		{A2F622AD-C742-450D-9DC4-CFF1B256A9F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2F622AD-C742-450D-9DC4-CFF1B256A9F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2F622AD-C742-450D-9DC4-CFF1B256A9F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C813FB0-C28F-49BD-9731-F22683010459}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C813FB0-C28F-49BD-9731-F22683010459}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C813FB0-C28F-49BD-9731-F22683010459}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C813FB0-C28F-49BD-9731-F22683010459}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9C813FB0-C28F-49BD-9731-F22683010459} = {A4A00DB3-1A98-4255-8376-7320CFA8BDA6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3EA7E718-B8B7-4EE9-A51E-4E156F1104E9}

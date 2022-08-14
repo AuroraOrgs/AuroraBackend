@@ -25,7 +25,7 @@ namespace Aurora.Scrapers.Option
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
         public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image };
 
-        public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
+        public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
         {
             var config = _config.Value;
             var baseUrl = Website.GetBaseUrl();
@@ -38,7 +38,7 @@ namespace Aurora.Scrapers.Option
             var driver = await _initializer.Initialize();
             var term = string.Join(" ", terms);
             var searchTerm = term.FormatTermToUrl();
-            var result = new List<SearchItem>();
+            var result = new List<SearchItem<SearchResultData>>();
 
             using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
             //TODO: Implement scraping of all pages
@@ -86,7 +86,7 @@ namespace Aurora.Scrapers.Option
                         {
                             var preview = image.GetAttributeValue("data-bkg");
                             var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").FirstOrDefault().GetAttributeValue("href");
-                            result.Add(new SearchItem(ContentType.Image, preview, url));
+                            result.Add(new SearchItem<SearchResultData>(ContentType.Image, preview, url));
                         }
                     }
                 }

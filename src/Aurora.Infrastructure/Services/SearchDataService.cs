@@ -148,9 +148,9 @@ namespace Aurora.Infrastructure.Services
 
                 var results = storedResults.GroupBy(res => res.Requests.Where(x => idsToLoad.Contains(x.SearchRequestId))
                                                          .Select(x => x.SearchRequest)
-                                                         .FirstOrDefault())
+                                                         .First())
                     .Select(group => new SearchResultDto(
-                        group.Select(item => new SearchItem(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl)).ToList(),
+                        group.Select(item => new SearchItem<SearchResultData>(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
                         terms,
                         group.Key.Website))
                     .ToList();
@@ -236,19 +236,22 @@ namespace Aurora.Infrastructure.Services
         private async Task StoreResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
         {
             var resultToIds = results.Select(result => result.Items.Select(item =>
-                                   (result.Terms.Select(term => state.StoredRequests[(result.Website, item.ContentType, term)].RequestId), new SearchResult()
-                                   {
-                                       FoundTimeUtc = _dateTime.UtcNow,
-                                       ImagePreviewUrl = item.ImagePreviewUrl,
-                                       SearchItemUrl = item.SearchItemUrl
-                                   })))
+                                   (
+                                        result.Terms.Select(term => state.StoredRequests[(result.Website, item.ContentType, term)].RequestId),
+                                        new SearchResult()
+                                        {
+                                            FoundTimeUtc = _dateTime.UtcNow,
+                                            ImagePreviewUrl = item.ImagePreviewUrl,
+                                            SearchItemUrl = item.SearchItemUrl,
+                                            AdditionalData = item.Data.ToJObject()
+                                        })))
                                .Flatten()
                                .ToDictionary(x => x.Item2, x => x.Item1);
 
             var newResults = resultToIds.Keys.ToList();
             await _context.Result.AddRangeAsync(newResults);
             var relations = newResults
-                .SelectMany(result => 
+                .SelectMany(result =>
                     resultToIds[result].Select(requestId => new SearchRequestToResult()
                     {
                         SearchRequestId = requestId,

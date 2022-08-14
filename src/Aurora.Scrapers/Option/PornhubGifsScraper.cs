@@ -24,11 +24,11 @@ namespace Aurora.Scrapers.Option
         public SupportedWebsite Website => SupportedWebsite.Pornhub;
         public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Gif };
 
-        public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
+        public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
         {
             var config = _config.Value;
             var baseUrl = Website.GetBaseUrl();
-            List<SearchItem> gifItems = new();
+            List<SearchItem<SearchResultData>> gifItems = new();
 
             var htmlDocument = new HtmlDocument
             {
