@@ -33,7 +33,7 @@ namespace Aurora.Scrapers.Discovery
             return ValueTask.FromResult(scrapers);
         }
 
-        private static List<TValue> GetScrapersOrEmpty<TKey, TValue>(Dictionary<TKey, List<TValue>> dict, TKey key)
+        private static List<TValue> GetScrapersOrEmpty<TValue>(Dictionary<(SupportedWebsite, ContentType), List<TValue>> dict, (SupportedWebsite, ContentType) key)
         {
             List<TValue> result;
             if (dict.TryGetValue(key, out var value))

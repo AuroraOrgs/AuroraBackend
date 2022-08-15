@@ -122,7 +122,7 @@ namespace Aurora.Infrastructure.Services
             return new SearchRequestState(result);
         }
 
-        public async Task<SearchResults> GetResults(SearchRequestState state, PagingOptions paging)
+        public async Task<SearchResults> GetResults(SearchRequestState state, PagingOptions? paging)
         {
             var idsToLoad = state.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.Fetched).Select(x => x.RequestId);
             SearchResults result;
@@ -211,7 +211,7 @@ namespace Aurora.Infrastructure.Services
                 .DeleteFromQueryAsync();
             _logger.LogInformation("Removed '{0}' stale results with no other requests", removedRows);
             var websitedToRecreate = results.Select(x => x.Website);
-            var typesToRecreate = results.Select(x => x.Items.Select(y => y.ContentType)).Flatten().Distinct();
+            var typesToRecreate = results.Select(x => x.Items!.Select(y => y.ContentType)).Flatten().Distinct();
             var removedRelations = await _context.RequestToResult
                 .Include(x => x.SearchRequest)
                 .Where(x => existingIds.Contains(x.SearchResultId) && websitedToRecreate.Contains(x.SearchRequest.Website) && typesToRecreate.Contains(x.SearchRequest.ContentType))
@@ -235,7 +235,7 @@ namespace Aurora.Infrastructure.Services
 
         private async Task StoreResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
         {
-            var resultToIds = results.Select(result => result.Items.Select(item =>
+            var resultToIds = results.Select(result => result.Items!.Select(item =>
                                    (
                                         result.Terms.Select(term => state.StoredRequests[(result.Website, item.ContentType, term)].RequestId),
                                         new SearchResult()

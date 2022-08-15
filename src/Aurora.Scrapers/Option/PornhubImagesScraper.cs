@@ -85,7 +85,7 @@ namespace Aurora.Scrapers.Option
                         foreach (var image in images.Where(x => x is not null))
                         {
                             var preview = image.GetAttributeValue("data-bkg");
-                            var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").FirstOrDefault().GetAttributeValue("href");
+                            var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").First().GetAttributeValue("href");
                             result.Add(new SearchItem<SearchResultData>(ContentType.Image, preview, url));
                         }
                     }

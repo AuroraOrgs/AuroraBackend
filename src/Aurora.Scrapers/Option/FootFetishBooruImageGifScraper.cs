@@ -123,7 +123,7 @@ namespace Aurora.Scrapers.Option
                 {
                     var hrefValue = post.GetAttributeValue("href", "none");
                     var location = $"{baseUrl}/{hrefValue}".Replace("&amp;", "&");
-                    var previewImage = post.ChildNodes.Where(x => x.Name == "img").FirstOrDefault();
+                    var previewImage = post.ChildNodes.Where(x => x.Name == "img").First();
                     var previewSrc = previewImage.GetAttributeValue("src", "none");
                     ContentType type;
                     if (previewSrc.EndsWith("gif"))

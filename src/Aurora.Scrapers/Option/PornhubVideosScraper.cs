@@ -62,7 +62,7 @@ namespace Aurora.Scrapers.Option
                         var currentLinkImageNode = videoLinkNode.ChildNodes
                             .FirstOrDefault(n => n.Name == "img");
                         //TODO: Add default image or make preview image nullable
-                        string previewImage = null;
+                        string previewImage = "";
 
                         if (currentLinkImageNode is not null)
                         {
