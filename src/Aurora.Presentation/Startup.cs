@@ -5,80 +5,74 @@ using Aurora.Presentation.Extensions;
 using Aurora.Presentation.Services;
 using Aurora.Scrapers;
 using Hangfire;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using System.Linq;
 using System.Reflection;
 
-namespace Aurora.Presentation
+namespace Aurora.Presentation;
+
+public class Startup
 {
-    public class Startup
+    private static readonly string CorsPolicyName = "AllowAll";
+    public IConfiguration Configuration { get; }
+
+    public Startup(IConfiguration configuration)
     {
-        private static readonly string CorsPolicyName = "AllowAll";
-        public IConfiguration Configuration { get; }
+        Configuration = configuration;
+    }
 
-        public Startup(IConfiguration configuration)
+    public void ConfigureServices(IServiceCollection services)
+    {
+        //TODO: Reuse those assemblies in other discovery classes
+        var auroraAssemblies = Assembly.GetExecutingAssembly()
+            .GetReferencedAssemblies()
+            .Where(assembly => assembly.Name is not null && assembly.Name.StartsWith(nameof(Aurora)))
+            .Select(name => Assembly.Load(name))
+            .ToArray();
+        services
+            .BindConfigSections(Configuration, auroraAssemblies)
+            .AddApplication()
+            .AddInfrastructure(Configuration)
+            .AddScrapers();
+
+        services.AddControllers();
+
+        services.AddCors(options =>
         {
-            Configuration = configuration;
-        }
+            options.AddPolicy(CorsPolicyName, policy =>
+            {
+                policy.AllowAnyHeader();
+                policy.AllowAnyMethod();
+                policy.AllowAnyOrigin();
+            });
+        });
 
-        public void ConfigureServices(IServiceCollection services)
+        services.AddSwaggerGen(c =>
         {
-            //TODO: Reuse those assemblies in other discovery classes
-            var auroraAssemblies = Assembly.GetExecutingAssembly()
-                .GetReferencedAssemblies()
-                .Where(assembly => assembly.Name is not null && assembly.Name.StartsWith(nameof(Aurora)))
-                .Select(name => Assembly.Load(name))
-                .ToArray();
-            services
-                .BindConfigSections(Configuration, auroraAssemblies)
-                .AddApplication()
-                .AddInfrastructure(Configuration)
-                .AddScrapers();
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aurora", Version = "v1" });
+        });
+    }
 
-            services.AddControllers();
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        app.UseDeveloperExceptionPage();
+        app.UseCors(CorsPolicyName);
+        app.UseSwagger();
+        app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aurora v1"));
 
-            services.AddCors(options =>
-            {
-                options.AddPolicy(CorsPolicyName, policy =>
-                {
-                    policy.AllowAnyHeader();
-                    policy.AllowAnyMethod();
-                    policy.AllowAnyOrigin();
-                });
-            });
+        app.UseAuthentication();
 
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Aurora", Version = "v1" });
-            });
-        }
-
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        app.UseHangfireDashboard(options: new DashboardOptions()
         {
-            app.UseDeveloperExceptionPage();
-            app.UseCors(CorsPolicyName);
-            app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Aurora v1"));
+            IgnoreAntiforgeryToken = true,
+            Authorization = new[] { new HangfireAuthorization() }
+        });
 
-            app.UseAuthentication();
+        app.UseRouting();
 
-            app.UseHangfireDashboard(options: new DashboardOptions()
-            {
-                IgnoreAntiforgeryToken = true,
-                Authorization = new[] { new HangfireAuthorization() }
-            });
-
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-                endpoints.MapHub<NotificationHub>("hub/notifications");
-            });
-        }
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+            endpoints.MapHub<NotificationHub>("hub/notifications");
+        });
     }
 }
