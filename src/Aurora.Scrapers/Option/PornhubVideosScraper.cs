@@ -1,11 +1,4 @@
-﻿using Aurora.Application.Models;
-using Aurora.Application.Scrapers;
-using Aurora.Scrapers.Config;
-using Aurora.Scrapers.Contracts;
-using Aurora.Scrapers.Extensions;
-using Microsoft.Extensions.Options;
-
-namespace Aurora.Scrapers.Option;
+﻿namespace Aurora.Scrapers.Option;
 
 public class PornhubVideosScraper : IOptionScraper
 {

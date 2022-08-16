@@ -1,6 +1,4 @@
-﻿using Aurora.Scrapers.Config;
-using Microsoft.Extensions.Options;
-using OpenQA.Selenium.Firefox;
+﻿using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Remote;
 
 namespace Aurora.Scrapers.Services;

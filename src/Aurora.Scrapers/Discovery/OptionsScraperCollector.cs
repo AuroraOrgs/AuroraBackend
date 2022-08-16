@@ -1,7 +1,4 @@
-﻿using Aurora.Application.Models;
-using Aurora.Application.Scrapers;
-using Aurora.Shared.Extensions;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Aurora.Scrapers.Discovery;

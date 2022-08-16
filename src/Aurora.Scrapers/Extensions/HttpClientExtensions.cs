@@ -1,6 +1,4 @@
-﻿using HtmlAgilityPack;
-
-namespace Aurora.Scrapers.Extensions;
+﻿namespace Aurora.Scrapers.Extensions;
 
 public static class HttpClientExtensions
 {

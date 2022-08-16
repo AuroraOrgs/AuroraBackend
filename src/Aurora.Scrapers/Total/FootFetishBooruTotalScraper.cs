@@ -1,13 +1,4 @@
-﻿using Aurora.Application.Models;
-using Aurora.Application.Scrapers;
-using Aurora.Scrapers.Config;
-using Aurora.Scrapers.Contracts;
-using Aurora.Scrapers.Extensions;
-using Aurora.Scrapers.Option;
-using Aurora.Shared.Extensions;
-using Aurora.Shared.Models;
-using HtmlAgilityPack;
-using Microsoft.Extensions.Options;
+﻿using Aurora.Scrapers.Option;
 
 namespace Aurora.Scrapers.Total;
 
