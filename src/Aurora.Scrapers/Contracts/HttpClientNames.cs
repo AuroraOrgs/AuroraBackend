@@ -1,8 +1,7 @@
-﻿namespace Aurora.Scrapers.Contracts
+﻿namespace Aurora.Scrapers.Contracts;
+
+public static class HttpClientNames
 {
-    public static class HttpClientNames
-    {
-        public static string DefaultClient { get; } = "DefaultClient";
-        public static string XVideosClient { get; } = "XVideosClient";
-    }
+    public static string DefaultClient { get; } = "DefaultClient";
+    public static string XVideosClient { get; } = "XVideosClient";
 }

@@ -1,10 +1,9 @@
 ﻿using Aurora.Shared.Config;
 
-namespace Aurora.Scrapers.Config
+namespace Aurora.Scrapers.Config;
+
+[ConfigSection("Selenium")]
+public class SeleniumConfig
 {
-    [ConfigSection("Selenium")]
-    public class SeleniumConfig
-    {
-        public string SeleniumLocation { get; set; } = "";
-    }
+    public string SeleniumLocation { get; set; } = "";
 }

@@ -1,99 +1,91 @@
-﻿using Aurora.Application.Models;
-using Aurora.Application.Scrapers;
-using Aurora.Scrapers.Config;
-using Aurora.Scrapers.Contracts;
-using Aurora.Scrapers.Extensions;
-using Microsoft.Extensions.Options;
+﻿namespace Aurora.Scrapers.Option;
 
-namespace Aurora.Scrapers.Option
+public class XVideosVideosScraper : IOptionScraper
 {
-    public class XVideosVideosScraper : IOptionScraper
+    private readonly IHttpClientFactory _clientProvider;
+    private readonly IOptions<ScrapersConfig> _config;
+
+    public XVideosVideosScraper(IHttpClientFactory clientProvider, IOptions<ScrapersConfig> config)
     {
-        private readonly IHttpClientFactory _clientProvider;
-        private readonly IOptions<ScrapersConfig> _config;
+        _clientProvider = clientProvider;
+        _config = config;
+    }
 
-        public XVideosVideosScraper(IHttpClientFactory clientProvider, IOptions<ScrapersConfig> config)
+    public SupportedWebsite Website => SupportedWebsite.XVideos;
+    public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Video };
+
+    public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+    {
+        var baseUrl = Website.GetBaseUrl();
+        var config = _config.Value;
+
+        List<SearchItem<SearchResultData>> videoItems = new();
+
+        var htmlDocument = new HtmlAgilityPack.HtmlDocument
         {
-            _clientProvider = clientProvider;
-            _config = config;
-        }
+            OptionFixNestedTags = true
+        };
 
-        public SupportedWebsite Website => SupportedWebsite.XVideos;
-        public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Video };
+        var pageNumber = 1;
 
-        public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+        var urlsCount = 0;
+
+        using var client = _clientProvider.CreateClient(HttpClientNames.XVideosClient);
+        //TODO: Implement scraping of all pages
+        for (var i = 0; i < config.MaxPagesCount; i++)
         {
-            var baseUrl = Website.GetBaseUrl();
-            var config = _config.Value;
-
-            List<SearchItem<SearchResultData>> videoItems = new();
-
-            var htmlDocument = new HtmlAgilityPack.HtmlDocument
+            if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
             {
-                OptionFixNestedTags = true
-            };
+                break;
+            }
 
-            var pageNumber = 1;
-
-            var urlsCount = 0;
-
-            using var client = _clientProvider.CreateClient(HttpClientNames.XVideosClient);
-            //TODO: Implement scraping of all pages
-            for (var i = 0; i < config.MaxPagesCount; i++)
+            // e.g: https://www.xvideos.com/?k=test+value&p=1
+            var term = string.Join(" ", terms);
+            var searchTermUrlFormatted = term.FormatTermToUrl();
+            var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
+            if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
             {
-                if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
+                break;
+            }
+
+            var videoLinksNodes = htmlDocument.DocumentNode
+                ?.SelectNodes("//a");
+
+            if (videoLinksNodes is null)
+            {
+                break;
+            }
+
+            foreach (var videoLinkNode in videoLinksNodes)
+            {
+                var currentLinkImageNode = videoLinkNode.ChildNodes
+                    .FirstOrDefault(n => n.Name == "img");
+
+                if (currentLinkImageNode is not null)
                 {
-                    break;
-                }
-
-                // e.g: https://www.xvideos.com/?k=test+value&p=1
-                var term = string.Join(" ", terms);
-                var searchTermUrlFormatted = term.FormatTermToUrl();
-                var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
-                if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
-                {
-                    break;
-                }
-
-                var videoLinksNodes = htmlDocument.DocumentNode
-                    ?.SelectNodes("//a");
-
-                if (videoLinksNodes is null)
-                {
-                    break;
-                }
-
-                foreach (var videoLinkNode in videoLinksNodes)
-                {
-                    var currentLinkImageNode = videoLinkNode.ChildNodes
-                        .FirstOrDefault(n => n.Name == "img");
-
-                    if (currentLinkImageNode is not null)
+                    var currentLinkImageAttributes = currentLinkImageNode.Attributes;
+                    string imagePreviewUrl = currentLinkImageAttributes["data-src"]?.Value ?? "";
+                    if (imagePreviewUrl is not null)
                     {
-                        var currentLinkImageAttributes = currentLinkImageNode.Attributes;
-                        string imagePreviewUrl = currentLinkImageAttributes["data-src"]?.Value ?? "";
-                        if (imagePreviewUrl is not null)
+                        var currentLinkAttributes = videoLinkNode.Attributes;
+                        var videoLink = currentLinkAttributes["href"]?.Value;
+                        if (videoLink is not null && videoLink.Contains("video") && !videoLink.Contains("videos"))
                         {
-                            var currentLinkAttributes = videoLinkNode.Attributes;
-                            var videoLink = currentLinkAttributes["href"]?.Value;
-                            if (videoLink is not null && videoLink.Contains("video") && !videoLink.Contains("videos"))
+                            string searchItemUrl = $"{baseUrl}{videoLink}";
+                            if (searchItemUrl is not null && imagePreviewUrl is not null)
                             {
-                                string searchItemUrl = $"{baseUrl}{videoLink}";
-                                if (searchItemUrl is not null && imagePreviewUrl is not null)
-                                {
-                                    videoItems.Add(new(ContentType.Video, imagePreviewUrl, searchItemUrl));
-                                }
+                                videoItems.Add(new(ContentType.Video, imagePreviewUrl, searchItemUrl));
                             }
                         }
                     }
-                    urlsCount++;
                 }
-
-                pageNumber++;
-                await Task.Delay(250);
+                urlsCount++;
             }
 
-            return videoItems;
+            pageNumber++;
+            await Task.Delay(250);
         }
+
+        return videoItems;
     }
 }

@@ -1,10 +1,7 @@
-﻿using HtmlAgilityPack;
+﻿namespace Aurora.Scrapers.Extensions;
 
-namespace Aurora.Scrapers.Extensions
+public static class HtmlNodeExtensions
 {
-    public static class HtmlNodeExtensions
-    {
-        public static string GetAttributeValue(this HtmlNode node, string attributeName, string defValue = "") =>
-            node.Attributes[attributeName]?.Value ?? defValue;
-    }
+    public static string GetAttributeValue(this HtmlNode node, string attributeName, string defValue = "") =>
+        node.Attributes[attributeName]?.Value ?? defValue;
 }

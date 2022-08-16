@@ -18,15 +18,4 @@ public static class LoggerExtensions
         request.Websites.CommaSeparate()
        );
     }
-
-    public static void LogRequest(this ILogger logger, SearchRequest request, string prefix)
-    {
-        logger.LogInformation(
-        "{prefix} with request for '{term}' terms with '{type}' type in '{website}' website",
-        prefix,
-        request.SearchTerm,
-        request.ContentType,
-        request.Website
-       );
-    }
 }

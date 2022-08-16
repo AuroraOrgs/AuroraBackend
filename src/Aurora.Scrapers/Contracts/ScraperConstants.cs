@@ -1,7 +1,6 @@
-﻿namespace Aurora.Scrapers.Contracts
+﻿namespace Aurora.Scrapers.Contracts;
+
+public static class ScraperConstants
 {
-    public static class ScraperConstants
-    {
-        public const int FootFetishBooruPostsPerPage = 20;
-    }
+    public const int FootFetishBooruPostsPerPage = 20;
 }

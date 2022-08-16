@@ -1,14 +1,13 @@
-﻿namespace Aurora.Scrapers.Discovery
-{
-    public class ScrapersContext
-    {
-        public ScrapersContext(List<Type> totalScrapers, List<Type> optionScrapers)
-        {
-            TotalScrapers = totalScrapers;
-            OptionScrapers = optionScrapers;
-        }
+﻿namespace Aurora.Scrapers.Discovery;
 
-        public List<Type> TotalScrapers { get; }
-        public List<Type> OptionScrapers { get; }
+public class ScrapersContext
+{
+    public ScrapersContext(List<Type> totalScrapers, List<Type> optionScrapers)
+    {
+        TotalScrapers = totalScrapers;
+        OptionScrapers = optionScrapers;
     }
+
+    public List<Type> TotalScrapers { get; }
+    public List<Type> OptionScrapers { get; }
 }
