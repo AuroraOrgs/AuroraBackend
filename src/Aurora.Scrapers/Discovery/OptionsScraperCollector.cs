@@ -4,47 +4,46 @@ using Aurora.Shared.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Aurora.Scrapers.Discovery
+namespace Aurora.Scrapers.Discovery;
+
+public class OptionsScraperCollector : IOptionsScraperCollector
 {
-    public class OptionsScraperCollector : IOptionsScraperCollector
+    public IEnumerable<(SupportedWebsite Key, ContentType value)> AllowedKeys => _ctx.Scrapers.Keys;
+
+    private readonly IServiceProvider _provider;
+    private readonly OptionScraperContext _ctx;
+
+    public OptionsScraperCollector(IServiceProvider provider, OptionScraperContext ctx)
     {
-        public IEnumerable<(SupportedWebsite Key, ContentType value)> AllowedKeys => _ctx.Scrapers.Keys;
+        _provider = provider;
+        _ctx = ctx;
+    }
 
-        private readonly IServiceProvider _provider;
-        private readonly OptionScraperContext _ctx;
+    public ValueTask<IEnumerable<IOptionScraper>> CollectFor(IEnumerable<(SupportedWebsite Key, ContentType value)> keys)
+    {
+        var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
 
-        public OptionsScraperCollector(IServiceProvider provider, OptionScraperContext ctx)
+        var scrapers = keys.Select(key => GetScrapersOrEmpty(_ctx.Scrapers, key))
+                           .Flatten()
+                           .Distinct()
+                           .Select(_provider.GetService)
+                           .OfType<IOptionScraper>()
+                           .Select(x => new OptionScraperTimeDecorator(loggerFactory, x) as IOptionScraper);
+
+        return ValueTask.FromResult(scrapers);
+    }
+
+    private static List<TValue> GetScrapersOrEmpty<TValue>(Dictionary<(SupportedWebsite, ContentType), List<TValue>> dict, (SupportedWebsite, ContentType) key)
+    {
+        List<TValue> result;
+        if (dict.TryGetValue(key, out var value))
         {
-            _provider = provider;
-            _ctx = ctx;
+            result = value;
         }
-
-        public ValueTask<IEnumerable<IOptionScraper>> CollectFor(IEnumerable<(SupportedWebsite Key, ContentType value)> keys)
+        else
         {
-            var loggerFactory = _provider.GetRequiredService<ILoggerFactory>();
-
-            var scrapers = keys.Select(key => GetScrapersOrEmpty(_ctx.Scrapers, key))
-                               .Flatten()
-                               .Distinct()
-                               .Select(_provider.GetService)
-                               .OfType<IOptionScraper>()
-                               .Select(x => new OptionScraperTimeDecorator(loggerFactory, x) as IOptionScraper);
-
-            return ValueTask.FromResult(scrapers);
+            result = new List<TValue>();
         }
-
-        private static List<TValue> GetScrapersOrEmpty<TValue>(Dictionary<(SupportedWebsite, ContentType), List<TValue>> dict, (SupportedWebsite, ContentType) key)
-        {
-            List<TValue> result;
-            if (dict.TryGetValue(key, out var value))
-            {
-                result = value;
-            }
-            else
-            {
-                result = new List<TValue>();
-            }
-            return result;
-        }
+        return result;
     }
 }

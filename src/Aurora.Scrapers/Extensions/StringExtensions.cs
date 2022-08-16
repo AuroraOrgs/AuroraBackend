@@ -1,7 +1,6 @@
-﻿namespace Aurora.Scrapers.Extensions
+﻿namespace Aurora.Scrapers.Extensions;
+
+internal static class StringExtensions
 {
-    internal static class StringExtensions
-    {
-        public static string FormatTermToUrl(this string term) => term.Replace(" ", "+");
-    }
+    public static string FormatTermToUrl(this string term) => term.Replace(" ", "+");
 }
