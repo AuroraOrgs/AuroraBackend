@@ -1,17 +1,16 @@
 ﻿using Hangfire;
 using Newtonsoft.Json;
 
-namespace Aurora.Infrastructure.Bridge
+namespace Aurora.Infrastructure.Bridge;
+
+public static class HangfireConfigurationExtensions
 {
-    public static class HangfireConfigurationExtensions
+    public static void UseMediatR(this IGlobalConfiguration configuration)
     {
-        public static void UseMediatR(this IGlobalConfiguration configuration)
+        var jsonSettings = new JsonSerializerSettings
         {
-            var jsonSettings = new JsonSerializerSettings
-            {
-                TypeNameHandling = TypeNameHandling.All
-            };
-            configuration.UseSerializerSettings(jsonSettings);
-        }
+            TypeNameHandling = TypeNameHandling.All
+        };
+        configuration.UseSerializerSettings(jsonSettings);
     }
 }

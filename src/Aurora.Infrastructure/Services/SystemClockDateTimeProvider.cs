@@ -1,10 +1,8 @@
 ﻿using Aurora.Application.Contracts;
-using System;
 
-namespace Aurora.Infrastructure.Services
+namespace Aurora.Infrastructure.Services;
+
+public class SystemClockDateTimeProvider : IDateTimeProvider
 {
-    public class SystemClockDateTimeProvider : IDateTimeProvider
-    {
-        public DateTime UtcNow => DateTime.UtcNow;
-    }
+    public DateTime UtcNow => DateTime.UtcNow;
 }
