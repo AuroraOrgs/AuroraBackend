@@ -1,6 +1,3 @@
-﻿using System.Collections.Generic;
+﻿namespace Aurora.Application.Models;
 
-namespace Aurora.Application.Models
-{
-    public record SearchCommandResult(List<SearchResultDto> Results, long ItemsCount);
-}
+public record SearchCommandResult(List<SearchResultDto> Results, long ItemsCount);

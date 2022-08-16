@@ -1,9 +1,8 @@
-﻿namespace Aurora.Application.Models
+﻿namespace Aurora.Application.Models;
+
+public enum SearchRequestStatus
 {
-    public enum SearchRequestStatus
-    {
-        Queued, //search request is being processed
-        NotFetched, //search request is not being processed and has never been
-        Fetched //search request is processed
-    }
+    Queued, //search request is being processed
+    NotFetched, //search request is not being processed and has never been
+    Fetched //search request is processed
 }

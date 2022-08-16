@@ -1,6 +1,5 @@
-﻿namespace Aurora.Application.Models
+﻿namespace Aurora.Application.Models;
+
+public abstract class SearchResultData
 {
-    public abstract class SearchResultData
-    {
-    }
 }

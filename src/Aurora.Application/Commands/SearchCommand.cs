@@ -1,46 +1,44 @@
 ﻿using Aurora.Application.Models;
 using MediatR;
-using System.Collections.Generic;
 
-namespace Aurora.Application.Commands
+namespace Aurora.Application.Commands;
+
+public class SearchCommand : IRequest<SearchCommandResult>
 {
-    public class SearchCommand : IRequest<SearchCommandResult>
+    public SearchCommand()
     {
-        public SearchCommand()
+        SearchRequest = new()
         {
-            SearchRequest = new()
-            {
-                SearchTerms = new List<string>()
-            };
-        }
+            SearchTerms = new List<string>()
+        };
+    }
 
-        public SearchCommand(SearchRequestDto searchRequest, int? pageNumber, int? pageSize, string? userId)
+    public SearchCommand(SearchRequestDto searchRequest, int? pageNumber, int? pageSize, string? userId)
+    {
+        SearchRequest = searchRequest;
+        if (pageNumber is null && pageSize is null)
         {
-            SearchRequest = searchRequest;
-            if (pageNumber is null && pageSize is null)
+            Paging = null;
+        }
+        else
+        {
+            if (pageNumber is null)
             {
-                Paging = null;
+                pageNumber = 0;
             }
             else
             {
-                if (pageNumber is null)
+                if (pageSize is null)
                 {
-                    pageNumber = 0;
+                    pageSize = 25;
                 }
-                else
-                {
-                    if (pageSize is null)
-                    {
-                        pageSize = 25;
-                    }
-                }
-                Paging = new PagingOptions(pageNumber.Value!, pageSize!.Value);
             }
-            UserId = userId;
+            Paging = new PagingOptions(pageNumber.Value!, pageSize!.Value);
         }
-
-        public SearchRequestDto SearchRequest { get; }
-        public PagingOptions? Paging { get; set; }
-        public string? UserId { get; }
+        UserId = userId;
     }
+
+    public SearchRequestDto SearchRequest { get; }
+    public PagingOptions? Paging { get; set; }
+    public string? UserId { get; }
 }

@@ -1,45 +1,41 @@
 ﻿using Aurora.Application.Models;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Aurora.Application.Scrapers
+namespace Aurora.Application.Scrapers;
+
+public class OptionScraperTimeDecorator : IOptionScraper
 {
-    public class OptionScraperTimeDecorator : IOptionScraper
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly IOptionScraper _innerScraper;
+
+    public OptionScraperTimeDecorator(ILoggerFactory loggerFactory, IOptionScraper innerScraper)
     {
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly IOptionScraper _innerScraper;
+        _loggerFactory = loggerFactory;
+        _innerScraper = innerScraper;
+    }
 
-        public OptionScraperTimeDecorator(ILoggerFactory loggerFactory, IOptionScraper innerScraper)
+    public SupportedWebsite Website => _innerScraper.Website;
+
+    public IEnumerable<ContentType> ContentTypes => _innerScraper.ContentTypes;
+
+    public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+    {
+        var currentScraper = _innerScraper.GetType();
+        var logger = _loggerFactory.CreateLogger(currentScraper);
+        var watch = Stopwatch.StartNew();
+        try
         {
-            _loggerFactory = loggerFactory;
-            _innerScraper = innerScraper;
+            return await _innerScraper.ScrapAsync(terms, token);
         }
-
-        public SupportedWebsite Website => _innerScraper.Website;
-
-        public IEnumerable<ContentType> ContentTypes => _innerScraper.ContentTypes;
-
-        public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+        finally
         {
-            var currentScraper = _innerScraper.GetType();
-            var logger = _loggerFactory.CreateLogger(currentScraper);
-            var watch = Stopwatch.StartNew();
-            try
-            {
-                return await _innerScraper.ScrapAsync(terms, token);
-            }
-            finally
-            {
-                watch.Stop();
-                var ranFor = watch.Elapsed;
-                var time = ranFor.ToString();
-                var scraperName = currentScraper.Name;
+            watch.Stop();
+            var ranFor = watch.Elapsed;
+            var time = ranFor.ToString();
+            var scraperName = currentScraper.Name;
 
-                logger.LogInformation("Scraper '{scraperName}' finished in '{time}'", scraperName, time);
-            }
+            logger.LogInformation("Scraper '{scraperName}' finished in '{time}'", scraperName, time);
         }
     }
 }

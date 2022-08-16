@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿namespace Aurora.Application.Models;
 
-namespace Aurora.Application.Models
+public static class ContentTypeContext
 {
-    public static class ContentTypeContext
+    private static List<ContentType> _allContentTypes = new();
+    static ContentTypeContext()
     {
-        private static List<ContentType> _allContentTypes = new();
-        static ContentTypeContext()
-        {
-            _allContentTypes = ((ContentType[])Enum.GetValues(typeof(ContentType))).ToList();
-        }
-
-        public static List<ContentType> ContentTypes => _allContentTypes;
+        _allContentTypes = ((ContentType[])Enum.GetValues(typeof(ContentType))).ToList();
     }
+
+    public static List<ContentType> ContentTypes => _allContentTypes;
 }

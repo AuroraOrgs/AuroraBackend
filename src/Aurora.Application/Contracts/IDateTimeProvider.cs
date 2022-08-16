@@ -1,9 +1,6 @@
-﻿using System;
+﻿namespace Aurora.Application.Contracts;
 
-namespace Aurora.Application.Contracts
+public interface IDateTimeProvider
 {
-    public interface IDateTimeProvider
-    {
-        DateTime UtcNow { get; }
-    }
+    DateTime UtcNow { get; }
 }

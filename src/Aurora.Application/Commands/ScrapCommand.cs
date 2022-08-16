@@ -1,26 +1,24 @@
 ﻿using Aurora.Application.Models;
 using MediatR;
-using System.Collections.Generic;
 
-namespace Aurora.Application.Commands
+namespace Aurora.Application.Commands;
+
+public class ScrapCommand : IRequest
 {
-    public class ScrapCommand : IRequest
+    public ScrapCommand()
     {
-        public ScrapCommand()
+        SearchRequest = new()
         {
-            SearchRequest = new()
-            {
-                SearchTerms = new List<string>()
-            };
-        }
-
-        public ScrapCommand(SearchRequestDto innerRequest, string? userId)
-        {
-            SearchRequest = innerRequest;
-            UserId = userId;
-        }
-
-        public SearchRequestDto SearchRequest { get; }
-        public string? UserId { get; }
+            SearchTerms = new List<string>()
+        };
     }
+
+    public ScrapCommand(SearchRequestDto innerRequest, string? userId)
+    {
+        SearchRequest = innerRequest;
+        UserId = userId;
+    }
+
+    public SearchRequestDto SearchRequest { get; }
+    public string? UserId { get; }
 }

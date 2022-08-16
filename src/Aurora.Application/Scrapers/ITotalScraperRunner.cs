@@ -1,10 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿namespace Aurora.Application.Scrapers;
 
-namespace Aurora.Application.Scrapers
+public interface ITotalScraperRunner
 {
-    public interface ITotalScraperRunner
-    {
-        Task RunTotalScraper(Type scraperType);
-    }
+    Task RunTotalScraper(Type scraperType);
 }

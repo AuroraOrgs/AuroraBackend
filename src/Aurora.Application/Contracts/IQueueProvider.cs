@@ -1,10 +1,9 @@
 ﻿using MediatR;
 
-namespace Aurora.Application.Contracts
+namespace Aurora.Application.Contracts;
+
+public interface IQueueProvider
 {
-    public interface IQueueProvider
-    {
-        void Enqueue(IRequest request);
-        void Enqueue(string jobName, IRequest request);
-    }
+    void Enqueue(IRequest request);
+    void Enqueue(string jobName, IRequest request);
 }

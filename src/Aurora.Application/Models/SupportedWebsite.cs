@@ -1,9 +1,8 @@
-﻿namespace Aurora.Application.Models
+﻿namespace Aurora.Application.Models;
+
+public enum SupportedWebsite
 {
-    public enum SupportedWebsite
-    {
-        Pornhub = 0,
-        XVideos = 1,
-        FootFetishBooru = 2
-    }
+    Pornhub = 0,
+    XVideos = 1,
+    FootFetishBooru = 2
 }

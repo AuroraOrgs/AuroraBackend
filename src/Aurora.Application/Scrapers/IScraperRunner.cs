@@ -1,13 +1,8 @@
 ﻿using Aurora.Application.Models;
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace Aurora.Application.Scrapers
+namespace Aurora.Application.Scrapers;
+
+public interface IScraperRunner
 {
-    public interface IScraperRunner
-    {
-        Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default);
-    }
+    Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default);
 }

@@ -1,10 +1,8 @@
 ﻿using Aurora.Application.Models;
-using System.Threading.Tasks;
 
-namespace Aurora.Application.Contracts
+namespace Aurora.Application.Contracts;
+
+public interface INotificator
 {
-    public interface INotificator
-    {
-        Task NotifyAboutScrapFinishing(string userId, SearchResultDto result);
-    }
+    Task NotifyAboutScrapFinishing(string userId, SearchResultDto result);
 }
