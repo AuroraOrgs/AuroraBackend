@@ -8,13 +8,13 @@ public class TotalScraperRunner : ITotalScraperRunner
 {
     private readonly IServiceProvider _provider;
     private readonly ILoggerFactory _loggerFactory;
-    private readonly ISearchDataService _search;
+    private readonly ISearchRepository _repo;
 
-    public TotalScraperRunner(IServiceProvider provider, ILoggerFactory loggerFactory, ISearchDataService search)
+    public TotalScraperRunner(IServiceProvider provider, ILoggerFactory loggerFactory, ISearchRepository repo)
     {
         _provider = provider;
         _loggerFactory = loggerFactory;
-        _search = search;
+        _repo = repo;
     }
 
     public async Task RunTotalScraper(Type scraperType)
@@ -36,9 +36,9 @@ public class TotalScraperRunner : ITotalScraperRunner
                     SearchTerms = result.Terms
                 };
                 var resultDto = new SearchResultDto(result.Items, result.Terms, website);
-                var state = await _search.FetchRequest(request, false);
-                await _search.MarkAsQueued(state);
-                await _search.AddOrUpdateResults(state, new[] { resultDto });
+                var state = await _repo.FetchRequest(request, false);
+                await _repo.MarkAsQueued(state);
+                await _repo.AddOrUpdateResults(state, new[] { resultDto });
             }
         }
         else

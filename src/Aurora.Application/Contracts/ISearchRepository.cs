@@ -2,18 +2,12 @@
 
 namespace Aurora.Application.Contracts;
 
-public interface ISearchDataService
+public interface ISearchRepository
 {
     /// <summary>
-    /// Gets current state for provided request
+    /// Gets current state for provided request, storing it if it does not yet exist
     /// </summary>
     Task<SearchRequestState> FetchRequest(SearchRequestDto request, bool isUserGenerated);
-    /// <summary>
-    /// Gets cached results for specified request 
-    /// and information about the state of result
-    /// </summary>
-    /// <param name="paging"> Optional paging parameter - if none are provided, then all records are fetched</param>
-    Task<SearchResults> GetResults(SearchRequestState state, PagingOptions? paging);
     /// <summary>
     /// Would mark requests items that have to be queued as queued
     /// </summary>
