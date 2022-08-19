@@ -14,7 +14,8 @@ public static class DIExtensions
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        services.AddScoped<ISearchDataService, SearchDataService>();
+        services.AddScoped<ISearchRepository, SearchRepository>();
+        services.AddScoped<ISearchQueryService, SearchQueryService>();
         services.AddScoped<IQueueProvider, QueueProvider>();
         services.AddScoped<IDateTimeProvider, SystemClockDateTimeProvider>();
         services.AddDistributedMemoryCache();

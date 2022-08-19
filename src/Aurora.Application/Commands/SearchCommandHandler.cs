@@ -9,14 +9,16 @@ namespace Aurora.Application.Commands;
 
 public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommandResult>
 {
-    private readonly ISearchDataService _search;
+    private readonly ISearchRepository _repo;
     private readonly IQueueProvider _queue;
+    private readonly ISearchQueryService _query;
     private readonly ILogger<SearchCommandHandler> _logger;
 
-    public SearchCommandHandler(ISearchDataService search, IQueueProvider queue, ILogger<SearchCommandHandler> logger)
+    public SearchCommandHandler(ISearchRepository search, IQueueProvider queue, ISearchQueryService query, ILogger<SearchCommandHandler> logger)
     {
-        _search = search;
+        _repo = search;
         _queue = queue;
+        _query = query;
         _logger = logger;
     }
 
@@ -26,7 +28,7 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         Action<string> log = (prefix) => _logger.LogRequest(request, prefix);
         log("Received request");
 
-        var storedRequest = await _search.FetchRequest(request, true);
+        var storedRequest = await _repo.FetchRequest(request, true);
         var websiteStatus = storedRequest.StoredRequests.GroupBy(x => x.Value.RequestStatus)
                                                            .ToDictionary(x => x.Key, x => x.Select(y => y.Key.Item1).Distinct());
         var queuedWebsites = websiteStatus.GetOrDefault(SearchRequestStatus.Queued, Enumerable.Empty<SupportedWebsite>());
@@ -39,7 +41,7 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         SearchResults result;
         if (fetchedWebsites.Any())
         {
-            result = await _search.GetResults(storedRequest, requestWrapper.Paging);
+            result = await _query.GetResults(storedRequest, requestWrapper.Paging);
         }
         else
         {
@@ -72,10 +74,10 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         };
 
         string websites = String.Join(", ", notFetchedWebsites.Select(x => x.ToString()));
-        var newState = await _search.FetchRequest(childRequest, false);
+        var newState = await _repo.FetchRequest(childRequest, false);
         _queue.Enqueue(
             $"Scrapping {websites} for {searchTerms.CommaSeparate()}",
             new ScrapCommand(childRequest, userId));
-        await _search.MarkAsQueued(newState);
+        await _repo.MarkAsQueued(newState);
     }
 }

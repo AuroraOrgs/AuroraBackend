@@ -10,18 +10,18 @@ namespace Aurora.Application.Commands;
 public class ScrapCommandHandler : IRequestHandler<ScrapCommand>
 {
     private readonly IScraperRunner _scraperRunner;
-    private readonly ISearchDataService _search;
+    private readonly ISearchRepository _repo;
     private readonly INotificator _notificator;
     private readonly ILogger<ScrapCommandHandler> _logger;
 
     public ScrapCommandHandler(
         IScraperRunner scraperRunner,
-        ISearchDataService search,
+        ISearchRepository repo,
         INotificator notificator,
         ILogger<ScrapCommandHandler> logger)
     {
         _scraperRunner = scraperRunner;
-        _search = search;
+        _repo = repo;
         _notificator = notificator;
         _logger = logger;
     }
@@ -45,8 +45,8 @@ public class ScrapCommandHandler : IRequestHandler<ScrapCommand>
             return task;
         }, cancellationToken);
         _logger.LogRequest(request, $"Got '{results.Count}' results with '{GetProcessedCount(results)}' total count of items");
-        var requestStored = await _search.FetchRequest(request, false);
-        await _search.AddOrUpdateResults(requestStored, results);
+        var requestStored = await _repo.FetchRequest(request, false);
+        await _repo.AddOrUpdateResults(requestStored, results);
         return Unit.Value;
     }
 

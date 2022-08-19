@@ -7,13 +7,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Aurora.Infrastructure.Services;
 
-public class SearchDataService : ISearchDataService
+public class SearchRepository : ISearchRepository
 {
     private readonly SearchContext _context;
-    private readonly ILogger<SearchDataService> _logger;
+    private readonly ILogger<SearchRepository> _logger;
     private readonly IDateTimeProvider _dateTime;
 
-    public SearchDataService(SearchContext context, ILogger<SearchDataService> logger, IDateTimeProvider dateTime)
+    public SearchRepository(SearchContext context, ILogger<SearchRepository> logger, IDateTimeProvider dateTime)
     {
         _context = context;
         _logger = logger;
@@ -116,49 +116,6 @@ public class SearchDataService : ISearchDataService
         var allRequests = existingRequestsWithStatus.Union(newRequests.Select(x => (x, SearchRequestStatus.NotFetched)));
         var result = allRequests.ToDictionary(key => (key.Item1.Website, key.Item1.ContentType, key.Item1.SearchTerm), value => (value.Item1.Id, value.Item2));
         return new SearchRequestState(result);
-    }
-
-    public async Task<SearchResults> GetResults(SearchRequestState state, PagingOptions? paging)
-    {
-        var idsToLoad = state.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.Fetched).Select(x => x.RequestId);
-        SearchResults result;
-        if (idsToLoad.Any())
-        {
-            var filteredResults = _context.Result
-                .Include(x => x.Requests)
-                .ThenInclude(x => x.SearchRequest)
-                .Where(x => x.Requests.Any(request => idsToLoad.Contains(request.SearchRequestId)));
-            var query = filteredResults;
-            if (paging is not null)
-            {
-                var toSkip = paging.PageSize * paging.PageNumber;
-                query = query
-                    .OrderBy(x => x.Id)
-                    .Skip(toSkip)
-                    .Take(paging.PageSize);
-            }
-            var storedResults = await query
-                .ToListAsync();
-
-            var terms = state.StoredRequests.Keys.Select(x => x.Term).Distinct().ToList();
-
-            var results = storedResults.GroupBy(res => res.Requests.Where(x => idsToLoad.Contains(x.SearchRequestId))
-                                                     .Select(x => x.SearchRequest)
-                                                     .First())
-                .Select(group => new SearchResultDto(
-                    group.Select(item => new SearchItem<SearchResultData>(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
-                    terms,
-                    group.Key.Website))
-                .ToList();
-            var count = await filteredResults.CountAsync();
-            _logger.LogInformation("Loaded '{resultsCount}' out of total of '{existingCount}'  existing results for requests '[{ids}]'", results.Count, count, idsToLoad.CommaSeparate());
-            result = new SearchResults(results, count);
-        }
-        else
-        {
-            result = new SearchResults(new List<SearchResultDto>(), 0);
-        }
-        return result;
     }
 
     public async Task MarkAsQueued(SearchRequestState request)
