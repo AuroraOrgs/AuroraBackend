@@ -31,20 +31,16 @@ public class PornhubGifsScraper : IOptionScraper
 
         using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
 
-        //TODO: Implement scraping of all pages
-        for (var i = 0; i < config.MaxPagesCount; i++)
+        int maxPageNumber = await FindMaxPageNumber(terms, config, baseUrl, htmlDocument, client);
+        for (var i = 0; i < maxPageNumber; i++)
         {
             if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
             {
                 break;
             }
 
-            var currentPageNumber = i + 1;
             // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
-            var term = string.Join(" ", terms);
-            var searchTermUrlFormatted = term.FormatTermToUrl();
-            var searchPageUrl = $"{baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
-            if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
+            if (await TryLoadPage(terms, baseUrl, htmlDocument, client, i) == false)
             {
                 break;
             }
@@ -76,5 +72,48 @@ public class PornhubGifsScraper : IOptionScraper
         }
 
         return gifItems;
+    }
+
+    private static async Task<int> FindMaxPageNumber(List<string> terms, ScrapersConfig config, string baseUrl, HtmlDocument htmlDocument, HttpClient client)
+    {
+        int maxPageNumber;
+
+        if (config.UseLimitations == false)
+        {
+            if (await TryLoadPage(terms, baseUrl, htmlDocument, client, 0))
+            {
+                var itemsText = htmlDocument.DocumentNode.SelectSingleNode("//div[contains(@class, 'showingCounter')]").InnerText;
+                var numbers = itemsText.ExtractAllNumbers();
+                if (numbers.Count == 3)
+                {
+                    var pageSize = numbers[1] - numbers[0] + 1;
+                    var itemsCount = numbers[2];
+                    var pagesCount = (int)Math.Ceiling((double)itemsCount / pageSize);
+                    maxPageNumber = pagesCount;
+                }
+                else
+                {
+                    maxPageNumber = config.MaxItemsCount;
+                }
+            }
+            else
+            {
+                maxPageNumber = config.MaxItemsCount;
+            }
+        }
+        else
+        {
+            maxPageNumber = config.MaxItemsCount;
+        }
+
+        return maxPageNumber;
+    }
+
+    private static async Task<bool> TryLoadPage(List<string> terms, string baseUrl, HtmlDocument htmlDocument, HttpClient client, int i)
+    {
+        var term = string.Join(" ", terms);
+        var searchTermUrlFormatted = term.FormatTermToUrl();
+        var searchPageUrl = $"{baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={i + 1}";
+        return await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl);
     }
 }
