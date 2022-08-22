@@ -16,13 +16,28 @@ namespace Aurora.Scrapers.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Runs scraping on paged website
+        /// </summary>
+        /// <param name="clientName">Name of client to be used for scraping</param>
+        /// <param name="loadPage">Function that loads a page based on its number. Numbers start from 0</param>
+        /// <param name="scrapPage">Function that finds all of the search results given the document</param>
+        /// <param name="findMaxPageNumber">
+        /// Optional. Function that determines max possible number of pages for current search options.
+        /// Number of pages is inclusive, so if you reply that 5 pages is the max number of pages then you <paramref name="loadPage"/> would get called 5 times.
+        /// Default is being provided from configuration
+        /// </param>
+        /// <param name="pagesWaitTime">Optional. Time to wait in-between scraping pages. Default is 1/4 of a second</param>
+        /// <param name="scraperName">Would be set by automatically by the compiler, so please do not set it yourself.</param>
         public async Task RunPagingAsync<T>(string clientName,
             Func<int, HttpClient, Task<ValueOrNull<HtmlDocument>>> loadPage,
             Func<HtmlDocument, Task<List<SearchItem<T>>>> scrapPage,
             Func<HttpClient, Task<ValueOrNull<int>>>? findMaxPageNumber = null,
+            TimeSpan? pagesWaitTime = null,
             [CallerMemberName] string scraperName = "")
             where T : SearchResultData
         {
+            TimeSpan waitTime = pagesWaitTime ?? TimeSpan.FromMilliseconds(250);
             var options = _options.Value;
             var client = _clientFactory.CreateClient(clientName);
             int maxPageNumber = options.MaxPagesCount;
