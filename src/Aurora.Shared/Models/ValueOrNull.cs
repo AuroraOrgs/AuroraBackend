@@ -34,6 +34,20 @@ public struct ValueOrNull<T>
         return result;
     }
 
+    public Task ResolveAsync(Func<T, Task> onValue, Func<string, Task> onNull)
+    {
+        Task result;
+        if (HasValue)
+        {
+            result = onValue(Value!);
+        }
+        else
+        {
+            result = onNull.Invoke(NullMessage ?? "");
+        }
+        return result;
+    }
+
     public Task<TResult> ResolveAsync<TResult>(Func<T, Task<TResult>> onValue, Func<string, Task<TResult>> onNull)
     {
         Task<TResult> result;
