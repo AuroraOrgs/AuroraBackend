@@ -29,7 +29,7 @@ namespace Aurora.Scrapers.Services
         /// </param>
         /// <param name="pagesWaitTime">Optional. Time to wait in-between scraping pages. Default is 1/4 of a second</param>
         /// <param name="scraperName">Would be set by automatically by the compiler, so please do not set it yourself.</param>
-        public async Task RunPagingAsync<T>(string clientName,
+        public async Task<List<SearchItem<T>>> RunPagingAsync<T>(string clientName,
             Func<int, HttpClient, Task<ValueOrNull<HtmlDocument>>> loadPage,
             Func<HtmlDocument, Task<List<SearchItem<T>>>> scrapPage,
             Func<HttpClient, Task<ValueOrNull<int>>>? findMaxPageNumber = null,
@@ -39,7 +39,7 @@ namespace Aurora.Scrapers.Services
         {
             TimeSpan waitTime = pagesWaitTime ?? TimeSpan.FromMilliseconds(250);
             var options = _options.Value;
-            var client = _clientFactory.CreateClient(clientName);
+            using var client = _clientFactory.CreateClient(clientName);
             int maxPageNumber = options.MaxPagesCount;
             if (options.UseLimitations == false)
             {
@@ -57,23 +57,40 @@ namespace Aurora.Scrapers.Services
             for (int i = 0; i < maxPageNumber; i++)
             {
                 bool failed = false;
-                var page = await loadPage(i, client);
-                await page.ResolveAsync(async document =>
+                try
                 {
-                    var items = await scrapPage(document);
-                    result.AddRange(items);
-                }, message =>
+                    var page = await loadPage(i, client);
+                    await page.ResolveAsync(async document =>
+                    {
+                        try
+                        {
+                            var items = await scrapPage(document);
+                            result.AddRange(items);
+                        }
+                        catch (Exception e)
+                        {
+                            _logger.LogError(e, "Failed to scrap page '{pageNum}' for '{scraperName}'", scraperName, i);
+                            failed = true;
+                        }
+                    }, message =>
+                    {
+                        failed = true;
+                        _logger.LogError("Failed to load page for '{scraperName}' with message '{msg}'", scraperName, message);
+                        return Task.CompletedTask;
+                    });
+                }
+                catch (Exception e)
                 {
+                    _logger.LogError(e, "Failed to load page for '{scraperName}' with message '{msg}'", scraperName, e.Message);
                     failed = true;
-                    _logger.LogError("Failed to load page for '{scraperName}' with message '{msg}'", scraperName, message);
-                    return Task.CompletedTask;
-                });
+                }
 
                 if (failed || (options.UseLimitations && options.MaxItemsCount <= result.Count))
                 {
                     break;
                 }
             }
+            return result;
         }
     }
 }
