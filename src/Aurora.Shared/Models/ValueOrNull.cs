@@ -93,12 +93,28 @@ public struct ValueOrNull<T>
 
 public static class ValueOrNullExtensions
 {
-    public static T WithDefault<T>(this ValueOrNull<T> valueOrNull, T defaultValue, Action<string>? onError = null)
-    {
-        return valueOrNull.Resolve<T>(x => x, msg =>
+    public static ValueOrNull<U> PipeValue<T, U>(this ValueOrNull<T> valueOrNull, Func<T, U> transform) =>
+        valueOrNull.Resolve(
+            value => transform(value).ToResult(), 
+            errorMessage => errorMessage.ToErrorResult<U>()
+            );
+
+    public static ValueOrNull<U> PipeValue<T, U>(this ValueOrNull<T> valueOrNull, Func<T, ValueOrNull<U>> transform) =>
+        valueOrNull.Resolve(
+            value => transform(value),
+            errorMessage => errorMessage.ToErrorResult<U>()
+            );
+
+    public static T WithDefault<T>(this ValueOrNull<T> valueOrNull, T defaultValue, Action<string>? onError = null) =>
+        valueOrNull.Resolve<T>(x => x, msg =>
         {
             onError?.Invoke(msg);
             return defaultValue;
         });
-    }
+
+    public static ValueOrNull<T> ToErrorResult<T>(this string errorMessage) =>
+        ValueOrNull<T>.CreateNull(errorMessage);
+
+    public static ValueOrNull<T> ToResult<T>(this T result) =>
+        ValueOrNull<T>.CreateValue(result);
 }
