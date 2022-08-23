@@ -1,14 +1,14 @@
-﻿namespace Aurora.Scrapers.Option;
+﻿using Aurora.Scrapers.Services;
+
+namespace Aurora.Scrapers.Option;
 
 public class XVideosImagesScraper : IOptionScraper
 {
-    private readonly IHttpClientFactory _clientProvider;
-    private readonly IOptions<ScrapersConfig> _config;
+    private readonly PagingRunner _runner;
 
-    public XVideosImagesScraper(IHttpClientFactory clientProvider, IOptions<ScrapersConfig> config)
+    public XVideosImagesScraper(PagingRunner runner)
     {
-        _clientProvider = clientProvider;
-        _config = config;
+        _runner = runner;
     }
 
     public SupportedWebsite Website => SupportedWebsite.XVideos;
@@ -16,67 +16,42 @@ public class XVideosImagesScraper : IOptionScraper
 
     public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
-        var config = _config.Value;
         var baseUrl = Website.GetBaseUrl();
-        List<SearchItem<SearchResultData>> imageItems = new();
-
-        var htmlDocument = new HtmlAgilityPack.HtmlDocument
-        {
-            OptionFixNestedTags = true
-        };
-
-        var pageNumber = 1;
-
-        var urlsCount = 0;
-
-        using var client = _clientProvider.CreateClient(HttpClientNames.XVideosClient);
+        var term = string.Join(" ", terms);
+        var searchTermUrlFormatted = term.FormatTermToUrl();
         //TODO: Implement scraping of all pages
-        for (var i = 0; i < config.MaxPagesCount; i++)
-        {
-            if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
+        return await _runner.RunPagingAsync(HttpClientNames.XVideosClient,
+            loadPage: async (pageNumber, client) =>
             {
-                break;
-            }
-
-            // e.g: https://www.xvideos.com/?k=test+value&p=1
-            var term = string.Join(" ", terms);
-            var searchTermUrlFormatted = term.FormatTermToUrl();
-            var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber}";
-            if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
+                var searchPageUrl = $"{baseUrl}/?k={searchTermUrlFormatted}&p={pageNumber + 1}";
+                return await client.TryLoadDocumentFromUrl(searchPageUrl);
+            },
+            scrapPage: (document) =>
             {
-                break;
-            }
+                List<SearchItem<SearchResultData>> imageItems = new();
+                var videoLinksNodes = document.DocumentNode?.SelectNodes("//a");
 
-            var videoLinksNodes = htmlDocument.DocumentNode
-                ?.SelectNodes("//a");
-
-            if (videoLinksNodes is null)
-            {
-                break;
-            }
-
-            foreach (var videoLinkNode in videoLinksNodes)
-            {
-                var currentLinkImageNode = videoLinkNode.ChildNodes
-                    .FirstOrDefault(n => n.Name == "img");
-
-                if (currentLinkImageNode is not null)
+                if (videoLinksNodes is not null)
                 {
-                    var currentLinkImageAttributes = currentLinkImageNode.Attributes;
-                    string imageUrl = currentLinkImageAttributes["data-src"]?.Value ?? "";
-                    if (imageUrl is not null)
+                    foreach (var videoLinkNode in videoLinksNodes)
                     {
-                        imageItems.Add(new(ContentType.Image, imageUrl, imageUrl));
+                        var currentLinkImageNode = videoLinkNode.ChildNodes
+                            .FirstOrDefault(n => n.Name == "img");
+
+                        if (currentLinkImageNode is not null)
+                        {
+                            var currentLinkImageAttributes = currentLinkImageNode.Attributes;
+                            string imageUrl = currentLinkImageAttributes["data-src"]?.Value ?? "";
+                            if (imageUrl is not null)
+                            {
+                                imageItems.Add(new(ContentType.Image, imageUrl, imageUrl));
+                            }
+                        }
+
                     }
                 }
-
-                urlsCount++;
+                return Task.FromResult(imageItems);
             }
-
-            pageNumber++;
-            await Task.Delay(250);
-        }
-
-        return imageItems;
+            );
     }
 }
