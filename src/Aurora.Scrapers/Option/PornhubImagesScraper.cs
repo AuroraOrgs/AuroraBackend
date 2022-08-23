@@ -5,14 +5,12 @@ namespace Aurora.Scrapers.Option;
 public class PornhubImagesScraper : IOptionScraper
 {
     private readonly DriverInitializer _initializer;
-    private readonly IOptions<ScrapersConfig> _config;
-    private readonly IHttpClientFactory _clientProvider;
+    private readonly PagingRunner _runner;
 
-    public PornhubImagesScraper(DriverInitializer initializer, IOptions<ScrapersConfig> config, IHttpClientFactory clientProvider)
+    public PornhubImagesScraper(DriverInitializer initializer, PagingRunner runner)
     {
         _initializer = initializer;
-        _config = config;
-        _clientProvider = clientProvider;
+        _runner = runner;
     }
 
     public SupportedWebsite Website => SupportedWebsite.Pornhub;
@@ -20,71 +18,59 @@ public class PornhubImagesScraper : IOptionScraper
 
     public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
-        var config = _config.Value;
         var baseUrl = Website.GetBaseUrl();
-
-        var htmlDocument = new HtmlDocument
-        {
-            OptionFixNestedTags = true
-        };
-
         var driver = await _initializer.Initialize();
-        var term = string.Join(" ", terms);
-        var searchTerm = term.FormatTermToUrl();
-        var result = new List<SearchItem<SearchResultData>>();
-
-        using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
+        var searchTerm = String.Join(" ", terms).FormatTermToUrl();
         //TODO: Implement scraping of all pages
-        for (var i = 0; i < config.MaxPagesCount; i++)
-        {
-            var pageNumber = i + 1;
-            var fullUrl = $"{baseUrl}/albums?search={searchTerm.FormatTermToUrl()}&page={pageNumber}";
-            if (await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl) == false)
+        return await _runner.RunPagingAsync(HttpClientNames.DefaultClient,
+            loadPage: async (pageNumber, client) => await TryLoadPage(baseUrl, searchTerm, pageNumber, client),
+            scrapPage: document =>
             {
-                break;
-            }
+                List<SearchItem<SearchResultData>> items = new();
+                var albumNodes = document.DocumentNode?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
 
-            var albumNodes = htmlDocument.DocumentNode
-                ?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
-
-            if (albumNodes is null) continue;
-
-            const string noHref = "none";
-            var albums = albumNodes.Select(x => x.GetAttributeValue("href", noHref))
-                                   .Where(x => x != noHref && x.Contains("album"));
-            foreach (var album in albums)
-            {
-                if (config.UseLimitations && result.Count >= config.MaxItemsCount) break;
-
-                var albumUrl = $"{baseUrl}{album}";
-                try
+                if (albumNodes is not null)
                 {
-                    driver.Navigate().GoToUrl(albumUrl);
-                }
-                catch
-                {
-                    //most likely non-album got found
-                    continue;
-                }
-
-                var albumHtml = driver.PageSource;
-                htmlDocument.LoadHtml(albumHtml);
-
-                var images = htmlDocument.DocumentNode
-                    ?.SelectNodes("//ul[contains(@class, 'photosAlbumsListing')]/li/div");
-
-                if (images is not null)
-                {
-                    foreach (var image in images.Where(x => x is not null))
+                    const string noHref = "none";
+                    var albums = albumNodes.Select(x => x.GetAttributeValue("href", noHref))
+                                           .Where(x => x != noHref && x.Contains("album"));
+                    foreach (var album in albums)
                     {
-                        var preview = image.GetAttributeValue("data-bkg");
-                        var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").First().GetAttributeValue("href");
-                        result.Add(new SearchItem<SearchResultData>(ContentType.Image, preview, url));
+                        var albumUrl = $"{baseUrl}{album}";
+                        try
+                        {
+                            driver.Navigate().GoToUrl(albumUrl);
+                        }
+                        catch
+                        {
+                            //most likely non-album got found
+                            continue;
+                        }
+
+                        var albumHtml = driver.PageSource;
+                        document.LoadHtml(albumHtml);
+
+                        var images = document.DocumentNode
+                            ?.SelectNodes("//ul[contains(@class, 'photosAlbumsListing')]/li/div");
+
+                        if (images is not null)
+                        {
+                            foreach (var image in images.Where(x => x is not null))
+                            {
+                                var preview = image.GetAttributeValue("data-bkg");
+                                var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").First().GetAttributeValue("href");
+                                items.Add(new SearchItem<SearchResultData>(ContentType.Image, preview, url));
+                            }
+                        }
                     }
                 }
-            }
-        }
+                return Task.FromResult(items);
+            });
+    }
 
-        return result;
+    private static async Task<ValueOrNull<HtmlDocument>> TryLoadPage(string baseUrl, string searchTerm, int pageNumber, HttpClient client)
+    {
+        var fullUrl = $"{baseUrl}/albums?search={searchTerm}&page={pageNumber + 1}";
+        return await client.TryLoadDocumentFromUrl(fullUrl);
     }
 }
