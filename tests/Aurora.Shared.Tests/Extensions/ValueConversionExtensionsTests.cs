@@ -29,7 +29,7 @@ public class ValueConversionExtensionsTests
         var jobj = obj.ToJObject();
         var str = jobj.ConvertToString();
         var jobj2 = str.ParseNullableJson();
-        var result = jobj2.ToData<Child>();
+        var result = jobj2.ToData<Parent>();
 
         //Assert
         result.Should().NotBeNull().And.BeAssignableTo<Child>().And.BeEquivalentTo(obj);
