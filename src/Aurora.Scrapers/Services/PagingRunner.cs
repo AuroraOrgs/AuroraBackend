@@ -34,9 +34,12 @@ namespace Aurora.Scrapers.Services
             Func<HtmlDocument, Task<List<SearchItem<T>>>> scrapPage,
             Func<HttpClient, Task<ValueOrNull<int>>>? findMaxPageNumber = null,
             TimeSpan? pagesWaitTime = null,
-            [CallerMemberName] string scraperName = "")
+            [CallerFilePath] string scraperName = "")
             where T : SearchResultData
         {
+            //This expects class name to match file name, which should be true in most cases
+            scraperName = Path.GetFileNameWithoutExtension(scraperName);
+
             TimeSpan waitTime = pagesWaitTime ?? TimeSpan.FromMilliseconds(250);
             var options = _options.Value;
             using var client = _clientFactory.CreateClient(clientName);
