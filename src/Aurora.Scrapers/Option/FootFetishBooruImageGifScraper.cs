@@ -30,6 +30,7 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
                     var location = $"{Website.GetBaseUrl()}/{hrefValue}".Replace("&amp;", "&");
                     var previewImage = post.ChildNodes.Where<HtmlNode>(x => x.Name == "img").First();
                     var previewSrc = previewImage.GetAttributeValue("src", "none");
+
                     ContentType type;
                     if (previewSrc.EndsWith("gif"))
                     {
@@ -39,7 +40,21 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
                     {
                         type = ContentType.Image;
                     }
-                    var item = new SearchItem<SearchResultData>(type, previewSrc, location);
+                    var termsStr = previewImage.GetAttributeValue("title");
+                    SearchItem<SearchResultData> item;
+                    if (termsStr is not null)
+                    {
+                        var specialTerms = new string[] { "score", "rating" };
+                        var terms = termsStr.Split(" ").Select(x => x.Trim())
+                            .Where(term => specialTerms.Where(special => term.StartsWith(special)).None())
+                            .Where(term => term.IsNotEmpty())
+                            .ToArray();
+                        item = new SearchItem<SearchResultData>(type, previewSrc, location, new FootfetishBooruResultData(terms));
+                    }
+                    else
+                    {
+                        item = new SearchItem<SearchResultData>(type, previewSrc, location);
+                    }
                     items.Add(item);
                 }
                 return Task.FromResult(items);

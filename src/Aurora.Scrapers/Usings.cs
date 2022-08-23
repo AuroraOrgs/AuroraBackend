@@ -7,3 +7,4 @@ global using Aurora.Shared.Extensions;
 global using Aurora.Shared.Models;
 global using HtmlAgilityPack;
 global using Microsoft.Extensions.Options;
+global using Aurora.Scrapers.ResultData;
