@@ -1,16 +1,16 @@
-﻿namespace Aurora.Scrapers.Option;
+﻿using Aurora.Scrapers.Services;
+
+namespace Aurora.Scrapers.Option;
 
 public class PornhubGifsScraper : IOptionScraper
 {
     private const string _dateSourcePhncdn = "https://dl.phncdn.com";
 
-    private readonly IHttpClientFactory _clientProvider;
-    private readonly IOptions<ScrapersConfig> _config;
+    private readonly PagingRunner _runner;
 
-    public PornhubGifsScraper(IHttpClientFactory clientProvider, IOptions<ScrapersConfig> config)
+    public PornhubGifsScraper(PagingRunner runner)
     {
-        _clientProvider = clientProvider;
-        _config = config;
+        _runner = runner;
     }
 
     public SupportedWebsite Website => SupportedWebsite.Pornhub;
@@ -18,63 +18,61 @@ public class PornhubGifsScraper : IOptionScraper
 
     public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
-        var config = _config.Value;
         var baseUrl = Website.GetBaseUrl();
-        List<SearchItem<SearchResultData>> gifItems = new();
-
-        var htmlDocument = new HtmlDocument
-        {
-            OptionFixNestedTags = true
-        };
-
-        var urlsCount = 0;
-
-        using var client = _clientProvider.CreateClient(HttpClientNames.DefaultClient);
-
-        //TODO: Implement scraping of all pages
-        for (var i = 0; i < config.MaxPagesCount; i++)
-        {
-            if (config.UseLimitations && urlsCount >= config.MaxItemsCount)
+        return await _runner.RunPagingAsync(HttpClientNames.DefaultClient,
+            loadPage: async (pageNumber, client) => await TryLoadPage(terms, baseUrl, client, pageNumber),
+            scrapPage: document =>
             {
-                break;
-            }
+                var bodyNode = document.DocumentNode?.SelectSingleNode("//body");
+                var gifLinksNodes = bodyNode?.SelectNodes("//li[contains(@class, 'gifVideoBlock')]");
 
-            var currentPageNumber = i + 1;
-            // e.g: https://www.pornhub.com/gifs/search?search=test+value&page=1
-            var term = string.Join(" ", terms);
-            var searchTermUrlFormatted = term.FormatTermToUrl();
-            var searchPageUrl = $"{baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={currentPageNumber}";
-            if (await client.TryLoadDocumentFromUrl(htmlDocument, searchPageUrl) == false)
-            {
-                break;
-            }
-            var bodyNode = htmlDocument.DocumentNode
-                ?.SelectSingleNode("//body");
-            var gifLinksNodes = bodyNode
-                ?.SelectNodes("//li[contains(@class, 'gifVideoBlock')]");
-
-            if (gifLinksNodes is not null)
-            {
-                foreach (var gifLinkNode in gifLinksNodes)
+                List<SearchItem<SearchResultData>> gifItems = new();
+                if (gifLinksNodes is not null)
                 {
-                    var currentLinkGifNode = gifLinkNode.ChildNodes
-                        .FirstOrDefault(n => n.Name == "a");
-
-                    if (currentLinkGifNode is not null)
+                    foreach (var gifLinkNode in gifLinksNodes)
                     {
-                        var currentLinkImageAttributes = currentLinkGifNode.Attributes;
-                        string imagePreviewUrl = $"{baseUrl}{currentLinkImageAttributes["href"].Value}";
-                        string searchItemUrl = $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
-                        gifItems.Add(new(ContentType.Gif, imagePreviewUrl, searchItemUrl));
+                        var currentLinkGifNode = gifLinkNode.ChildNodes
+                            .FirstOrDefault(n => n.Name == "a");
+
+                        if (currentLinkGifNode is not null)
+                        {
+                            var currentLinkImageAttributes = currentLinkGifNode.Attributes;
+                            string imagePreviewUrl = $"{baseUrl}{currentLinkImageAttributes["href"].Value}";
+                            string searchItemUrl = $"{_dateSourcePhncdn}{currentLinkImageAttributes["href"].Value}.gif";
+                            gifItems.Add(new(ContentType.Gif, imagePreviewUrl, searchItemUrl));
+                        }
                     }
-
-                    urlsCount++;
                 }
-            }
+                return Task.FromResult(gifItems);
+            },
+            findMaxPageNumber: async client =>
+            {
+                return (await TryLoadPage(terms, baseUrl, client, 0)).PipeValue(document =>
+                {
+                    ValueOrNull<int> result;
+                    var itemsText = document.DocumentNode.SelectSingleNode("//div[contains(@class, 'showingCounter')]").InnerText;
+                    var numbers = itemsText.ExtractAllNumbers();
+                    if (numbers.Count == 3)
+                    {
+                        var pageSize = numbers[1] - numbers[0] + 1;
+                        var itemsCount = numbers[2];
+                        var pagesCount = (int)Math.Ceiling((double)itemsCount / pageSize);
+                        result = pagesCount;
+                    }
+                    else
+                    {
+                        result = $"Number of numbers for page count has unexpected value of '{numbers.Count}'".ToErrorResult<int>();
+                    }
+                    return result;
+                });
+            });
+    }
 
-            await Task.Delay(250);
-        }
-
-        return gifItems;
+    private static async Task<ValueOrNull<HtmlDocument>> TryLoadPage(List<string> terms, string baseUrl, HttpClient client, int i)
+    {
+        var term = string.Join(" ", terms);
+        var searchTermUrlFormatted = term.FormatTermToUrl();
+        var searchPageUrl = $"{baseUrl}/gifs/search?search={searchTermUrlFormatted}&page={i + 1}";
+        return await client.TryLoadDocumentFromUrl(searchPageUrl);
     }
 }

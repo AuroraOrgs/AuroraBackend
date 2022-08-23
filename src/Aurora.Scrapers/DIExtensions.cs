@@ -17,6 +17,7 @@ public static class DIExtensions
     public static IServiceCollection AddScrapers(this IServiceCollection services)
     {
         services.AddScoped<DriverInitializer>();
+        services.AddTransient<PagingRunner>();
         services.AddHttpClients();
         var (optionScrapers, totalScrapers) = DiscoverScrapers();
         foreach (var scraper in optionScrapers)

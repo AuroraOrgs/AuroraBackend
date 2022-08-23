@@ -1,16 +1,14 @@
-﻿namespace Aurora.Scrapers.Option;
+﻿using Aurora.Scrapers.Services;
+
+namespace Aurora.Scrapers.Option;
 
 public class FootFetishBooruImageGifScraper : IOptionScraper
 {
-    private static List<SearchItem<SearchResultData>> _emptyResult = new List<SearchItem<SearchResultData>>();
+    private readonly PagingRunner _runner;
 
-    private readonly IHttpClientFactory _clientFactory;
-    private readonly IOptions<ScrapersConfig> _config;
-
-    public FootFetishBooruImageGifScraper(IHttpClientFactory clientFactory, IOptions<ScrapersConfig> config)
+    public FootFetishBooruImageGifScraper(PagingRunner runner)
     {
-        _clientFactory = clientFactory;
-        _config = config;
+        _runner = runner;
     }
 
     public SupportedWebsite Website => SupportedWebsite.FootFetishBooru;
@@ -18,49 +16,46 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
 
     public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
-        var config = _config.Value;
-        using var client = _clientFactory.CreateClient(HttpClientNames.DefaultClient);
-        var baseUrl = Website.GetBaseUrl();
         string term = string.Join("+", terms.Select(TermToUrlFormat));
-        var fullUrl = $"{baseUrl}/index.php?page=post&s=list&tags={term}";
-        var htmlDocument = new HtmlDocument
-        {
-            OptionFixNestedTags = true
-        };
-
-        List<SearchItem<SearchResultData>> result;
-        if (await client.TryLoadDocumentFromUrl(htmlDocument, fullUrl))
-        {
-            var pageResult = ExtractPagesCount(htmlDocument);
-            result = await pageResult.ResolveAsync(async pagesCount =>
+        return await _runner.RunPagingAsync(HttpClientNames.DefaultClient,
+            loadPage: (pageNumber, client) => LoadPage(term, pageNumber, client),
+            scrapPage: document =>
             {
-                int lastPageIndex;
-                if (config.UseLimitations)
+                var posts = document.DocumentNode.SelectNodes("//a[@id]")
+                                                     .Where<HtmlNode>(x => x.Id.StartsWith("p") && x.Id != "pi");
+                List<SearchItem<SearchResultData>> items = new();
+                foreach (var post in posts)
                 {
-                    lastPageIndex = Math.Min(pagesCount, config.MaxPagesCount);
-                }
-                else
-                {
-                    lastPageIndex = pagesCount;
-                }
-                var items = new List<SearchItem<SearchResultData>>();
-                for (int i = 0; i < lastPageIndex; i++)
-                {
-                    items.AddRange(await LoadPageAsync(term, client, i));
-                    if (config.UseLimitations && items.Count > config.MaxItemsCount)
+                    var hrefValue = post.GetAttributeValue("href", "none");
+                    var location = $"{Website.GetBaseUrl()}/{hrefValue}".Replace("&amp;", "&");
+                    var previewImage = post.ChildNodes.Where<HtmlNode>(x => x.Name == "img").First();
+                    var previewSrc = previewImage.GetAttributeValue("src", "none");
+                    ContentType type;
+                    if (previewSrc.EndsWith("gif"))
                     {
-                        break;
+                        type = ContentType.Gif;
                     }
+                    else
+                    {
+                        type = ContentType.Image;
+                    }
+                    var item = new SearchItem<SearchResultData>(type, previewSrc, location);
+                    items.Add(item);
                 }
-                return items;
+                return Task.FromResult(items);
             },
-            _ => Task.FromResult(_emptyResult));
-        }
-        else
-        {
-            result = _emptyResult;
-        }
-        return result;
+            findMaxPageNumber: async (client) =>
+            {
+                var firstPage = await LoadPage(term, 0, client);
+                return firstPage.PipeValue(document => ExtractPagesCount(document));
+            });
+    }
+
+    private async Task<ValueOrNull<HtmlDocument>> LoadPage(string term, int pageNumber, HttpClient client)
+    {
+        var baseUrl = Website.GetBaseUrl();
+        var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={term}&pid={pageNumber * ScraperConstants.FootFetishBooruPostsPerPage}";
+        return await client.TryLoadDocumentFromUrl(pageUrl);
     }
 
     internal static ValueOrNull<int> ExtractPagesCount(HtmlDocument searchPage)
@@ -95,41 +90,6 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
             result = ValueOrNull<int>.CreateNull();
         }
         return result;
-    }
-
-    private async Task<List<SearchItem<SearchResultData>>> LoadPageAsync(string term, HttpClient client, int pageNumber)
-    {
-        var htmlDocument = new HtmlDocument
-        {
-            OptionFixNestedTags = true
-        };
-        var baseUrl = Website.GetBaseUrl();
-        var items = new List<SearchItem<SearchResultData>>();
-        var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={term}&pid={pageNumber * ScraperConstants.FootFetishBooruPostsPerPage}";
-        if (await client.TryLoadDocumentFromUrl(htmlDocument, pageUrl))
-        {
-            var posts = htmlDocument.DocumentNode.SelectNodes("//a[@id]")
-                .Where(x => x.Id.StartsWith("p") && x.Id != "pi");
-            foreach (var post in posts)
-            {
-                var hrefValue = post.GetAttributeValue("href", "none");
-                var location = $"{baseUrl}/{hrefValue}".Replace("&amp;", "&");
-                var previewImage = post.ChildNodes.Where(x => x.Name == "img").First();
-                var previewSrc = previewImage.GetAttributeValue("src", "none");
-                ContentType type;
-                if (previewSrc.EndsWith("gif"))
-                {
-                    type = ContentType.Gif;
-                }
-                else
-                {
-                    type = ContentType.Image;
-                }
-                var item = new SearchItem<SearchResultData>(type, previewSrc, location);
-                items.Add(item);
-            }
-        }
-        return items;
     }
 
     private static string TermToUrlFormat(string term) =>
