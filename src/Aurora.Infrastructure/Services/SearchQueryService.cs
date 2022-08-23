@@ -45,7 +45,7 @@ public class SearchQueryService : ISearchQueryService
                                                      .Select(x => x.SearchRequest)
                                                      .First())
                 .Select(group => new SearchResultDto(
-                    group.Select(item => new SearchItem<SearchResultData>(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
+                    group.Select(item => new SearchItem(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
                     terms,
                     group.Key.Website))
                 .ToList();

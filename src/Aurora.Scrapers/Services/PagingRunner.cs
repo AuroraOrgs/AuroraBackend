@@ -29,13 +29,12 @@ public class PagingRunner
     /// </param>
     /// <param name="pagesWaitTime">Optional. Time to wait in-between scraping pages. Default is 1/4 of a second</param>
     /// <param name="scraperName">Would be set by automatically by the compiler, so please do not set it yourself.</param>
-    public async Task<List<SearchItem<T>>> RunPagingAsync<T>(string clientName,
+    public async Task<List<SearchItem>> RunPagingAsync(string clientName,
         Func<int, HttpClient, Task<ValueOrNull<HtmlDocument>>> loadPage,
-        Func<HtmlDocument, Task<List<SearchItem<T>>>> scrapPage,
+        Func<HtmlDocument, Task<List<SearchItem>>> scrapPage,
         Func<HttpClient, Task<ValueOrNull<int>>>? findMaxPageNumber = null,
         TimeSpan? pagesWaitTime = null,
         [CallerFilePath] string scraperName = "")
-        where T : SearchResultData
     {
         //This expects class name to match file name, which should be true in most cases
         scraperName = Path.GetFileNameWithoutExtension(scraperName);
@@ -56,7 +55,7 @@ public class PagingRunner
                     .WithDefault(options.MaxPagesCount, errorMessage => _logger.LogError("Failed to find max page number in '{scraperName}' with message '{msg}'", scraperName, errorMessage));
             }
         }
-        List<SearchItem<T>> result = new();
+        List<SearchItem> result = new();
         for (int i = 0; i < maxPageNumber; i++)
         {
             bool failed = false;

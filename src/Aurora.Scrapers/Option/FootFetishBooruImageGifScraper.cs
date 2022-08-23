@@ -14,7 +14,7 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
     public SupportedWebsite Website => SupportedWebsite.FootFetishBooru;
     public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image, ContentType.Gif };
 
-    public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+    public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
         string term = string.Join("+", terms.Select(TermToUrlFormat));
         return await _runner.RunPagingAsync(HttpClientNames.DefaultClient,
@@ -23,7 +23,7 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
             {
                 var posts = document.DocumentNode.SelectNodes("//a[@id]")
                                                      .Where<HtmlNode>(x => x.Id.StartsWith("p") && x.Id != "pi");
-                List<SearchItem<SearchResultData>> items = new();
+                List<SearchItem> items = new();
                 foreach (var post in posts)
                 {
                     var hrefValue = post.GetAttributeValue("href", "none");
@@ -41,7 +41,7 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
                         type = ContentType.Image;
                     }
                     var termsStr = previewImage.GetAttributeValue("title");
-                    SearchItem<SearchResultData> item;
+                    SearchItem item;
                     if (termsStr is not null)
                     {
                         var specialTerms = new string[] { "score", "rating" };
@@ -49,11 +49,11 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
                             .Where(term => specialTerms.Where(special => term.StartsWith(special)).None())
                             .Where(term => term.IsNotEmpty())
                             .ToArray();
-                        item = new SearchItem<SearchResultData>(type, previewSrc, location, new FootfetishBooruResultData(terms));
+                        item = new SearchItem(type, previewSrc, location, new FootfetishBooruResultData(terms));
                     }
                     else
                     {
-                        item = new SearchItem<SearchResultData>(type, previewSrc, location);
+                        item = new SearchItem(type, previewSrc, location);
                     }
                     items.Add(item);
                 }

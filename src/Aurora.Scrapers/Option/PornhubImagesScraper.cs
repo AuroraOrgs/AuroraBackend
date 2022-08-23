@@ -16,7 +16,7 @@ public class PornhubImagesScraper : IOptionScraper
     public SupportedWebsite Website => SupportedWebsite.Pornhub;
     public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType> { ContentType.Image };
 
-    public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+    public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
         var baseUrl = Website.GetBaseUrl();
         var driver = await _initializer.Initialize();
@@ -26,7 +26,7 @@ public class PornhubImagesScraper : IOptionScraper
             loadPage: async (pageNumber, client) => await TryLoadPage(baseUrl, searchTerm, pageNumber, client),
             scrapPage: document =>
             {
-                List<SearchItem<SearchResultData>> items = new();
+                List<SearchItem> items = new();
                 var albumNodes = document.DocumentNode?.SelectNodes("//li[contains(@class,'photoAlbumListContainer')]/div/a");
 
                 if (albumNodes is not null)
@@ -59,7 +59,7 @@ public class PornhubImagesScraper : IOptionScraper
                             {
                                 var preview = image.GetAttributeValue("data-bkg");
                                 var url = baseUrl + image.ChildNodes.Where(x => x.Name == "a").First().GetAttributeValue("href");
-                                items.Add(new SearchItem<SearchResultData>(ContentType.Image, preview, url));
+                                items.Add(new SearchItem(ContentType.Image, preview, url));
                             }
                         }
                     }
