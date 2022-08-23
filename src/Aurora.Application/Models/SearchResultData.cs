@@ -1,5 +1,5 @@
 ﻿namespace Aurora.Application.Models;
 
-public abstract class SearchResultData
+public abstract record SearchResultData
 {
 }
