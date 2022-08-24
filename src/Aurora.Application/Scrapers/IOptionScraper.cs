@@ -6,6 +6,5 @@ public interface IOptionScraper
 {
     SupportedWebsite Website { get; }
     IEnumerable<ContentType> ContentTypes { get; }
-    //TODO: Add generic type preservation
-    Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default);
+    Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default);
 }

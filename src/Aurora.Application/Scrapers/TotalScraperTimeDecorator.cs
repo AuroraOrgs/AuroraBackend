@@ -17,7 +17,7 @@ public class TotalScraperTimeDecorator : ITotalScraper
 
     public SupportedWebsite Website => _innerScraper.Website;
 
-    public async Task<IEnumerable<(List<string> Terms, List<SearchItem<SearchResultData>> Items)>> Scrap()
+    public async Task<IEnumerable<(List<string> Terms, List<SearchItem> Items)>> Scrap()
     {
         var currentScraper = _innerScraper.GetType();
         var logger = _factory.CreateLogger(currentScraper);

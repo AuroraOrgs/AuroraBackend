@@ -19,7 +19,7 @@ public class OptionScraperTimeDecorator : IOptionScraper
 
     public IEnumerable<ContentType> ContentTypes => _innerScraper.ContentTypes;
 
-    public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+    public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
         var currentScraper = _innerScraper.GetType();
         var logger = _loggerFactory.CreateLogger(currentScraper);

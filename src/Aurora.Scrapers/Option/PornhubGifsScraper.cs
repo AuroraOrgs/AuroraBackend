@@ -16,7 +16,7 @@ public class PornhubGifsScraper : IOptionScraper
     public SupportedWebsite Website => SupportedWebsite.Pornhub;
     public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Gif };
 
-    public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+    public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
         var baseUrl = Website.GetBaseUrl();
         return await _runner.RunPagingAsync(HttpClientNames.DefaultClient,
@@ -26,7 +26,7 @@ public class PornhubGifsScraper : IOptionScraper
                 var bodyNode = document.DocumentNode?.SelectSingleNode("//body");
                 var gifLinksNodes = bodyNode?.SelectNodes("//li[contains(@class, 'gifVideoBlock')]");
 
-                List<SearchItem<SearchResultData>> gifItems = new();
+                List<SearchItem> gifItems = new();
                 if (gifLinksNodes is not null)
                 {
                     foreach (var gifLinkNode in gifLinksNodes)

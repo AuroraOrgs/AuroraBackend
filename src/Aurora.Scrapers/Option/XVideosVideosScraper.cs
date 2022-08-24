@@ -14,7 +14,7 @@ public class XVideosVideosScraper : IOptionScraper
     public SupportedWebsite Website => SupportedWebsite.XVideos;
     public IEnumerable<ContentType> ContentTypes { get; init; } = new List<ContentType>() { ContentType.Video };
 
-    public async Task<List<SearchItem<SearchResultData>>> ScrapAsync(List<string> terms, CancellationToken token = default)
+    public async Task<List<SearchItem>> ScrapAsync(List<string> terms, CancellationToken token = default)
     {
         var baseUrl = Website.GetBaseUrl();
         var term = string.Join(" ", terms);
@@ -29,7 +29,7 @@ public class XVideosVideosScraper : IOptionScraper
             },
             scrapPage: document =>
             {
-                List<SearchItem<SearchResultData>> videoItems = new();
+                List<SearchItem> videoItems = new();
                 var videoLinksNodes = document.DocumentNode
                 ?.SelectNodes("//a");
 
