@@ -1,3 +1,3 @@
 ﻿namespace Aurora.Shared.Tests.Base;
 
-public record Child(int ChildProp, int ParentProp) : Parent(ParentProp);
+public sealed record Child(int ChildProp, int ParentProp) : Parent(ParentProp);
