@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 namespace Aurora.Application.Models;
 
 [JsonConverterAttribute(typeof(SearchDataConverter))]
-public abstract class SearchResultData
+public abstract record SearchResultData
 {
 }
 
