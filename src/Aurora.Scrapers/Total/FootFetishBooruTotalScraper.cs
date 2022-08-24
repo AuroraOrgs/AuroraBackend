@@ -1,5 +1,4 @@
 ﻿using Aurora.Scrapers.Behaviours;
-using Aurora.Scrapers.Option;
 using Aurora.Scrapers.Services;
 
 namespace Aurora.Scrapers.Total;
@@ -29,7 +28,7 @@ public class FootFetishBooruTotalScraper : ITotalScraper
             findMaxPageNumber: async client =>
             {
                 var document = await client.TryLoadDocumentFromUrl(fullUrl);
-                return document.PipeValue(value => FootFetishBooruImageGifScraper.ExtractPagesCount(value));
+                return document.PipeValue(value => Scraping.ExtractFootfetishBooruPagesCount(value));
             });
 
         return items.GroupBy(x => (x.Data as FootfetishBooruResultData)!.Tags).Select(x => (x.Key.ToList(), x.ToList()));

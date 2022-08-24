@@ -24,7 +24,7 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
             findMaxPageNumber: async (client) =>
             {
                 var firstPage = await LoadPage(term, 0, client);
-                return firstPage.PipeValue(document => ExtractPagesCount(document));
+                return firstPage.PipeValue(document => Scraping.ExtractFootfetishBooruPagesCount(document));
             });
     }
 
@@ -33,40 +33,6 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
         var baseUrl = Website.GetBaseUrl();
         var pageUrl = $"{baseUrl}/index.php?page=post&s=list&tags={term}&pid={pageNumber * ScraperConstants.FootFetishBooruPostsPerPage}";
         return await client.TryLoadDocumentFromUrl(pageUrl);
-    }
-
-    internal static ValueOrNull<int> ExtractPagesCount(HtmlDocument searchPage)
-    {
-        ValueOrNull<int> result;
-        var paginator = searchPage.DocumentNode.SelectSingleNode("//div[@id='paginator']");
-        if (paginator is not null)
-        {
-            var lastButton = paginator.ChildNodes.Last();
-            if (lastButton is not null && lastButton.GetAttributeValue("alt", "none") == "last page")
-            {
-                const string defVal = "none";
-                var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
-                var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
-                var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
-                if (lastPidStr is not null && int.TryParse(lastPidStr, out int lastPid))
-                {
-                    result = lastPid / ScraperConstants.FootFetishBooruPostsPerPage + 1;
-                }
-                else
-                {
-                    result = 1;
-                }
-            }
-            else
-            {
-                result = ValueOrNull<int>.CreateNull();
-            }
-        }
-        else
-        {
-            result = ValueOrNull<int>.CreateNull();
-        }
-        return result;
     }
 
     private static string TermToUrlFormat(string term) =>

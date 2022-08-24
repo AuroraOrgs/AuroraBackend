@@ -1,5 +1,8 @@
 ﻿namespace Aurora.Scrapers.Behaviours
 {
+    /// <summary>
+    /// This is a class for scraping behaviour that is shared between multiple scrapers
+    /// </summary>
     public static class Scraping
     {
         public static List<SearchItem> FootFetishBooruScrap(HtmlDocument document)
@@ -42,5 +45,40 @@
             }
             return items;
         }
+
+        public static ValueOrNull<int> ExtractFootfetishBooruPagesCount(HtmlDocument searchPage)
+        {
+            ValueOrNull<int> result;
+            var paginator = searchPage.DocumentNode.SelectSingleNode("//div[@id='paginator']");
+            if (paginator is not null)
+            {
+                var lastButton = paginator.ChildNodes.Last();
+                if (lastButton is not null && lastButton.GetAttributeValue("alt", "none") == "last page")
+                {
+                    const string defVal = "none";
+                    var lastButtonReference = lastButton.GetAttributeValue("href", defVal);
+                    var pidPart = lastButtonReference.Split("&amp;").Where(x => x.StartsWith("pid")).FirstOrDefault();
+                    var lastPidStr = pidPart?.Split('=')?.LastOrDefault();
+                    if (lastPidStr is not null && int.TryParse(lastPidStr, out int lastPid))
+                    {
+                        result = lastPid / ScraperConstants.FootFetishBooruPostsPerPage + 1;
+                    }
+                    else
+                    {
+                        result = 1;
+                    }
+                }
+                else
+                {
+                    result = ValueOrNull<int>.CreateNull();
+                }
+            }
+            else
+            {
+                result = ValueOrNull<int>.CreateNull();
+            }
+            return result;
+        }
+
     }
 }
