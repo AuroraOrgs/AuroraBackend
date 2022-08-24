@@ -20,82 +20,47 @@ public struct ValueOrNull<T>
         }
     }
 
-    public TResult Resolve<TResult>(Func<T, TResult> onValue, Func<string, TResult> onNull)
-    {
-        TResult result;
-        if (HasValue)
-        {
-            result = onValue(Value!);
-        }
-        else
-        {
-            result = onNull.Invoke(NullMessage ?? "");
-        }
-        return result;
-    }
+    public TResult Resolve<TResult>(Func<T, TResult> onValue, Func<string, TResult> onNull) =>
+        HasValue
+            ? onValue(Value!)
+            : onNull.Invoke(NullMessage ?? "");
 
-    public Task ResolveAsync(Func<T, Task> onValue, Func<string, Task> onNull)
-    {
-        Task result;
-        if (HasValue)
-        {
-            result = onValue(Value!);
-        }
-        else
-        {
-            result = onNull.Invoke(NullMessage ?? "");
-        }
-        return result;
-    }
+    public Task ResolveAsync(Func<T, Task> onValue, Func<string, Task> onNull) =>
+        HasValue
+            ? onValue(Value!)
+            : onNull.Invoke(NullMessage ?? "");
 
-    public Task<TResult> ResolveAsync<TResult>(Func<T, Task<TResult>> onValue, Func<string, Task<TResult>> onNull)
-    {
-        Task<TResult> result;
-        if (HasValue)
-        {
-            result = onValue(Value!);
-        }
-        else
-        {
-            result = onNull.Invoke(NullMessage ?? "");
-        }
-        return result;
-    }
+    public Task<TResult> ResolveAsync<TResult>(Func<T, Task<TResult>> onValue, Func<string, Task<TResult>> onNull) =>
+        HasValue
+            ? onValue(Value!)
+            : onNull.Invoke(NullMessage ?? "");
 
-    public static ValueOrNull<T> CreateValue(T value)
-    {
-        return new ValueOrNull<T>
+    public static ValueOrNull<T> CreateValue(T value) =>
+        new ValueOrNull<T>
         {
             IsNull = false,
             Value = value
         };
-    }
 
-    public static ValueOrNull<T> CreateNull(string? nullMessage = null)
-    {
-        return new ValueOrNull<T>
+    public static ValueOrNull<T> CreateNull(string? nullMessage = null) =>
+        new ValueOrNull<T>
         {
             IsNull = true,
             Value = default,
             NullMessage = nullMessage
         };
-    }
 
-    public static implicit operator ValueOrNull<T>(T value)
-    {
-        if (value is null)
-        {
-            return CreateNull();
-        }
-        return CreateValue(value);
-    }
+    public static implicit operator ValueOrNull<T>(T value) =>
+        value is null
+            ? CreateNull()
+            : CreateValue(value);
 }
 
 public static class ValueOrNullExtensions
 {
     public static ValueOrNull<U> PipeValue<T, U>(this ValueOrNull<T> valueOrNull, Func<T, U> transform) =>
         valueOrNull.Resolve(
-            value => transform(value).ToResult(), 
+            value => transform(value).ToResult(),
             errorMessage => errorMessage.ToErrorResult<U>()
             );
 
