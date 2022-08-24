@@ -87,11 +87,14 @@ public class PagingRunner
                 failed = true;
             }
 
-            if (failed || (options.UseLimitations && options.MaxItemsCount <= result.Count))
+            if (failed || ItemLimitationReached(options, result))
             {
                 break;
             }
         }
         return result;
     }
+
+    private static bool ItemLimitationReached(ScrapersConfig options, List<SearchItem> result) =>
+        options.UseLimitations && options.MaxItemsCount <= result.Count;
 }
