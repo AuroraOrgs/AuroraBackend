@@ -55,7 +55,7 @@
                     var scoreParts = termPart.Split(":");
                     if (scoreParts.Length == 2)
                     {
-                        Int32.TryParse(scoreParts[1], out int scoreRating);
+                        Int32.TryParse(scoreParts[1], out score);
                     }
                 }
                 else
