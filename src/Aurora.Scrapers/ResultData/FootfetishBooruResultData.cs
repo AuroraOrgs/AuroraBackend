@@ -1,6 +1,6 @@
 ﻿namespace Aurora.Scrapers.ResultData;
 
-public class FootfetishBooruResultData : SearchResultData
+public sealed class FootfetishBooruResultData : SearchResultData
 {
     public FootfetishBooruResultData(string[] tags)
     {
