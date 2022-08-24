@@ -1,3 +1,11 @@
 ﻿namespace Aurora.Shared.Tests.Base;
 
-public abstract record Parent(int ParentProp);
+public class Parent
+{
+    public Parent(int parentProp)
+    {
+        ParentProp = parentProp;
+    }
+
+    public int ParentProp { get; set; }
+}
