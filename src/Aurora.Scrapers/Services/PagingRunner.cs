@@ -42,19 +42,8 @@ public class PagingRunner
         TimeSpan waitTime = pagesWaitTime ?? TimeSpan.FromMilliseconds(250);
         var options = _options.Value;
         using var client = _clientFactory.CreateClient(clientName);
-        int maxPageNumber = options.MaxPagesCount;
-        if (options.UseLimitations == false)
-        {
-            if (findMaxPageNumber is null)
-            {
-                _logger.LogInformation("Tried to scrap without limitation for '{scraperName}', but no finder were provided", scraperName);
-            }
-            else
-            {
-                maxPageNumber = (await findMaxPageNumber(client))
-                    .WithDefault(options.MaxPagesCount, errorMessage => _logger.LogError("Failed to find max page number in '{scraperName}' with message '{msg}'", scraperName, errorMessage));
-            }
-        }
+        int maxPageNumber = await FindMaxPageNumber(findMaxPageNumber, scraperName, options, client);
+
         List<SearchItem> result = new();
         for (int i = 0; i < maxPageNumber; i++)
         {
@@ -62,7 +51,8 @@ public class PagingRunner
             try
             {
                 var page = await loadPage(i, client);
-                await page.ResolveAsync(async document =>
+                await page.ResolveAsync(
+                onValue: async document =>
                 {
                     try
                     {
@@ -74,7 +64,8 @@ public class PagingRunner
                         _logger.LogError(e, "Failed to scrap page '{pageNum}' for '{scraperName}'", scraperName, i);
                         failed = true;
                     }
-                }, message =>
+                }, 
+                onNull: message =>
                 {
                     failed = true;
                     _logger.LogError("Failed to load page for '{scraperName}' with message '{msg}'", scraperName, message);
@@ -93,6 +84,25 @@ public class PagingRunner
             }
         }
         return result;
+    }
+
+    private async Task<int> FindMaxPageNumber(Func<HttpClient, Task<ValueOrNull<int>>>? findMaxPageNumber, string scraperName, ScrapersConfig options, HttpClient client)
+    {
+        int maxPageNumber = options.MaxPagesCount;
+        if (options.UseLimitations == false)
+        {
+            if (findMaxPageNumber is null)
+            {
+                _logger.LogInformation("Tried to scrap without limitation for '{scraperName}', but no finder were provided", scraperName);
+            }
+            else
+            {
+                maxPageNumber = (await findMaxPageNumber(client))
+                    .WithDefault(options.MaxPagesCount, errorMessage => _logger.LogError("Failed to find max page number in '{scraperName}' with message '{msg}'", scraperName, errorMessage));
+            }
+        }
+
+        return maxPageNumber;
     }
 
     private static bool ItemLimitationReached(ScrapersConfig options, List<SearchItem> result) =>
