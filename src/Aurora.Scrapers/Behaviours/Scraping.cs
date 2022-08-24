@@ -30,12 +30,8 @@
                 SearchItem item;
                 if (termsStr is not null)
                 {
-                    var specialTerms = new string[] { "score", "rating" };
-                    var terms = termsStr.Split(" ").Select(x => x.Trim())
-                        .Where(term => specialTerms.Where(special => term.StartsWith(special)).None())
-                        .Where(term => term.IsNotEmpty())
-                        .ToArray();
-                    item = new SearchItem(type, previewSrc, location, new FootfetishBooruResultData(terms));
+                    FootfetishBooruResultData resultData = ExtractDataFrom(termsStr);
+                    item = new SearchItem(type, previewSrc, location, resultData);
                 }
                 else
                 {
@@ -44,6 +40,41 @@
                 items.Add(item);
             }
             return items;
+        }
+
+        private static FootfetishBooruResultData ExtractDataFrom(string termsStr)
+        {
+            var titleTerms = termsStr.Split(" ").Select(x => x.Trim());
+            List<string> tags = new List<string>();
+            int score = 0;
+            string rating = "";
+            foreach (var termPart in titleTerms)
+            {
+                if (termPart.StartsWith("score:"))
+                {
+                    var scoreParts = termPart.Split(":");
+                    if (scoreParts.Length == 2)
+                    {
+                        Int32.TryParse(scoreParts[1], out int scoreRating);
+                    }
+                }
+                else
+                {
+                    if (termPart.StartsWith("rating:"))
+                    {
+                        var scoreParts = termPart.Split(":");
+                        if (scoreParts.Length == 2)
+                        {
+                            rating = scoreParts[1];
+                        }
+                    }
+                    else
+                    {
+                        tags.Add(termPart);
+                    }
+                }
+            }
+            return new FootfetishBooruResultData(tags.ToArray(), score, rating);
         }
 
         public static ValueOrNull<int> ExtractFootfetishBooruPagesCount(HtmlDocument searchPage)
