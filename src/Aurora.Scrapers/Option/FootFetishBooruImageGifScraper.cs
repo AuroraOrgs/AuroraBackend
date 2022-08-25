@@ -20,11 +20,11 @@ public class FootFetishBooruImageGifScraper : IOptionScraper
         string term = string.Join("+", terms.Select(TermToUrlFormat));
         return await _runner.RunPagingAsync(HttpClientNames.DefaultClient,
             loadPage: (pageNumber, client) => LoadPage(term, pageNumber, client),
-            scrapPage: document => Task.FromResult(Scraping.FootFetishBooruScrap(document)),
+            scrapPage: document => Task.FromResult(FootfetishBooruBehaviour.FootFetishBooruScrap(document)),
             findMaxPageNumber: async (client) =>
             {
                 var firstPage = await LoadPage(term, 0, client);
-                return firstPage.PipeValue(document => Scraping.ExtractFootfetishBooruPagesCount(document));
+                return firstPage.PipeValue(document => FootfetishBooruBehaviour.ExtractFootfetishBooruPagesCount(document));
             });
     }
 

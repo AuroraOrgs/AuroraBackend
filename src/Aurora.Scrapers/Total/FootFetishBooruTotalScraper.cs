@@ -24,11 +24,11 @@ public class FootFetishBooruTotalScraper : ITotalScraper
                 var pageUrl = $"{fullUrl}&pid={pageNumber * ScraperConstants.FootFetishBooruPostsPerPage}";
                 return await client.TryLoadDocumentFromUrl(pageUrl);
             },
-            scrapPage: document => Task.FromResult(Scraping.FootFetishBooruScrap(document)),
+            scrapPage: document => Task.FromResult(FootfetishBooruBehaviour.FootFetishBooruScrap(document)),
             findMaxPageNumber: async client =>
             {
                 var document = await client.TryLoadDocumentFromUrl(fullUrl);
-                return document.PipeValue(value => Scraping.ExtractFootfetishBooruPagesCount(value));
+                return document.PipeValue(value => FootfetishBooruBehaviour.ExtractFootfetishBooruPagesCount(value));
             });
 
         return items.GroupBy(x => (x.Data as FootfetishBooruResultData)!.Tags).Select(x => (x.Key.ToList(), x.ToList()));
