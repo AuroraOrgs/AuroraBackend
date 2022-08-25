@@ -24,6 +24,7 @@ public class SearchQueryService : ISearchQueryService
         if (idsToLoad.Any())
         {
             var filteredResults = _context.Result
+                .AsNoTracking()
                 .Include(x => x.SearchRequest)
                 .Where(request => idsToLoad.Contains(request.SearchRequestId));
             var query = filteredResults;
