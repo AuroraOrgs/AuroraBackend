@@ -1,11 +1,7 @@
-﻿using Aurora.Application.Scrapers;
-using Aurora.Scrapers.Config;
-using Aurora.Scrapers.Contracts;
-using Aurora.Scrapers.Discovery;
+﻿using Aurora.Scrapers.Discovery;
 using Aurora.Scrapers.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Polly;
 using System.Net;
 using System.Reflection;
