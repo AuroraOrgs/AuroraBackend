@@ -1,6 +1,6 @@
 using Aurora.Scrapers.Extensions;
 
-namespace Aurora.Scrapers.Tests;
+namespace Aurora.Scrapers.Tests.Extensions;
 
 public class StringExtensionsTest
 {
@@ -23,7 +23,7 @@ public class StringExtensionsTest
         //Arrange
         var str = "showing pages!";
         //Act 
-        var expectedNumber = new long[] {};
+        var expectedNumber = new long[] { };
         var actualNums = str.ExtractAllNumbers();
 
         //Assert
