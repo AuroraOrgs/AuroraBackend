@@ -1,4 +1,5 @@
 ﻿using Aurora.Application.Entities;
+using Aurora.Infrastructure.Converters;
 using Aurora.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,18 +14,18 @@ public class SearchContext : DbContext
     public DbSet<SearchRequest> Request { get; set; }
     public DbSet<SearchResult> Result { get; set; }
     public DbSet<SearchRequestQueueItem> Queue { get; set; }
-    public DbSet<SearchRequestToResult> RequestToResult { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<SearchRequest>()
            .HasIndex(p => new { p.SearchTerm, p.Website, p.ContentType }).IsUnique();
 
-        modelBuilder.Entity<SearchRequestToResult>()
-            .HasIndex(p => new { p.SearchResultId, p.SearchRequestId }).IsUnique();
-
         modelBuilder.Entity<SearchResult>()
             .Property(p => p.AdditionalData)
             .HasJsonConversion();
+
+        modelBuilder.Entity<SearchRequest>()
+            .Property(x => x.SearchTerm)
+            .HasConversion<SearchRequestTermStringConverter>();
     }
 }

@@ -24,9 +24,8 @@ public class SearchQueryService : ISearchQueryService
         if (idsToLoad.Any())
         {
             var filteredResults = _context.Result
-                .Include(x => x.Requests)
-                .ThenInclude(x => x.SearchRequest)
-                .Where(x => x.Requests.Any(request => idsToLoad.Contains(request.SearchRequestId)));
+                .Include(x => x.SearchRequest)
+                .Where(request => idsToLoad.Contains(request.SearchRequestId));
             var query = filteredResults;
             if (paging is not null)
             {
@@ -39,11 +38,9 @@ public class SearchQueryService : ISearchQueryService
             var storedResults = await query
                 .ToListAsync();
 
-            var terms = state.StoredRequests.Keys.Select(x => x.Term).Distinct().ToList();
+            var terms = state.StoredRequests.Keys.SelectMany(x => x.Term.Terms).Distinct().ToList();
 
-            var results = storedResults.GroupBy(res => res.Requests.Where(x => idsToLoad.Contains(x.SearchRequestId))
-                                                     .Select(x => x.SearchRequest)
-                                                     .First())
+            var results = storedResults.GroupBy(res => res.SearchRequest)
                 .Select(group => new SearchResultDto(
                     group.Select(item => new SearchItem(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
                     terms,

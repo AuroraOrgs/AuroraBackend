@@ -1,6 +1,7 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Entities;
 using Aurora.Application.Models;
+using Aurora.Application.ValueObjects;
 using Aurora.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -61,26 +62,24 @@ public class SearchRepository : ISearchRepository
 
     public async Task<SearchRequestState> FetchRequest(SearchRequestDto request, bool isUserGenerated)
     {
+        var term = SearchRequestTerm.CreateOr(request.SearchTerms);
         var requests = await _context.Request
                         .Include(x => x.QueueItems)
                         .Where(x => request.ContentTypes.Contains(x.ContentType)
                             && request.Websites.Contains(x.Website)
-                            && request.SearchTerms.Contains(x.SearchTerm))
+                            && x.SearchTerm == term)
                         .ToListAsync();
 
         var existingRequestsWithStatus = requests.Select(x => (Request: x, GetStatusFor(x)));
         var existingRequests = existingRequestsWithStatus.Select(x => x.Request);
 
         var existingOptions = existingRequests.Select(x => (x.Website, x.ContentType, x.SearchTerm));
-        List<(SupportedWebsite website, ContentType type, string term)> requestedOptions = new List<(SupportedWebsite, ContentType, string)>();
+        List<(SupportedWebsite website, ContentType type, SearchRequestTerm term)> requestedOptions = new();
         foreach (var website in request.Websites)
         {
             foreach (var option in request.ContentTypes)
             {
-                foreach (var term in request.SearchTerms)
-                {
-                    requestedOptions.Add((website, option, term));
-                }
+                requestedOptions.Add((website, option, term));
             }
         }
         var newOptions = requestedOptions.Where(x => existingOptions.NotContains(x));
@@ -160,16 +159,11 @@ public class SearchRepository : ISearchRepository
     {
         _logger.LogInformation("Removing stale search results");
         var removedRows = await _context.Result
-            .Where(x => x.Requests.Count() == 1 && x.Requests.Any(request => existingIds.Contains(request.SearchRequestId)))
+            .Where(request => existingIds.Contains(request.SearchRequestId))
             .DeleteFromQueryAsync();
         _logger.LogInformation("Removed '{0}' stale results with no other requests", removedRows);
         var websitedToRecreate = results.Select(x => x.Website);
         var typesToRecreate = results.Select(x => x.Items!.Select(y => y.ContentType)).Flatten().Distinct();
-        var removedRelations = await _context.RequestToResult
-            .Include(x => x.SearchRequest)
-            .Where(x => existingIds.Contains(x.SearchResultId) && websitedToRecreate.Contains(x.SearchRequest.Website) && typesToRecreate.Contains(x.SearchRequest.ContentType))
-            .DeleteFromQueryAsync();
-        _logger.LogInformation("Removed '{0}' relations between result and request", removedRelations);
     }
 
     private async Task MarkAsProcessed(IEnumerable<Guid> existingIds)
@@ -188,32 +182,22 @@ public class SearchRepository : ISearchRepository
 
     private async Task StoreResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
     {
-        var resultToIds = results.Select(result => result.Items!.Select(item =>
-                               (
-                                    result.Terms.Select(term => state.StoredRequests[(result.Website, item.ContentType, term)].RequestId),
-                                    new SearchResult()
-                                    {
-                                        FoundTimeUtc = _dateTime.UtcNow,
-                                        ImagePreviewUrl = item.ImagePreviewUrl,
-                                        SearchItemUrl = item.SearchItemUrl,
-                                        AdditionalData = item.Data.ToJObject()
-                                    })))
-                           .Flatten()
-                           .ToDictionary(x => x.Item2, x => x.Item1);
-
-        var newResults = resultToIds.Keys.ToList();
-        await _context.Result.AddRangeAsync(newResults);
-        var relations = newResults
-            .SelectMany(result =>
-                resultToIds[result].Select(requestId => new SearchRequestToResult()
-                {
-                    SearchRequestId = requestId,
-                    SearchResultId = result.Id
-                }))
+        var newResults = results
+            .Where(result => result.Items is not null)
+            .SelectMany(result => result.Items!.Select(item => new SearchResult()
+            {
+                FoundTimeUtc = _dateTime.UtcNow,
+                ImagePreviewUrl = item.ImagePreviewUrl,
+                SearchItemUrl = item.SearchItemUrl,
+                AdditionalData = item.Data.ToJObject(),
+                SearchRequestId = GetRequestId(state, result, item)
+            }))
             .ToList();
+        await _context.Result.AddRangeAsync(newResults);
 
-        await _context.RequestToResult.AddRangeAsync(relations);
-
-        _logger.LogInformation("Stored '{0}' rows of new search results and created '{1}' relations", newResults.Count, relations.Count);
+        _logger.LogInformation("Stored '{rowsCount}' rows of new search results", newResults.Count);
     }
+
+    private static Guid GetRequestId(SearchRequestState state, SearchResultDto result, SearchItem item) =>
+        state.StoredRequests[(result.Website, item.ContentType, SearchRequestTerm.CreateOr(result.Terms))].RequestId;
 }

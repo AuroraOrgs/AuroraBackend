@@ -1,4 +1,5 @@
 ﻿using Aurora.Application.Models;
+using Aurora.Application.ValueObjects;
 using System.ComponentModel.DataAnnotations;
 
 namespace Aurora.Application.Entities;
@@ -8,8 +9,7 @@ public class SearchRequest
     [Key]
     public Guid Id { get; set; }
 
-    [MaxLength(255)]
-    public string SearchTerm { get; set; } = null!;
+    public SearchRequestTerm SearchTerm { get; set; } = null!;
     public SupportedWebsite Website { get; set; }
     public ContentType ContentType { get; set; }
 

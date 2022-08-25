@@ -18,7 +18,7 @@ public static class HttpClientExtensions
         }
         else
         {
-            result = $"Failed to load page from '{url}'".ToErrorResult<HtmlDocument>();
+            result = $"Failed to load page from '{url}' with status code '{response.StatusCode}' and '{(response.ReasonPhrase!.IsEmpty() ? "none" : response.ReasonPhrase)}'".ToErrorResult<HtmlDocument>();
         }
         return result;
     }
