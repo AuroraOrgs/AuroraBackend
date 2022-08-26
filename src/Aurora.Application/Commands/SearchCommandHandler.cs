@@ -30,7 +30,7 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
 
         var storedRequest = await _repo.FetchRequest(request, true);
         var websiteStatus = storedRequest.StoredRequests.GroupBy(x => x.Value.RequestStatus)
-                                                           .ToDictionary(x => x.Key, x => x.Select(y => y.Key.Item1).Distinct());
+                                                           .ToDictionary(x => x.Key, x => x.Select(y => y.Key.Website).Distinct());
         var queuedWebsites = websiteStatus.GetOrDefault(SearchRequestStatus.Queued, Enumerable.Empty<SupportedWebsite>());
         var notFetchedWebsites = websiteStatus.GetOrDefault(SearchRequestStatus.NotFetched, Enumerable.Empty<SupportedWebsite>());
         var fetchedWebsites = websiteStatus.GetOrDefault(SearchRequestStatus.Fetched, Enumerable.Empty<SupportedWebsite>());

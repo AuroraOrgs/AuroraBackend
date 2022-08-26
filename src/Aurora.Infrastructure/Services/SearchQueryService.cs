@@ -19,14 +19,15 @@ public class SearchQueryService : ISearchQueryService
 
     public async Task<SearchResults> GetResults(SearchRequestState state, PagingOptions? paging)
     {
-        var idsToLoad = state.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.Fetched).Select(x => x.RequestId);
+        var idsToLoad = state.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.Fetched).Select(x => x.Snapshots.OrderBy(x => x.SnapshotTime).Last().SnapshotId);
         SearchResults result;
         if (idsToLoad.Any())
         {
             var filteredResults = _context.Result
                 .AsNoTracking()
-                .Include(x => x.SearchRequest)
-                .Where(request => idsToLoad.Contains(request.SearchRequestId));
+                .Include(x => x.SearchRequestSnapshot)
+                .ThenInclude(x => x.SearchRequest)
+                .Where(request => idsToLoad.Contains(request.SearchRequestSnapshotId));
             var query = filteredResults;
             if (paging is not null)
             {
@@ -41,11 +42,11 @@ public class SearchQueryService : ISearchQueryService
 
             var terms = state.StoredRequests.Keys.SelectMany(x => x.Term.Terms).Distinct().ToList();
 
-            var results = storedResults.GroupBy(res => res.SearchRequest)
+            var results = storedResults.GroupBy(res => res.SearchRequestSnapshot)
                 .Select(group => new SearchResultDto(
-                    group.Select(item => new SearchItem(group.Key.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
+                    group.Select(item => new SearchItem(group.Key.SearchRequest.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
                     terms,
-                    group.Key.Website))
+                    group.Key.SearchRequest.Website))
                 .ToList();
             var count = await filteredResults.CountAsync();
             _logger.LogInformation("Loaded '{resultsCount}' out of total of '{existingCount}'  existing results for requests '[{ids}]'", results.Count, count, idsToLoad.CommaSeparate());

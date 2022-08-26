@@ -21,7 +21,7 @@ public class SearchRepository : ISearchRepository
         _dateTime = dateTime;
     }
 
-    private SearchRequestStatus GetStatusFor(SearchRequest request)
+    private static SearchRequestStatus GetStatusFor(SearchRequest request)
     {
         SearchRequestStatus status;
         if (request.QueueItems.None())
@@ -30,31 +30,14 @@ public class SearchRepository : ISearchRepository
         }
         else
         {
-            var orderedItems = request.QueueItems.OrderByDescending(x => x.QueuedTimeUtc);
-            if (orderedItems.Count() > 1)
+            //we might want to use time of queue items to create more informed statuses for snapshots
+            if (request.QueueItems.Any(x => x.IsProcessed))
             {
-                if (orderedItems.Skip(1).First().IsProcessed)
-                {
-                    status = SearchRequestStatus.Fetched;
-                }
-                else
-                {
-                    //Should not be possible, but we better be safe
-                    status = SearchRequestStatus.Queued;
-                    _logger.LogInformation("Found two non-processed queue items for {requestId}", request.Id);
-                }
+                status = SearchRequestStatus.Fetched;
             }
             else
             {
-                var latestQueueItem = orderedItems.First();
-                if (latestQueueItem.IsProcessed)
-                {
-                    status = SearchRequestStatus.Fetched;
-                }
-                else
-                {
-                    status = SearchRequestStatus.Queued;
-                }
+                status = SearchRequestStatus.Queued;
             }
         }
         return status;
@@ -65,7 +48,9 @@ public class SearchRepository : ISearchRepository
         var term = SearchRequestTerm.CreateOr(request.SearchTerms);
         var requests = await _context.Request
                         .Include(x => x.QueueItems)
-                        .Where(x => request.ContentTypes.Contains(x.ContentType)
+                        .Include(x => x.Snapshots)
+                        .Where(x =>
+                            request.ContentTypes.Contains(x.ContentType)
                             && request.Websites.Contains(x.Website)
                             && x.SearchTerm == term)
                         .ToListAsync();
@@ -73,29 +58,28 @@ public class SearchRepository : ISearchRepository
         var existingRequestsWithStatus = requests.Select(x => (Request: x, GetStatusFor(x)));
         var existingRequests = existingRequestsWithStatus.Select(x => x.Request);
 
-        var existingOptions = existingRequests.Select(x => (x.Website, x.ContentType, x.SearchTerm));
-        List<(SupportedWebsite website, ContentType type, SearchRequestTerm term)> requestedOptions = new();
+        var existingOptions = existingRequests.Select(x => new SearchRequestOption(x.Website, x.ContentType, x.SearchTerm));
+        List<SearchRequestOption> requestedOptions = new();
         foreach (var website in request.Websites)
         {
             foreach (var option in request.ContentTypes)
             {
-                requestedOptions.Add((website, option, term));
+                requestedOptions.Add(new(website, option, term));
             }
         }
         var newOptions = requestedOptions.Where(x => existingOptions.NotContains(x));
         _logger.LogInformation(
               "Creating new requests with '{0}' contentTypes, '{1}' websites and '{2} terms'",
-              newOptions.Select(x => x.type).CommaSeparate(),
-              newOptions.Select(x => x.website).CommaSeparate(),
-              newOptions.Select(x => x.term).CommaSeparate());
+              newOptions.Select(x => x.ContentType).CommaSeparate(),
+              newOptions.Select(x => x.Website).CommaSeparate(),
+              newOptions.Select(x => x.Term.ToString()).CommaSeparate());
         var newRequests = newOptions.Select(newOption => new SearchRequest()
         {
-            ContentType = newOption.type,
+            ContentType = newOption.ContentType,
             OccurredCount = 1,
-            SearchTerm = newOption.term,
-            Website = newOption.website
-        })
-            .ToArray();
+            SearchTerm = newOption.Term,
+            Website = newOption.Website
+        }).ToArray();
 
         _context.Request
             .AddRange(newRequests);
@@ -112,19 +96,23 @@ public class SearchRepository : ISearchRepository
         var updatedCount = await _context.SaveChangesAsync();
         _logger.LogInformation("Updated '{number}' records whilst fetching", updatedCount);
 
-        var allRequests = existingRequestsWithStatus.Union(newRequests.Select(x => (x, SearchRequestStatus.NotFetched)));
-        var result = allRequests.ToDictionary(key => (key.Item1.Website, key.Item1.ContentType, key.Item1.SearchTerm), value => (value.Item1.Id, value.Item2));
+        IEnumerable<(SearchRequest Request, SearchRequestStatus Status)> allRequests = existingRequestsWithStatus.Union(newRequests.Select(x => (x, SearchRequestStatus.NotFetched)));
+        var result = allRequests.ToDictionary(
+            key => new SearchRequestOption(key.Request.Website, key.Request.ContentType, key.Request.SearchTerm),
+            value => new SearchRequestItem(
+                value.Request.Id,
+                value.Status,
+                value.Request.Snapshots.Select(snapshot => new SearchSnapshot(snapshot.Id, snapshot.Time)).ToList()
+              ));
         return new SearchRequestState(result);
     }
 
     public async Task MarkAsQueued(SearchRequestState request)
     {
-        var searchRequestIds = request.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.NotFetched).Select(x => x.RequestId);
+        var requestIds = request.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.NotFetched).Select(x => x.RequestId);
         await using (var transaction = _context.Database.BeginTransaction())
         {
-            var removedCount = await _context.Queue.Where(x => searchRequestIds.Contains(x.SearchRequestId)).DeleteFromQueryAsync();
-            _logger.LogInformation("Removed '{itemsCount}' items due to requeue", removedCount);
-            var items = searchRequestIds.Select(searchRequestId => new SearchRequestQueueItem
+            var items = requestIds.Select(searchRequestId => new SearchRequestQueueItem
             {
                 IsProcessed = false,
                 QueuedTimeUtc = _dateTime.UtcNow,
@@ -139,14 +127,12 @@ public class SearchRepository : ISearchRepository
         }
     }
 
+    //TODO: Get snapshot id from request instead of just returning latest
     public async Task AddOrUpdateResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
     {
-        var existingRequests = state.StoredRequests.Values.Select(x => x.RequestId);
         await using (var transaction = _context.Database.BeginTransaction())
         {
-            await ClearOldResults(results, existingRequests);
-
-            await MarkAsProcessed(existingRequests);
+            await MarkAsProcessed(state);
 
             await StoreResults(state, results);
 
@@ -155,21 +141,12 @@ public class SearchRepository : ISearchRepository
         }
     }
 
-    private async Task ClearOldResults(IEnumerable<SearchResultDto> results, IEnumerable<Guid> existingIds)
+    private async Task MarkAsProcessed(SearchRequestState state)
     {
-        _logger.LogInformation("Removing stale search results");
-        var removedRows = await _context.Result
-            .Where(request => existingIds.Contains(request.SearchRequestId))
-            .DeleteFromQueryAsync();
-        _logger.LogInformation("Removed '{0}' stale results with no other requests", removedRows);
-        var websitedToRecreate = results.Select(x => x.Website);
-        var typesToRecreate = results.Select(x => x.Items!.Select(y => y.ContentType)).Flatten().Distinct();
-    }
-
-    private async Task MarkAsProcessed(IEnumerable<Guid> existingIds)
-    {
+        var requestIds = state.StoredRequests.Values.Select(x => x.RequestId);
         await _context.Queue
-            .Where(x => existingIds.Contains(x.SearchRequestId))
+            .Include(x => x.SearchRequest)
+            .Where(x => requestIds.Contains(x.SearchRequestId))
             .UpdateFromQueryAsync(obj =>
                 new SearchRequestQueueItem()
                 {
@@ -190,7 +167,7 @@ public class SearchRepository : ISearchRepository
                 ImagePreviewUrl = item.ImagePreviewUrl,
                 SearchItemUrl = item.SearchItemUrl,
                 AdditionalData = item.Data.ToJObject(),
-                SearchRequestId = GetRequestId(state, result, item)
+                SearchRequestSnapshotId = GetSnapshotId(state, result, item)
             }))
             .ToList();
         await _context.Result.AddRangeAsync(newResults);
@@ -198,6 +175,6 @@ public class SearchRepository : ISearchRepository
         _logger.LogInformation("Stored '{rowsCount}' rows of new search results", newResults.Count);
     }
 
-    private static Guid GetRequestId(SearchRequestState state, SearchResultDto result, SearchItem item) =>
-        state.StoredRequests[(result.Website, item.ContentType, SearchRequestTerm.CreateOr(result.Terms))].RequestId;
+    private static Guid GetSnapshotId(SearchRequestState state, SearchResultDto result, SearchItem item) =>
+        state.StoredRequests[new(result.Website, item.ContentType, SearchRequestTerm.CreateOr(result.Terms))].Snapshots.OrderBy(x => x.SnapshotTime).Last().SnapshotId;
 }

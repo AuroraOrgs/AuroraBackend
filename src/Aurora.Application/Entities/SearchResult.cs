@@ -12,6 +12,6 @@ public class SearchResult
     public DateTime FoundTimeUtc { get; set; }
     public JObject? AdditionalData { get; set; } = null;
 
-    public Guid SearchRequestId { get; set; }
-    public SearchRequest SearchRequest { get; set; } = null!;
+    public Guid SearchRequestSnapshotId { get; set; }
+    public SearchRequestSnapshot SearchRequestSnapshot { get; set; } = null!;
 }

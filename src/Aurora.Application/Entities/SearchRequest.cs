@@ -15,4 +15,5 @@ public class SearchRequest
 
     public int OccurredCount { get; set; }
     public IEnumerable<SearchRequestQueueItem> QueueItems { get; set; } = null!;
+    public IEnumerable<SearchRequestSnapshot> Snapshots { get; set; } = null!;
 }

@@ -10,4 +10,6 @@ public class SearchRequestQueueItem
 
     public DateTime QueuedTimeUtc { get; set; }
     public bool IsProcessed { get; set; }
+
+    public SearchRequest SearchRequest { get; set; } = null!;
 }
