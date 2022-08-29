@@ -11,7 +11,7 @@ public class SearchRequestTerm : ValueObject
 
     public IEnumerable<string> Terms => _terms;
 
-    public static SearchRequestTerm CreateOr(IEnumerable<string> terms) =>
+    public static SearchRequestTerm CreateAnd(IEnumerable<string> terms) =>
         new(terms);
 
     public static SearchRequestTerm ParseString(string str) =>

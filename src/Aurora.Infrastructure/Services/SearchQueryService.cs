@@ -19,7 +19,7 @@ public class SearchQueryService : ISearchQueryService
 
     public async Task<SearchResults> GetResults(SearchRequestState state, PagingOptions? paging)
     {
-        var idsToLoad = state.StoredRequests.Values.Where(x => x.RequestStatus == SearchRequestStatus.Fetched).Select(x => x.Snapshots.OrderBy(x => x.SnapshotTime).Last().SnapshotId);
+        var idsToLoad = state.StoredOptions.Values.Where(x => x.RequestStatus == SearchRequestStatus.Fetched).Select(x => x.Snapshots.OrderBy(x => x.SnapshotTime).Last().SnapshotId);
         SearchResults result;
         if (idsToLoad.Any())
         {
@@ -40,7 +40,7 @@ public class SearchQueryService : ISearchQueryService
             var storedResults = await query
                 .ToListAsync();
 
-            var terms = state.StoredRequests.Keys.SelectMany(x => x.Term.Terms).Distinct().ToList();
+            var terms = state.StoredOptions.Keys.SelectMany(x => x.Term.Terms).Distinct().ToList();
 
             var results = storedResults.GroupBy(res => res.SearchRequestSnapshot)
                 .Select(group => new SearchResultDto(
