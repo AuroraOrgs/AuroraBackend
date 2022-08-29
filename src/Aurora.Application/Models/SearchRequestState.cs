@@ -4,7 +4,15 @@ namespace Aurora.Application.Models;
 
 
 //TODO: Refactor double meaning of the term 'Request' (means set of content type and website for API request and one combination of option and website as entity)
-public record SearchRequestState(Dictionary<SearchRequestOption, SearchRequestItem> StoredRequests);
+public record SearchRequestState
+{
+    public SearchRequestState(Dictionary<SearchRequestOption, SearchRequestItem> storedRequests)
+    {
+        StoredRequests = storedRequests;
+    }
+
+    public Dictionary<SearchRequestOption, SearchRequestItem> StoredRequests { get; set; }
+};
 
 public record SearchRequestOption(SupportedWebsite Website, ContentType ContentType, SearchRequestTerm Term);
 
