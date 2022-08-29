@@ -21,23 +21,23 @@ public class SearchRepository : ISearchRepository
         _dateTime = dateTime;
     }
 
-    private static SearchRequestStatus GetStatusFor(SearchRequest request)
+    private static SearchRequestOptionStatus GetStatusFor(SearchRequestOption request)
     {
-        SearchRequestStatus status;
+        SearchRequestOptionStatus status;
         if (request.QueueItems.None())
         {
-            status = SearchRequestStatus.NotFetched;
+            status = SearchRequestOptionStatus.NotFetched;
         }
         else
         {
             //we might want to use time of queue items to create more informed statuses for snapshots
             if (request.QueueItems.Any(x => x.IsProcessed))
             {
-                status = SearchRequestStatus.Fetched;
+                status = SearchRequestOptionStatus.Fetched;
             }
             else
             {
-                status = SearchRequestStatus.Queued;
+                status = SearchRequestOptionStatus.Queued;
             }
         }
         return status;
@@ -45,8 +45,8 @@ public class SearchRepository : ISearchRepository
 
     public async Task<SearchRequestState> FetchRequest(SearchRequestDto request, bool isUserGenerated)
     {
-        var term = SearchRequestTerm.CreateAnd(request.SearchTerms);
-        var storedOptions = await _context.Request
+        var term = SearchOptionTerm.CreateAnd(request.SearchTerms);
+        var storedOptions = await _context.Options
                         .Include(x => x.QueueItems)
                         .Include(x => x.Snapshots)
                         .Where(x =>
@@ -65,7 +65,7 @@ public class SearchRepository : ISearchRepository
             }
         }
         var newOptionModels = requestedOptions.Where(x => existingOptions.NotContains(x));
-        List<SearchRequest> newOptions = CreateOptions(newOptionModels);
+        List<Application.Entities.SearchRequestOption> newOptions = CreateOptions(newOptionModels);
 
         if (isUserGenerated)
         {
@@ -74,14 +74,14 @@ public class SearchRepository : ISearchRepository
                 existingRequest.OccurredCount++;
             }
         }
-        _context.Request.UpdateRange(storedOptions);
+        _context.Options.UpdateRange(storedOptions);
 
         var updatedCount = await _context.SaveChangesAsync();
         _logger.LogInformation("Updated '{number}' records whilst fetching", updatedCount);
         var allOptions = storedOptions.Union(newOptions).ToList();
         var result = allOptions.ToDictionary(
             key => new SearchRequestOptionDto(key.Website, key.ContentType, key.SearchTerm),
-            value => new SearchRequestItem(
+            value => new SearchRequestOptionItem(
                 value.Id,
                 GetStatusFor(value),
                 value.Snapshots.Select(snapshot => new SearchSnapshot(snapshot.Id, snapshot.Time)).ToList()
@@ -89,35 +89,35 @@ public class SearchRepository : ISearchRepository
         return new SearchRequestState(result);
     }
 
-    private List<SearchRequest> CreateOptions(IEnumerable<SearchRequestOptionDto> newOptions)
+    private List<Application.Entities.SearchRequestOption> CreateOptions(IEnumerable<SearchRequestOptionDto> newOptions)
     {
         _logger.LogInformation(
                       "Creating new requests with '{0}' contentTypes, '{1}' websites and '{2} terms'",
                       newOptions.Select(x => x.ContentType).CommaSeparate(),
                       newOptions.Select(x => x.Website).CommaSeparate(),
                       newOptions.Select(x => x.Term.ToString()).CommaSeparate());
-        var newRequests = newOptions.Select(newOption => new SearchRequest()
+        var optionsToCreate = newOptions.Select(newOption => new SearchRequestOption()
         {
             ContentType = newOption.ContentType,
             OccurredCount = 1,
             SearchTerm = newOption.Term,
             Website = newOption.Website
         }).ToList();
-        _context.Request
-            .AddRange(newRequests);
-        return newRequests;
+        _context.Options
+            .AddRange(optionsToCreate);
+        return optionsToCreate;
     }
 
     public async Task MarkAsQueued(SearchRequestState request)
     {
-        var requestIds = request.StoredOptions.Values.Where(x => x.RequestStatus == SearchRequestStatus.NotFetched).Select(x => x.RequestId);
+        var optionIds = request.StoredOptions.Values.Where(x => x.OptionStatus == SearchRequestOptionStatus.NotFetched).Select(x => x.OptionId);
         await using (var transaction = _context.Database.BeginTransaction())
         {
-            var items = requestIds.Select(searchRequestId => new SearchRequestQueueItem
+            var items = optionIds.Select(optionId => new SearchOptionQueueItem
             {
                 IsProcessed = false,
                 QueuedTimeUtc = _dateTime.UtcNow,
-                SearchRequestId = searchRequestId
+                SearchOptionId = optionId
             });
             if (items.Any())
             {
@@ -144,33 +144,33 @@ public class SearchRepository : ISearchRepository
 
     private async Task MarkAsProcessed(SearchRequestState state)
     {
-        var requestIds = state.StoredOptions.Values.Select(x => x.RequestId);
+        var optionIds = state.StoredOptions.Values.Select(x => x.OptionId);
         await _context.Queue
-            .Include(x => x.SearchRequest)
-            .Where(x => requestIds.Contains(x.SearchRequestId))
+            .Include(x => x.SearchOption)
+            .Where(x => optionIds.Contains(x.SearchOptionId))
             .UpdateFromQueryAsync(obj =>
-                new SearchRequestQueueItem()
+                new SearchOptionQueueItem()
                 {
                     IsProcessed = true,
                     QueuedTimeUtc = obj.QueuedTimeUtc,
                     QueueId = obj.QueueId,
-                    SearchRequestId = obj.SearchRequestId
+                    SearchOptionId = obj.SearchOptionId
                 });
     }
 
     private async Task StoreResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
     {
         var optionToSnapshot = state.StoredOptions.Keys
-            .ToDictionary(option => option, option => new SearchRequestSnapshot()
+            .ToDictionary(option => option, option => new SearchOptionSnapshot()
             {
-                SearchRequestId = state.StoredOptions[option].RequestId,
+                SearchOptionId = state.StoredOptions[option].OptionId,
                 Time = _dateTime.UtcNow
             });
-        await _context.AddRangeAsync(optionToSnapshot.Values);
+        await _context.Snapshots.AddRangeAsync(optionToSnapshot.Values);
 
         var optionToItems = results
            .Where(result => result.Items is not null)
-           .SelectMany(result => result.Items!.Select(item => (item, option: new SearchRequestOptionDto(result.Website, item.ContentType, SearchRequestTerm.CreateAnd(result.Terms)))))
+           .SelectMany(result => result.Items!.Select(item => (item, option: new SearchRequestOptionDto(result.Website, item.ContentType, SearchOptionTerm.CreateAnd(result.Terms)))))
            .GroupBy(x => x.option)
            .ToDictionary(x => x.Key, x => x.Select(y => y.item).ToList());
 
@@ -188,7 +188,7 @@ public class SearchRepository : ISearchRepository
                         ImagePreviewUrl = item.ImagePreviewUrl,
                         SearchItemUrl = item.SearchItemUrl,
                         AdditionalData = item.Data.ToJObject(),
-                        SearchRequestSnapshotId = snapshotId
+                        SearchOptionSnapshotId = snapshotId
                     });
                 }
             }

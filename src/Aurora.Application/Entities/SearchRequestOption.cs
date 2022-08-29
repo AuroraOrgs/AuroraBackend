@@ -4,16 +4,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Aurora.Application.Entities;
 
-public class SearchRequest
+public class SearchRequestOption
 {
     [Key]
     public Guid Id { get; set; }
 
-    public SearchRequestTerm SearchTerm { get; set; } = null!;
+    public SearchOptionTerm SearchTerm { get; set; } = null!;
     public SupportedWebsite Website { get; set; }
     public ContentType ContentType { get; set; }
 
     public int OccurredCount { get; set; }
-    public IEnumerable<SearchRequestQueueItem> QueueItems { get; set; } = null!;
-    public IEnumerable<SearchRequestSnapshot> Snapshots { get; set; } = null!;
+    public IEnumerable<SearchOptionQueueItem> QueueItems { get; set; } = null!;
+    public IEnumerable<SearchOptionSnapshot> Snapshots { get; set; } = null!;
 }

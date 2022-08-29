@@ -2,14 +2,14 @@
 
 namespace Aurora.Application.Entities;
 
-public class SearchRequestQueueItem
+public class SearchOptionQueueItem
 {
     [Key]
     public Guid QueueId { get; set; }
-    public Guid SearchRequestId { get; set; }
+    public Guid SearchOptionId { get; set; }
 
     public DateTime QueuedTimeUtc { get; set; }
     public bool IsProcessed { get; set; }
 
-    public SearchRequest SearchRequest { get; set; } = null!;
+    public SearchRequestOption SearchOption { get; set; } = null!;
 }

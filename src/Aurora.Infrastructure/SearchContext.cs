@@ -11,21 +11,21 @@ public class SearchContext : DbContext
     public SearchContext(DbContextOptions<SearchContext> options) : base(options) { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-    public DbSet<SearchRequest> Request { get; set; }
+    public DbSet<Application.Entities.SearchRequestOption> Options { get; set; }
     public DbSet<SearchResult> Result { get; set; }
-    public DbSet<SearchRequestQueueItem> Queue { get; set; }
-    public DbSet<SearchRequestSnapshot> Snapshots { get; internal set; }
+    public DbSet<SearchOptionQueueItem> Queue { get; set; }
+    public DbSet<SearchOptionSnapshot> Snapshots { get; internal set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<SearchRequest>()
+        modelBuilder.Entity<SearchRequestOption>()
            .HasIndex(p => new { p.SearchTerm, p.Website, p.ContentType }).IsUnique();
 
         modelBuilder.Entity<SearchResult>()
             .Property(p => p.AdditionalData)
             .HasJsonConversion();
 
-        modelBuilder.Entity<SearchRequest>()
+        modelBuilder.Entity<SearchRequestOption>()
             .Property(x => x.SearchTerm)
             .HasConversion<SearchRequestTermStringConverter>();
     }

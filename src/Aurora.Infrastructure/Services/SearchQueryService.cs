@@ -19,15 +19,19 @@ public class SearchQueryService : ISearchQueryService
 
     public async Task<SearchResults> GetResults(SearchRequestState state, PagingOptions? paging)
     {
-        var idsToLoad = state.StoredOptions.Values.Where(x => x.RequestStatus == SearchRequestStatus.Fetched).Select(x => x.Snapshots.OrderBy(x => x.SnapshotTime).Last().SnapshotId);
+        var idsToLoad = state.StoredOptions.Values
+            .Where(x => x.OptionStatus == SearchRequestOptionStatus.Fetched)
+            //getting last snapshot does not work for items that were fetched before, but are currently in the process of refreshing
+            //TODO:fix
+            .Select(x => x.Snapshots.OrderBy(x => x.SnapshotTime).LastOrDefault()?.SnapshotId);
         SearchResults result;
         if (idsToLoad.Any())
         {
             var filteredResults = _context.Result
                 .AsNoTracking()
-                .Include(x => x.SearchRequestSnapshot)
-                .ThenInclude(x => x.SearchRequest)
-                .Where(request => idsToLoad.Contains(request.SearchRequestSnapshotId));
+                .Include(x => x.SearchOptionSnapshot)
+                .ThenInclude(x => x.SearchOption)
+                .Where(request => idsToLoad.Contains(request.SearchOptionSnapshotId));
             var query = filteredResults;
             if (paging is not null)
             {
@@ -42,11 +46,11 @@ public class SearchQueryService : ISearchQueryService
 
             var terms = state.StoredOptions.Keys.SelectMany(x => x.Term.Terms).Distinct().ToList();
 
-            var results = storedResults.GroupBy(res => res.SearchRequestSnapshot)
+            var results = storedResults.GroupBy(res => res.SearchOptionSnapshot)
                 .Select(group => new SearchResultDto(
-                    group.Select(item => new SearchItem(group.Key.SearchRequest.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
+                    group.Select(item => new SearchItem(group.Key.SearchOption.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
                     terms,
-                    group.Key.SearchRequest.Website))
+                    group.Key.SearchOption.Website))
                 .ToList();
             var count = await filteredResults.CountAsync();
             _logger.LogInformation("Loaded '{resultsCount}' out of total of '{existingCount}'  existing results for requests '[{ids}]'", results.Count, count, idsToLoad.CommaSeparate());
