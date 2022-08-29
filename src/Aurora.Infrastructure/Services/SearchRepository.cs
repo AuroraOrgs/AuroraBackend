@@ -24,7 +24,7 @@ public class SearchRepository : ISearchRepository
     private static SearchRequestOptionStatus GetStatusFor(SearchRequestOption request)
     {
         SearchRequestOptionStatus status;
-        if (request.QueueItems.None())
+        if (request.QueueItems is null || request.QueueItems.None())
         {
             status = SearchRequestOptionStatus.NotFetched;
         }
