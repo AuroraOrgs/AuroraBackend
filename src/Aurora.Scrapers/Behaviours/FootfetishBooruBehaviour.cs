@@ -1,6 +1,4 @@
-﻿using Aurora.Domain.Enums;
-
-namespace Aurora.Scrapers.Behaviours;
+﻿namespace Aurora.Scrapers.Behaviours;
 
 public static class FootfetishBooruBehaviour
 {

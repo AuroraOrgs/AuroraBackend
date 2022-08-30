@@ -1,5 +1,4 @@
-﻿using Aurora.Domain.Enums;
-using Aurora.Scrapers.Behaviours;
+﻿using Aurora.Scrapers.Behaviours;
 using Aurora.Scrapers.Services;
 
 namespace Aurora.Scrapers.Total;

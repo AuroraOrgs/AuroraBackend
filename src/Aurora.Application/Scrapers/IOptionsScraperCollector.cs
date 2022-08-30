@@ -1,6 +1,4 @@
-﻿using Aurora.Domain.Enums;
-
-namespace Aurora.Application.Scrapers;
+﻿namespace Aurora.Application.Scrapers;
 
 public interface IOptionsScraperCollector
 {

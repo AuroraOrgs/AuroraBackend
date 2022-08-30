@@ -1,6 +1,4 @@
-﻿using Aurora.Domain.Enums;
-
-namespace Aurora.Scrapers.Extensions;
+﻿namespace Aurora.Scrapers.Extensions;
 
 public static class SupportedWebsiteExtensions
 {
