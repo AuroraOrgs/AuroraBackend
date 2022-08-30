@@ -88,23 +88,35 @@ public class SearchRepository : ISearchRepository
         return new SearchRequestState(result);
     }
 
-    private List<Application.Entities.SearchRequestOption> CreateOptions(IEnumerable<SearchRequestOptionDto> newOptions)
+    private List<SearchRequestOption> CreateOptions(IEnumerable<SearchRequestOptionDto> newOptions)
     {
-        _logger.LogInformation(
-                      "Creating new requests with '{0}' contentTypes, '{1}' websites and '{2} terms'",
-                      newOptions.Select(x => x.ContentType).CommaSeparate(),
-                      newOptions.Select(x => x.Website).CommaSeparate(),
-                      newOptions.Select(x => x.Term.ToString()).CommaSeparate());
-        var optionsToCreate = newOptions.Select(newOption => new SearchRequestOption()
+        List<SearchRequestOption> createdOptions;
+        if (newOptions.Any())
         {
-            ContentType = newOption.ContentType,
-            OccurredCount = 1,
-            SearchTerm = newOption.Term,
-            Website = newOption.Website
-        }).ToList();
-        _context.Options
-            .AddRange(optionsToCreate);
-        return optionsToCreate;
+            _logger.LogInformation(
+                          "Creating new requests with '{0}' contentTypes, '{1}' websites and '{2} terms'",
+                          newOptions.CommaSeparate(x => x.ContentType),
+                          newOptions.CommaSeparate(x => x.Website),
+                          newOptions.CommaSeparate(x => x.Term.ToString())
+                          );
+            createdOptions = newOptions
+                .Select(newOption => new SearchRequestOption()
+                {
+                    ContentType = newOption.ContentType,
+                    OccurredCount = 1,
+                    SearchTerm = newOption.Term,
+                    Website = newOption.Website,
+                    Snapshots = new List<SearchOptionSnapshot>()
+                })
+                .ToList();
+            _context.Options
+                .AddRange(createdOptions);
+        }
+        else
+        {
+            createdOptions = new();
+        }
+        return createdOptions;
     }
 
     public async Task MarkAsQueued(SearchRequestState request)
