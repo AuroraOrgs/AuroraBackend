@@ -21,17 +21,17 @@ public class SearchRepository : ISearchRepository
         _dateTime = dateTime;
     }
 
-    private static SearchRequestOptionStatus GetStatusFor(SearchRequestOption request)
+    private static SearchRequestOptionStatus GetStatusFor(IEnumerable<SearchOptionSnapshot> snapshots)
     {
         SearchRequestOptionStatus status;
-        if (request.QueueItems is null || request.QueueItems.None())
+        if (snapshots is null || snapshots.None())
         {
             status = SearchRequestOptionStatus.NotFetched;
         }
         else
         {
             //we might want to use time of queue items to create more informed statuses for snapshots
-            if (request.QueueItems.Any(x => x.IsProcessed))
+            if (snapshots.Any(x => x.IsProcessed))
             {
                 status = SearchRequestOptionStatus.Fetched;
             }
@@ -47,7 +47,6 @@ public class SearchRepository : ISearchRepository
     {
         var term = SearchOptionTerm.CreateAnd(request.SearchTerms);
         var storedOptions = await _context.Options
-                        .Include(x => x.QueueItems)
                         .Include(x => x.Snapshots)
                         .Where(x =>
                             request.ContentTypes.Contains(x.ContentType)
@@ -83,7 +82,7 @@ public class SearchRepository : ISearchRepository
             key => new SearchRequestOptionDto(key.Website, key.ContentType, key.SearchTerm),
             value => new SearchRequestOptionItem(
                 value.Id,
-                GetStatusFor(value),
+                GetStatusFor(value.Snapshots),
                 value.Snapshots.Select(snapshot => new SearchSnapshot(snapshot.Id, snapshot.Time)).ToList()
               ));
         return new SearchRequestState(result);
@@ -113,15 +112,15 @@ public class SearchRepository : ISearchRepository
         var optionIds = request.StoredOptions.Values.Where(x => x.OptionStatus == SearchRequestOptionStatus.NotFetched).Select(x => x.OptionId);
         await using (var transaction = _context.Database.BeginTransaction())
         {
-            var items = optionIds.Select(optionId => new SearchOptionQueueItem
+            var items = optionIds.Select(optionId => new SearchOptionSnapshot
             {
                 IsProcessed = false,
-                QueuedTimeUtc = _dateTime.UtcNow,
+                Time = _dateTime.UtcNow,
                 SearchOptionId = optionId
             });
             if (items.Any())
             {
-                await _context.Queue.AddRangeAsync(items);
+                await _context.Snapshots.AddRangeAsync(items);
             }
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -145,15 +144,15 @@ public class SearchRepository : ISearchRepository
     private async Task MarkAsProcessed(SearchRequestState state)
     {
         var optionIds = state.StoredOptions.Values.Select(x => x.OptionId);
-        await _context.Queue
+        await _context.Snapshots
             .Include(x => x.SearchOption)
             .Where(x => optionIds.Contains(x.SearchOptionId))
             .UpdateFromQueryAsync(obj =>
-                new SearchOptionQueueItem()
+                new SearchOptionSnapshot()
                 {
                     IsProcessed = true,
-                    QueuedTimeUtc = obj.QueuedTimeUtc,
-                    QueueId = obj.QueueId,
+                    Time = obj.Time,
+                    Id = obj.Id,
                     SearchOptionId = obj.SearchOptionId
                 });
     }

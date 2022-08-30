@@ -14,6 +14,5 @@ public class SearchRequestOption
     public ContentType ContentType { get; set; }
 
     public int OccurredCount { get; set; }
-    public IEnumerable<SearchOptionQueueItem> QueueItems { get; set; } = null!;
     public IEnumerable<SearchOptionSnapshot> Snapshots { get; set; } = null!;
 }

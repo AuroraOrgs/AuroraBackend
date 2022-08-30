@@ -11,9 +11,8 @@ public class SearchContext : DbContext
     public SearchContext(DbContextOptions<SearchContext> options) : base(options) { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-    public DbSet<Application.Entities.SearchRequestOption> Options { get; set; }
+    public DbSet<SearchRequestOption> Options { get; set; }
     public DbSet<SearchResult> Result { get; set; }
-    public DbSet<SearchOptionQueueItem> Queue { get; set; }
     public DbSet<SearchOptionSnapshot> Snapshots { get; internal set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
