@@ -1,6 +1,7 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Extensions;
 using Aurora.Application.Models;
+using Aurora.Domain.Enums;
 using Aurora.Shared.Extensions;
 using MediatR;
 using Microsoft.Extensions.Logging;

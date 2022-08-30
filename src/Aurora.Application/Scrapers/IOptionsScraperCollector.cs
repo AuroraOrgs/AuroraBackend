@@ -1,4 +1,4 @@
-﻿using Aurora.Application.Models;
+﻿using Aurora.Domain.Enums;
 
 namespace Aurora.Application.Scrapers;
 

@@ -1,4 +1,4 @@
-﻿using Aurora.Application.ValueObjects;
+﻿using Aurora.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Aurora.Infrastructure.Converters;

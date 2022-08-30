@@ -1,4 +1,4 @@
-﻿namespace Aurora.Application.ValueObjects;
+﻿namespace Aurora.Domain.ValueObjects;
 
 public class SearchOptionTerm : ValueObject
 {
@@ -18,7 +18,7 @@ public class SearchOptionTerm : ValueObject
         new(str.Split(','));
 
     public override string ToString() =>
-        String.Join(',', _terms.Distinct());
+        string.Join(',', _terms.Distinct());
 
     protected override IEnumerable<object> GetEqualityComponents()
     {

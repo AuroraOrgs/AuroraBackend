@@ -1,7 +1,6 @@
 ﻿using Aurora.Application.Models;
-using Microsoft.Extensions.Logging;
 using Aurora.Shared.Extensions;
-using Aurora.Application.Entities;
+using Microsoft.Extensions.Logging;
 
 namespace Aurora.Application.Extensions;
 

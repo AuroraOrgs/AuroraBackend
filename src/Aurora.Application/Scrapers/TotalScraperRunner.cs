@@ -1,5 +1,6 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Models;
+using Aurora.Domain.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Aurora.Application.Scrapers;

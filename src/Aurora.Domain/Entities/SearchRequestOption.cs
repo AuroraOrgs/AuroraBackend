@@ -1,8 +1,8 @@
-﻿using Aurora.Application.Models;
-using Aurora.Application.ValueObjects;
+﻿using Aurora.Domain.Enums;
+using Aurora.Domain.ValueObjects;
 using System.ComponentModel.DataAnnotations;
 
-namespace Aurora.Application.Entities;
+namespace Aurora.Domain.Entities;
 
 public class SearchRequestOption
 {

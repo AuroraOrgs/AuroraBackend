@@ -1,4 +1,4 @@
-﻿namespace Aurora.Application.Entities;
+﻿namespace Aurora.Domain.Entities;
 
 public class SearchOptionSnapshot
 {

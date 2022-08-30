@@ -1,4 +1,5 @@
 ﻿using Aurora.Application.Models;
+using Aurora.Domain.Enums;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 

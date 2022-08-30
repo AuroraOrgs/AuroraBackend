@@ -1,4 +1,5 @@
-﻿using Aurora.Application.ValueObjects;
+﻿using Aurora.Domain.Enums;
+using Aurora.Domain.ValueObjects;
 
 namespace Aurora.Application.Models;
 

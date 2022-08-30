@@ -1,4 +1,4 @@
-﻿using Aurora.Application.Entities;
+﻿using Aurora.Domain.Entities;
 using Aurora.Infrastructure.Converters;
 using Aurora.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
