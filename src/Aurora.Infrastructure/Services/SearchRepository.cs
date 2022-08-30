@@ -65,7 +65,7 @@ public class SearchRepository : ISearchRepository
             }
         }
         var newOptionModels = requestedOptions.Where(x => existingOptions.NotContains(x));
-        List<Application.Entities.SearchRequestOption> newOptions = CreateOptions(newOptionModels);
+        List<SearchRequestOption> newOptions = CreateOptions(newOptionModels);
 
         if (isUserGenerated)
         {
