@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 
-namespace Aurora.Application.Entities;
+namespace Aurora.Domain.Entities;
 
 public class SearchResult
 {

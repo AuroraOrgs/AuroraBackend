@@ -1,7 +1,7 @@
 ﻿using Aurora.Application.Contracts;
-using Aurora.Application.Entities;
 using Aurora.Application.Models;
-using Aurora.Application.ValueObjects;
+using Aurora.Domain.Entities;
+using Aurora.Domain.ValueObjects;
 using Aurora.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

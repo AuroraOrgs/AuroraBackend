@@ -1,4 +1,4 @@
-﻿namespace Aurora.Application.Models;
+﻿namespace Aurora.Domain.Enums;
 
 public enum ContentType
 {

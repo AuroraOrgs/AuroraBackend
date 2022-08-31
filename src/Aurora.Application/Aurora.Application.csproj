@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Aurora.Shared\Aurora.Shared.csproj" />
+    <ProjectReference Include="..\Aurora.Domain\Aurora.Domain.csproj" />
   </ItemGroup>
 
 </Project>

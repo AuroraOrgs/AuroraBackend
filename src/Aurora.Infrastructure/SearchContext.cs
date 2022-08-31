@@ -1,7 +1,8 @@
-﻿using Aurora.Application.Entities;
-using Aurora.Infrastructure.Converters;
+﻿using Aurora.Domain.Entities;
+using Aurora.Domain.ValueObjects;
 using Aurora.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Aurora.Infrastructure;
 
@@ -24,8 +25,10 @@ public class SearchContext : DbContext
             .Property(p => p.AdditionalData)
             .HasJsonConversion();
 
+        ValueConverter<SearchOptionTerm, string> termConverter = new(v => v.ToString(), v => SearchOptionTerm.ParseString(v));
+
         modelBuilder.Entity<SearchRequestOption>()
             .Property(x => x.SearchTerm)
-            .HasConversion<SearchRequestTermStringConverter>();
+            .HasConversion(termConverter);
     }
 }
