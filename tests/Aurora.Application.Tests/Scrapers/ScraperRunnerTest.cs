@@ -8,7 +8,7 @@ namespace Aurora.Application.Tests.Scrapers;
 public class ScraperRunnerTest
 {
     [Fact]
-    public async Task RunAsync_ShouldExecuteCallbackForResults()
+    public async Task RunAsync_ShouldExecuteCallbackForResults_WhenCallbackProvided()
     {
         //Arrange
         var website = SupportedWebsite.XVideos;
