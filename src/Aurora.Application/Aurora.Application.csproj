@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Aurora.Domain\Aurora.Domain.csproj" />
+    <ProjectReference Include="..\Aurora.Shared\Aurora.Shared.csproj" />
   </ItemGroup>
 
 </Project>
