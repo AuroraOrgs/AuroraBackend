@@ -20,7 +20,7 @@ public class ScraperRunner : IScraperRunner
         _logger = logger;
     }
 
-    public async Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default)
+    public async Task<List<SearchResultDto>> RunAsync(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default)
     {
         var options = searchRequest.Websites.Select(website => searchRequest.ContentTypes.Select(option => (website, option))).Flatten();
         var scrapers = await _collector.CollectFor(options);

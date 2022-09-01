@@ -30,7 +30,7 @@ public class ScrapCommandHandler : IRequestHandler<ScrapCommand>
     {
         var request = requestWrapper.SearchRequest;
         var userId = requestWrapper.UserId;
-        var results = await _scraperRunner.Run(request, result =>
+        var results = await _scraperRunner.RunAsync(request, result =>
         {
             Task task;
             if (userId is not null)
