@@ -40,7 +40,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Scrapers.Tests", "..
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Application.Tests", "..\tests\Aurora.Application.Tests\Aurora.Application.Tests.csproj", "{8EF89652-249F-465B-A405-3EFB604DF0C1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Domain", "Aurora.Domain\Aurora.Domain.csproj", "{439AF28C-2661-4586-A9C7-52C0F5580F07}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Aurora.Domain", "Aurora.Domain\Aurora.Domain.csproj", "{439AF28C-2661-4586-A9C7-52C0F5580F07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aurora.Domain.Tests", "Aurora.Domain.Tests\Aurora.Domain.Tests.csproj", "{DD66B52D-37F3-4D2F-AAFD-05B54A71F7E7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -84,6 +86,10 @@ Global
 		{439AF28C-2661-4586-A9C7-52C0F5580F07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{439AF28C-2661-4586-A9C7-52C0F5580F07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{439AF28C-2661-4586-A9C7-52C0F5580F07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD66B52D-37F3-4D2F-AAFD-05B54A71F7E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD66B52D-37F3-4D2F-AAFD-05B54A71F7E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD66B52D-37F3-4D2F-AAFD-05B54A71F7E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD66B52D-37F3-4D2F-AAFD-05B54A71F7E7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,6 +98,7 @@ Global
 		{9C813FB0-C28F-49BD-9731-F22683010459} = {A4A00DB3-1A98-4255-8376-7320CFA8BDA6}
 		{F9D4A1D2-7830-45D5-8A75-5B1FE15A0107} = {A4A00DB3-1A98-4255-8376-7320CFA8BDA6}
 		{8EF89652-249F-465B-A405-3EFB604DF0C1} = {A4A00DB3-1A98-4255-8376-7320CFA8BDA6}
+		{DD66B52D-37F3-4D2F-AAFD-05B54A71F7E7} = {A4A00DB3-1A98-4255-8376-7320CFA8BDA6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3EA7E718-B8B7-4EE9-A51E-4E156F1104E9}

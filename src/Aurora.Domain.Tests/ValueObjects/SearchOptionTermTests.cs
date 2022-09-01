@@ -1,6 +1,6 @@
 using Aurora.Domain.ValueObjects;
 
-namespace Aurora.Application.Tests.ValueObjects;
+namespace Aurora.Domain.Tests.ValueObjects;
 
 public class SearchOptionTermTests
 {
