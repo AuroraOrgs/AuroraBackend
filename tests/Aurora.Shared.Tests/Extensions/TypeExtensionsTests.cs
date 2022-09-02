@@ -2,7 +2,7 @@
 
 namespace Aurora.Shared.Tests.Extensions;
 
-public class TypeExtensionsTest
+public class TypeExtensionsTests
 {
     [Theory]
     [InlineData(typeof(List<>), typeof(List<>))]
@@ -10,10 +10,8 @@ public class TypeExtensionsTest
     [InlineData(typeof(List<>), typeof(ListInheritor<>))]
     [InlineData(typeof(List<>), typeof(ListInheritor<int>))]
     [InlineData(typeof(List<>), typeof(ListInheritorImpl))]
-    public void IsAssignableToGenericType_ShouldBeAssignable_WhenInherits(Type genericType, Type givenType)
-    {
+    public void IsAssignableToGenericType_ShouldBeAssignable_WhenInherits(Type genericType, Type givenType) =>
         givenType.IsAssignableToGenericType(genericType).Should().BeTrue();
-    }
 
     private class ListInheritor<T> : List<T>
     {
@@ -29,8 +27,6 @@ public class TypeExtensionsTest
     [InlineData(typeof(List<>), typeof(IEnumerable<>))]
     [InlineData(typeof(List<>), typeof(IEnumerable<int>))]
     [InlineData(typeof(List<>), typeof(HashSet<>))]
-    public void IsAssignableToGenericType_ShouldNotBeAssignable_WhenDifferentTypes(Type genericType, Type givenType)
-    {
+    public void IsAssignableToGenericType_ShouldNotBeAssignable_WhenDifferentTypes(Type genericType, Type givenType) =>
         givenType.IsAssignableToGenericType(genericType).Should().BeFalse();
-    }
 }
