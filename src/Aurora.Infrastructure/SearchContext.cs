@@ -34,6 +34,11 @@ public class SearchContext : DbContext
             .Property(x => x.SearchTerm)
             .HasConversion(termConverter);
 
+        AddEnumWrapperConversions(modelBuilder);
+    }
+
+    private static void AddEnumWrapperConversions(ModelBuilder modelBuilder)
+    {
         var wrapperBaseType = typeof(EnumWrapper<>);
         var enumProperties = modelBuilder.Model
             .GetEntityTypes()
