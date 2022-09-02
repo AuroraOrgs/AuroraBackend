@@ -5,6 +5,7 @@ using Aurora.Domain.ValueObjects;
 using Aurora.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Collections.Immutable;
 
 namespace Aurora.Infrastructure.Services;
 
@@ -78,7 +79,7 @@ public class SearchRepository : ISearchRepository
         var updatedCount = await _context.SaveChangesAsync();
         _logger.LogInformation("Updated '{number}' records whilst fetching", updatedCount);
         var allOptions = storedOptions.Union(newOptions).ToList();
-        var result = allOptions.ToDictionary(
+        var result = allOptions.ToImmutableDictionary(
             key => new SearchRequestOptionDto(key.Website, key.ContentType, key.SearchTerm),
             value => new SearchRequestOptionItem(
                 value.Id,

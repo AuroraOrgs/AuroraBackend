@@ -1,15 +1,16 @@
 ﻿using Aurora.Domain.ValueObjects;
+using System.Collections.Immutable;
 
 namespace Aurora.Application.Models;
 
 public record SearchRequestState
 {
-    public SearchRequestState(Dictionary<SearchRequestOptionDto, SearchRequestOptionItem> storedRequests)
+    public SearchRequestState(ImmutableDictionary<SearchRequestOptionDto, SearchRequestOptionItem> storedRequests)
     {
         StoredOptions = storedRequests;
     }
 
-    public Dictionary<SearchRequestOptionDto, SearchRequestOptionItem> StoredOptions { get; set; }
+    public ImmutableDictionary<SearchRequestOptionDto, SearchRequestOptionItem> StoredOptions { get; set; }
 };
 
 public record SearchRequestOptionDto(SupportedWebsite Website, ContentType ContentType, SearchOptionTerm Term);
