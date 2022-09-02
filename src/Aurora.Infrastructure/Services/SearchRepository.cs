@@ -3,6 +3,7 @@ using Aurora.Application.Models;
 using Aurora.Domain.Entities;
 using Aurora.Domain.ValueObjects;
 using Aurora.Shared.Extensions;
+using Aurora.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Collections.Immutable;
@@ -103,10 +104,10 @@ public class SearchRepository : ISearchRepository
             createdOptions = newOptions
                 .Select(newOption => new SearchRequestOption()
                 {
-                    ContentType = newOption.ContentType,
+                    ContentType = newOption.ContentType.Wrap(),
                     OccurredCount = 1,
                     SearchTerm = newOption.Term,
-                    Website = newOption.Website,
+                    Website = newOption.Website.Wrap(),
                     Snapshots = new List<SearchOptionSnapshot>()
                 })
                 .ToList();
