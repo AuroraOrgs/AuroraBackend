@@ -4,20 +4,36 @@ public static class TypeExtensions
 {
     public static bool IsAssignableToGenericType(this Type givenType, Type genericType)
     {
-        var interfaceTypes = givenType.GetInterfaces();
-
-        foreach (var it in interfaceTypes)
+        bool result;
+        if (givenType == genericType
+            || givenType.InheritsGenericType(genericType)
+            || givenType.IsGeneticType(genericType)
+            )
         {
-            if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
-                return true;
+            result = true;
         }
+        else
+        {
+            Type baseType = givenType.BaseType;
+            if (baseType is not null)
+            {
+                result = IsAssignableToGenericType(baseType, genericType);
+            }
+            else
+            {
+                result = false;
+            }
+        }
+        return result;
+    }
 
-        if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
-            return true;
+    private static bool IsGeneticType(this Type givenType, Type genericType)
+    {
+        return givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType;
+    }
 
-        Type baseType = givenType.BaseType;
-        if (baseType == null) return false;
-
-        return IsAssignableToGenericType(baseType, genericType);
+    private static bool InheritsGenericType(this Type givenType, Type genericType)
+    {
+        return givenType.GetInterfaces().Any(it => it.IsGenericType && it.GetGenericTypeDefinition() == genericType);
     }
 }
