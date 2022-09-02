@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Aurora.Scrapers.Tests.Extensions;
 
-public class SupportedWebsiteExtensionsTest
+public class SupportedWebsiteExtensionsTests
 {
     [Fact]
     public void GetWebsite_ShouldWork_ForAllWebsites()

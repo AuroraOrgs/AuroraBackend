@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Aurora.Application.Tests.Scrapers;
 
-public class ScraperRunnerTest
+public class ScraperRunnerTests
 {
     [Fact]
     public async Task RunAsync_ShouldExecuteCallbackForResults_WhenCallbackProvided()
