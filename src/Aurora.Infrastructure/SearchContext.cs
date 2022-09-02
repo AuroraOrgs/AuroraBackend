@@ -1,6 +1,9 @@
 ﻿using Aurora.Domain.Entities;
 using Aurora.Domain.ValueObjects;
 using Aurora.Infrastructure.Extensions;
+using Aurora.Infrastructure.Services;
+using Aurora.Shared.Extensions;
+using Aurora.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -30,5 +33,26 @@ public class SearchContext : DbContext
         modelBuilder.Entity<SearchRequestOption>()
             .Property(x => x.SearchTerm)
             .HasConversion(termConverter);
+
+        var wrapperBaseType = typeof(EnumWrapper<>);
+        var enumProperties = modelBuilder.Model
+            .GetEntityTypes()
+            .SelectMany(x => x.GetProperties())
+            .Where(x => x.ClrType.IsAssignableToGenericType(wrapperBaseType));
+
+        var numberConverterBaseType = typeof(EnumToNumberConverter<,>);
+        var enumNumberType = typeof(int);
+        var convererBaseType = typeof(EnumWrapperConverter<>);
+        foreach (var property in enumProperties)
+        {
+            var enumType = property.ClrType.GenericTypeArguments[0];
+            var numberConverterType = numberConverterBaseType.MakeGenericType(new[] { enumType, enumNumberType });
+            var numberConverter = (ValueConverter)Activator.CreateInstance(numberConverterType)!;
+            var converterType = convererBaseType.MakeGenericType(new[] { enumType });
+            var converter = (ValueConverter)Activator.CreateInstance(converterType)!;
+            //convert wrapper to enum then to int
+            var finalConverter = converter.ComposeWith(numberConverter);
+            property.SetValueConverter(finalConverter);
+        }
     }
 }

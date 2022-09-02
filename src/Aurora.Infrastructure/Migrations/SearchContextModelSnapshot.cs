@@ -41,7 +41,7 @@ namespace Aurora.Infrastructure.Migrations
 
                     b.HasIndex("SearchOptionId");
 
-                    b.ToTable("Snapshots");
+                    b.ToTable("Snapshots", (string)null);
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchRequestOption", b =>
@@ -68,7 +68,7 @@ namespace Aurora.Infrastructure.Migrations
                     b.HasIndex("SearchTerm", "Website", "ContentType")
                         .IsUnique();
 
-                    b.ToTable("Options");
+                    b.ToTable("Options", (string)null);
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchResult", b =>
@@ -98,7 +98,7 @@ namespace Aurora.Infrastructure.Migrations
 
                     b.HasIndex("SearchOptionSnapshotId");
 
-                    b.ToTable("Result");
+                    b.ToTable("Result", (string)null);
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchOptionSnapshot", b =>
