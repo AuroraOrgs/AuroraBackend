@@ -7,7 +7,6 @@ namespace Aurora.Domain.Entities;
 
 public class SearchRequestOption
 {
-    [Key]
     public Guid Id { get; set; }
 
     public SearchOptionTerm SearchTerm { get; set; } = null!;
