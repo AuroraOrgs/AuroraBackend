@@ -42,7 +42,7 @@ public static class FootfetishBooruBehaviour
     private static FootfetishBooruResultData ExtractDataFrom(string termsStr)
     {
         var titleTerms = termsStr.Split(" ").Select(x => x.Trim());
-        List<string> tags = new List<string>();
+        List<string> tags = new();
         int score = 0;
         string rating = "";
         foreach (var termPart in titleTerms)
@@ -71,7 +71,8 @@ public static class FootfetishBooruBehaviour
                 }
             }
         }
-        return new FootfetishBooruResultData(tags.ToArray(), score, rating);
+        var resultingTags = tags.Distinct().Where(x => x.IsNotEmpty()).ToArray();
+        return new(resultingTags, score, rating);
     }
 
     public static ValueOrNull<int> ExtractFootfetishBooruPagesCount(HtmlDocument searchPage)

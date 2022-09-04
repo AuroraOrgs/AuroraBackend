@@ -1,6 +1,4 @@
-﻿using Aurora.Application.Models;
-
-namespace Aurora.Application.Scrapers;
+﻿namespace Aurora.Application.Scrapers;
 
 public interface IOptionsScraperCollector
 {

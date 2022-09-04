@@ -4,5 +4,5 @@ namespace Aurora.Application.Scrapers;
 
 public interface IScraperRunner
 {
-    Task<List<SearchResultDto>> Run(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default);
+    Task<List<SearchResultDto>> RunAsync(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default);
 }

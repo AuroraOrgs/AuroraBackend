@@ -3,6 +3,7 @@ using System;
 using Aurora.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Aurora.Infrastructure.Migrations
 {
     [DbContext(typeof(SearchContext))]
-    partial class SearchContextModelSnapshot : ModelSnapshot
+    [Migration("20220830155152_RemoveQueueItems")]
+    partial class RemoveQueueItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -41,7 +43,7 @@ namespace Aurora.Infrastructure.Migrations
 
                     b.HasIndex("SearchOptionId");
 
-                    b.ToTable("Snapshots", (string)null);
+                    b.ToTable("Snapshots");
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchRequestOption", b =>
@@ -68,7 +70,7 @@ namespace Aurora.Infrastructure.Migrations
                     b.HasIndex("SearchTerm", "Website", "ContentType")
                         .IsUnique();
 
-                    b.ToTable("Options", (string)null);
+                    b.ToTable("Options");
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchResult", b =>
@@ -98,7 +100,7 @@ namespace Aurora.Infrastructure.Migrations
 
                     b.HasIndex("SearchOptionSnapshotId");
 
-                    b.ToTable("Result", (string)null);
+                    b.ToTable("Result");
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchOptionSnapshot", b =>

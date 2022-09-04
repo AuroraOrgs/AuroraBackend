@@ -1,4 +1,20 @@
-﻿namespace Aurora.Application.Models;
+﻿using Aurora.Domain.ValueObjects;
+using System.Collections.Immutable;
 
-//TODO: Refactor double meaning of the term 'Request' (means set of content type and website for API request and one combination of option and website as entity)
-public record SearchRequestState(Dictionary<(SupportedWebsite Website, ContentType ContentType, string Term), (Guid RequestId, SearchRequestStatus RequestStatus)> StoredRequests);
+namespace Aurora.Application.Models;
+
+public record SearchRequestState
+{
+    public SearchRequestState(ImmutableDictionary<SearchRequestOptionDto, SearchRequestOptionItem> storedRequests)
+    {
+        StoredOptions = storedRequests;
+    }
+
+    public ImmutableDictionary<SearchRequestOptionDto, SearchRequestOptionItem> StoredOptions { get; set; }
+};
+
+public record SearchRequestOptionDto(SupportedWebsite Website, ContentType ContentType, SearchOptionTerm Term);
+
+public record SearchRequestOptionItem(Guid OptionId, SearchRequestOptionStatus OptionStatus, List<SearchSnapshot> Snapshots);
+
+public record SearchSnapshot(Guid SnapshotId, DateTime SnapshotTime);

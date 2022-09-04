@@ -3,6 +3,7 @@ using System;
 using Aurora.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Aurora.Infrastructure.Migrations
 {
     [DbContext(typeof(SearchContext))]
-    partial class SearchContextModelSnapshot : ModelSnapshot
+    [Migration("20220829101746_RenameRequestToOption")]
+    partial class RenameRequestToOption
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,14 +24,33 @@ namespace Aurora.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Aurora.Application.Entities.SearchOptionSnapshot", b =>
+            modelBuilder.Entity("Aurora.Application.Entities.SearchOptionQueueItem", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("QueueId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsProcessed")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime>("QueuedTimeUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SearchOptionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("QueueId");
+
+                    b.HasIndex("SearchOptionId");
+
+                    b.ToTable("Queue");
+                });
+
+            modelBuilder.Entity("Aurora.Application.Entities.SearchOptionSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("SearchOptionId")
                         .HasColumnType("uuid");
@@ -41,7 +62,7 @@ namespace Aurora.Infrastructure.Migrations
 
                     b.HasIndex("SearchOptionId");
 
-                    b.ToTable("Snapshots", (string)null);
+                    b.ToTable("Snapshots");
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchRequestOption", b =>
@@ -68,7 +89,7 @@ namespace Aurora.Infrastructure.Migrations
                     b.HasIndex("SearchTerm", "Website", "ContentType")
                         .IsUnique();
 
-                    b.ToTable("Options", (string)null);
+                    b.ToTable("Options");
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchResult", b =>
@@ -98,7 +119,18 @@ namespace Aurora.Infrastructure.Migrations
 
                     b.HasIndex("SearchOptionSnapshotId");
 
-                    b.ToTable("Result", (string)null);
+                    b.ToTable("Result");
+                });
+
+            modelBuilder.Entity("Aurora.Application.Entities.SearchOptionQueueItem", b =>
+                {
+                    b.HasOne("Aurora.Application.Entities.SearchRequestOption", "SearchOption")
+                        .WithMany("QueueItems")
+                        .HasForeignKey("SearchOptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SearchOption");
                 });
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchOptionSnapshot", b =>
@@ -125,6 +157,8 @@ namespace Aurora.Infrastructure.Migrations
 
             modelBuilder.Entity("Aurora.Application.Entities.SearchRequestOption", b =>
                 {
+                    b.Navigation("QueueItems");
+
                     b.Navigation("Snapshots");
                 });
 #pragma warning restore 612, 618

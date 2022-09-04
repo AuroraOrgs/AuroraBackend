@@ -1,4 +1,4 @@
-﻿using Aurora.Application.Models;
+﻿using Aurora.Domain.Enums;
 using Aurora.Scrapers.Extensions;
 using Aurora.Shared.Extensions;
 using System;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Aurora.Scrapers.Tests.Extensions;
 
-public class SupportedWebsiteExtensionsTest
+public class SupportedWebsiteExtensionsTests
 {
     [Fact]
     public void GetWebsite_ShouldWork_ForAllWebsites()

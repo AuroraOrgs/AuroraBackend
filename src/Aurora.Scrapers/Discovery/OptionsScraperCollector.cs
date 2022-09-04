@@ -25,7 +25,7 @@ public class OptionsScraperCollector : IOptionsScraperCollector
                            .Distinct()
                            .Select(_provider.GetService)
                            .OfType<IOptionScraper>()
-                           .Select(x => new OptionScraperTimeDecorator(loggerFactory, x) as IOptionScraper);
+                           .Select(x => (IOptionScraper)new OptionScraperTimeDecorator(loggerFactory, x));
 
         return ValueTask.FromResult(scrapers);
     }

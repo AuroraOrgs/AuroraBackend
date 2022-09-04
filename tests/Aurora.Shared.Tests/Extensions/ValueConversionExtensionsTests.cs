@@ -1,6 +1,5 @@
 using Aurora.Shared.Extensions;
 using Aurora.Shared.Tests.Base;
-using FluentAssertions;
 
 namespace Aurora.Shared.Tests.Extensions;
 

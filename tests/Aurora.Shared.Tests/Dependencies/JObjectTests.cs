@@ -1,5 +1,4 @@
 ﻿using Aurora.Shared.Tests.Base;
-using FluentAssertions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

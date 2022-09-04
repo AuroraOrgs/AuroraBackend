@@ -2,7 +2,7 @@ using Aurora.Scrapers.Extensions;
 
 namespace Aurora.Scrapers.Tests.Extensions;
 
-public class StringExtensionsTest
+public class StringExtensionsTests
 {
     [Fact]
     public void ExtractAllNumbers_ShouldGetAll_WhenTheyArePresent()

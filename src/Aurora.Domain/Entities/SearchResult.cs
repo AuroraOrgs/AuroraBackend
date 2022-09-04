@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 
-namespace Aurora.Application.Entities;
+namespace Aurora.Domain.Entities;
 
 public class SearchResult
 {
@@ -12,5 +12,6 @@ public class SearchResult
     public DateTime FoundTimeUtc { get; set; }
     public JObject? AdditionalData { get; set; } = null;
 
-    public IEnumerable<SearchRequestToResult> Requests { get; set; } = null!;
+    public Guid SearchOptionSnapshotId { get; set; }
+    public SearchOptionSnapshot SearchOptionSnapshot { get; set; } = null!;
 }
