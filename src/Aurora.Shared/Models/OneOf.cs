@@ -7,47 +7,47 @@ namespace Aurora.Shared.Models;
 
 public class OneOf<T0, T1>
 {
-    private readonly bool isT0;
+    private readonly bool _isT0;
     // It is better to store both fields instead of having an object field
     // because of boxing when assigning and casting when using
-    private readonly T0 t0;
-    private readonly T1 t1;
+    private readonly T0 _t0;
+    private readonly T1 _t1;
 
     public OneOf(T0 value)
     {
-        t0 = value;
-        t1 = default!;
-        isT0 = true;
+        _t0 = value;
+        _t1 = default!;
+        _isT0 = true;
     }
 
     public OneOf(T1 value)
     {
-        t0 = default!;
-        t1 = value;
-        isT0 = false;
+        _t0 = default!;
+        _t1 = value;
+        _isT0 = false;
     }
 
     public TResult Match<TResult>(Func<T0, TResult> func0, Func<T1, TResult> func1) =>
-        isT0
-            ? func0(t0)
-            : func1(t1);
+        _isT0
+            ? func0(_t0)
+            : func1(_t1);
 
     public void Match(Action<T0> func0, Action<T1> func1)
     {
-        if (isT0)
+        if (_isT0)
         {
-            func0(t0);
+            func0(_t0);
         }
         else
         {
-            func1(t1);
+            func1(_t1);
         }
     }
 
     public Task MatchAsync(Func<T0, Task> func0, Func<T1, Task> func1) =>
-          isT0
-            ? func0(t0)
-            : func1(t1);
+          _isT0
+            ? func0(_t0)
+            : func1(_t1);
 }
 
 public static class OneOfExtensions
