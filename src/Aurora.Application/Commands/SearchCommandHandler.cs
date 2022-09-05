@@ -29,7 +29,7 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         log("Received request");
 
         var storedRequest = await _repo.FetchRequest(request, true);
-        var websiteStatus = storedRequest.StoredOptions.GroupBy(x => x.Value.OptionStatus)
+        var websiteStatus = storedRequest.StoredOptions.GroupBy(x => GetStatusFor(x.Value.Snapshots))
                                                            .ToDictionary(x => x.Key, x => x.Select(y => y.Key.Website).Distinct());
         var queuedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.Queued, Enumerable.Empty<SupportedWebsite>());
         var notFetchedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.NotFetched, Enumerable.Empty<SupportedWebsite>());
@@ -80,4 +80,28 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
             new ScrapCommand(childRequest, userId));
         await _repo.MarkAsQueued(newState);
     }
+
+
+    private static SearchRequestOptionStatus GetStatusFor(IEnumerable<SearchSnapshot> snapshots)
+    {
+        SearchRequestOptionStatus status;
+        if (snapshots is null || snapshots.None())
+        {
+            status = SearchRequestOptionStatus.NotFetched;
+        }
+        else
+        {
+            //we might want to use time of queue items to create more informed statuses for snapshots
+            if (snapshots.Any(x => x.IsProcessed))
+            {
+                status = SearchRequestOptionStatus.Fetched;
+            }
+            else
+            {
+                status = SearchRequestOptionStatus.Queued;
+            }
+        }
+        return status;
+    }
+
 }

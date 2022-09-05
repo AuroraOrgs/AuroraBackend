@@ -23,28 +23,6 @@ public class SearchRepository : ISearchRepository
         _dateTime = dateTime;
     }
 
-    private static SearchRequestOptionStatus GetStatusFor(IEnumerable<SearchOptionSnapshot> snapshots)
-    {
-        SearchRequestOptionStatus status;
-        if (snapshots is null || snapshots.None())
-        {
-            status = SearchRequestOptionStatus.NotFetched;
-        }
-        else
-        {
-            //we might want to use time of queue items to create more informed statuses for snapshots
-            if (snapshots.Any(x => x.IsProcessed))
-            {
-                status = SearchRequestOptionStatus.Fetched;
-            }
-            else
-            {
-                status = SearchRequestOptionStatus.Queued;
-            }
-        }
-        return status;
-    }
-
     public async Task<SearchRequestState> FetchRequest(SearchRequestDto request, bool isUserGenerated)
     {
         var term = SearchOptionTerm.CreateAnd(request.SearchTerms);
@@ -84,8 +62,7 @@ public class SearchRepository : ISearchRepository
             key => new SearchRequestOptionDto(key.Website, key.ContentType, key.SearchTerm),
             value => new SearchRequestOptionItem(
                 value.Id,
-                GetStatusFor(value.Snapshots),
-                value.Snapshots.Select(snapshot => new SearchSnapshot(snapshot.Id, snapshot.Time)).ToList()
+                value.Snapshots.Select(snapshot => new SearchSnapshot(snapshot.Id, snapshot.Time, snapshot.IsProcessed)).ToList()
               ));
         return new SearchRequestState(result);
     }
