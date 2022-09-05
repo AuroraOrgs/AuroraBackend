@@ -10,7 +10,7 @@ public record SearchRequestState
         StoredOptions = storedRequests;
     }
 
-    public ImmutableDictionary<SearchRequestOptionDto, SearchRequestOptionItem> StoredOptions { get; set; }
+    public ImmutableDictionary<SearchRequestOptionDto, SearchRequestOptionItem> StoredOptions { get; }
 };
 
 public record SearchRequestOptionDto(SupportedWebsite Website, ContentType ContentType, SearchOptionTerm Term);
