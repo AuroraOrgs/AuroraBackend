@@ -44,16 +44,8 @@ public class ScrapCommandHandler : IRequestHandler<ScrapCommand>
             }
             return task;
         }, cancellationToken);
-        _logger.LogRequest(request, $"Got '{results.Count}' results with '{GetProcessedCount(results)}' total count of items");
         var requestStored = await _repo.FetchRequest(request, false);
         await _repo.AddOrUpdateResults(requestStored, results);
         return Unit.Value;
-    }
-
-    private static long GetProcessedCount(List<SearchResultDto> results)
-    {
-        return results.Where(x => x.BeenQueued == false)
-                      .SelectMany(x => x.Items!)
-                      .LongCount();
     }
 }

@@ -161,8 +161,7 @@ public class SearchRepository : ISearchRepository
         await _context.Snapshots.AddRangeAsync(optionToSnapshot.Values);
 
         var optionToItems = results
-           .Where(result => result.Items is not null)
-           .SelectMany(result => result.Items!.Select(item => (item, option: new SearchRequestOptionDto(result.Website, item.ContentType, SearchOptionTerm.CreateAnd(result.Terms)))))
+           .SelectMany(result => result.Items.Select(item => (item, option: new SearchRequestOptionDto(result.Website, item.ContentType, SearchOptionTerm.CreateAnd(result.Terms)))))
            .GroupBy(x => x.option)
            .ToDictionary(x => x.Key, x => x.Select(y => y.item).ToList());
 

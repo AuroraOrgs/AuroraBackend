@@ -2,6 +2,7 @@
 using Aurora.Application.Extensions;
 using Aurora.Application.Models;
 using Aurora.Shared.Extensions;
+using Aurora.Shared.Models;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -54,13 +55,12 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         }
 
         var nonCachedWebsites = queuedWebsites.Union(notFetchedWebsites);
-        var resultItems = result.Results;
-        foreach (var website in nonCachedWebsites)
-        {
-            resultItems.Add(new SearchResultDto(request.SearchTerms, website));
-        }
+        var resultItems = result.Results.Select(x => x.ToOneOf<SearchResultDto, QueuedResult>())
+            .Union(nonCachedWebsites.Select(website => new QueuedResult(true, website).ToOneOf<SearchResultDto, QueuedResult>()))
+            .ToList();
 
-        log($"Finished processing in {GetType().Name}");
+        var resultsCount = resultItems.SelectFirsts().Sum(x => x.Items.Count);
+        log($"Finished processing in {GetType().Name}, got '{resultsCount}' result items");
         return new SearchCommandResult(resultItems, result.TotalItems);
     }
 

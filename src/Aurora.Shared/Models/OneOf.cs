@@ -57,6 +57,51 @@ public static class OneOfExtensions
 
     public static Task<TResult> MatchAsync<T0, T1, TResult>(this OneOf<T0, T1> oneOf, Func<T0, Task<TResult>> func0, Func<T1, Task<TResult>> func1) =>
           oneOf.Match(func0, func1);
+
+    public static OneOf<T0, T1> ToOneOf<T0, T1>(this T0 value) =>
+        new(value);
+
+    public static OneOf<T0, T1> ToOneOf<T0, T1>(this T1 value) =>
+        new(value);
+
+    public static OneOf<T1, T0> Swap<T0, T1>(this OneOf<T0, T1> value) =>
+        value.Match(x => new OneOf<T1, T0>(x), x => new OneOf<T1, T0>(x));
+
+    public static bool IsFirst<T0, T1>(this OneOf<T0, T1> value) =>
+        value.Match(_ => true, _ => false);
+
+    public static bool IsSecond<T0, T1>(this OneOf<T0, T1> value) =>
+        value.Match(_ => false, _ => true);
+
+    public static IEnumerable<T0> SelectFirsts<T0, T1>(this IEnumerable<OneOf<T0, T1>> values)
+    {
+        foreach (var value in values)
+        {
+            if (value.IsFirst())
+            {
+                T0? current = value.Match(x => x, x => default(T0));
+                if (current is not null)
+                {
+                    yield return current;
+                }
+            }
+        }
+    }
+
+    public static IEnumerable<T1> SelectSeconds<T0, T1>(this IEnumerable<OneOf<T0, T1>> values)
+    {
+        foreach (var value in values)
+        {
+            if (value.IsSecond())
+            {
+                T1? current = value.Match(x => default(T1), x => x);
+                if (current is not null)
+                {
+                    yield return current;
+                }
+            }
+        }
+    }
 }
 
 public class OneOfJsonConverterFactory : JsonConverterFactory
