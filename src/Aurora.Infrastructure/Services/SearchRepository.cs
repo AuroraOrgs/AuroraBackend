@@ -123,21 +123,23 @@ public class SearchRepository : ISearchRepository
 
     public async Task MarkAsQueued(SearchRequestState request)
     {
-        var optionIds = request.StoredOptions.Values.Select(x => x.OptionId);
-        await using (var transaction = _context.Database.BeginTransaction())
-        {
-            var items = optionIds.Select(optionId => new SearchOptionSnapshot
+        var items = request.StoredOptions.Values
+            .Select(x => x.OptionId)
+            .Select(optionId => new SearchOptionSnapshot
             {
                 IsProcessed = false,
                 Time = _dateTime.UtcNow,
                 SearchOptionId = optionId
             });
-            if (items.Any())
+
+        if (items.Any())
+        {
+            await using (var transaction = _context.Database.BeginTransaction())
             {
                 await _context.Snapshots.AddRangeAsync(items);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
         }
     }
 
