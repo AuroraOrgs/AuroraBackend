@@ -123,7 +123,7 @@ public class SearchRepository : ISearchRepository
 
     public async Task MarkAsQueued(SearchRequestState request)
     {
-        var optionIds = request.StoredOptions.Values.Where(x => x.OptionStatus == SearchRequestOptionStatus.NotFetched).Select(x => x.OptionId);
+        var optionIds = request.StoredOptions.Values.Select(x => x.OptionId);
         await using (var transaction = _context.Database.BeginTransaction())
         {
             var items = optionIds.Select(optionId => new SearchOptionSnapshot
