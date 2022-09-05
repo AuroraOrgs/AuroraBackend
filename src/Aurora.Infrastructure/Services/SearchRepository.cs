@@ -66,7 +66,7 @@ public class SearchRepository : ISearchRepository
             }
         }
         var newOptionModels = requestedOptions.Where(x => existingOptions.NotContains(x));
-        List<SearchRequestOption> newOptions = CreateOptions(newOptionModels);
+        var newOptions = await CreateOptionsAsync(newOptionModels);
 
         if (isUserGenerated)
         {
@@ -90,7 +90,7 @@ public class SearchRepository : ISearchRepository
         return new SearchRequestState(result);
     }
 
-    private List<SearchRequestOption> CreateOptions(IEnumerable<SearchRequestOptionDto> newOptions)
+    private async Task<List<SearchRequestOption>> CreateOptionsAsync(IEnumerable<SearchRequestOptionDto> newOptions)
     {
         List<SearchRequestOption> createdOptions;
         if (newOptions.Any())
@@ -111,8 +111,8 @@ public class SearchRepository : ISearchRepository
                     Snapshots = new List<SearchOptionSnapshot>()
                 })
                 .ToList();
-            _context.Options
-                .AddRange(createdOptions);
+            await _context.Options
+                .AddRangeAsync(createdOptions);
         }
         else
         {
