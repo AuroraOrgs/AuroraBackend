@@ -23,28 +23,6 @@ public class SearchRepository : ISearchRepository
         _dateTime = dateTime;
     }
 
-    private static SearchRequestOptionStatus GetStatusFor(IEnumerable<SearchOptionSnapshot> snapshots)
-    {
-        SearchRequestOptionStatus status;
-        if (snapshots is null || snapshots.None())
-        {
-            status = SearchRequestOptionStatus.NotFetched;
-        }
-        else
-        {
-            //we might want to use time of queue items to create more informed statuses for snapshots
-            if (snapshots.Any(x => x.IsProcessed))
-            {
-                status = SearchRequestOptionStatus.Fetched;
-            }
-            else
-            {
-                status = SearchRequestOptionStatus.Queued;
-            }
-        }
-        return status;
-    }
-
     public async Task<SearchRequestState> FetchRequest(SearchRequestDto request, bool isUserGenerated)
     {
         var term = SearchOptionTerm.CreateAnd(request.SearchTerms);
@@ -66,7 +44,7 @@ public class SearchRepository : ISearchRepository
             }
         }
         var newOptionModels = requestedOptions.Where(x => existingOptions.NotContains(x));
-        List<SearchRequestOption> newOptions = CreateOptions(newOptionModels);
+        var newOptions = await CreateOptionsAsync(newOptionModels);
 
         if (isUserGenerated)
         {
@@ -84,13 +62,12 @@ public class SearchRepository : ISearchRepository
             key => new SearchRequestOptionDto(key.Website, key.ContentType, key.SearchTerm),
             value => new SearchRequestOptionItem(
                 value.Id,
-                GetStatusFor(value.Snapshots),
-                value.Snapshots.Select(snapshot => new SearchSnapshot(snapshot.Id, snapshot.Time)).ToList()
+                value.Snapshots.Select(snapshot => new SearchSnapshot(snapshot.Id, snapshot.Time, snapshot.IsProcessed)).ToList()
               ));
         return new SearchRequestState(result);
     }
 
-    private List<SearchRequestOption> CreateOptions(IEnumerable<SearchRequestOptionDto> newOptions)
+    private async Task<List<SearchRequestOption>> CreateOptionsAsync(IEnumerable<SearchRequestOptionDto> newOptions)
     {
         List<SearchRequestOption> createdOptions;
         if (newOptions.Any())
@@ -111,8 +88,8 @@ public class SearchRepository : ISearchRepository
                     Snapshots = new List<SearchOptionSnapshot>()
                 })
                 .ToList();
-            _context.Options
-                .AddRange(createdOptions);
+            await _context.Options
+                .AddRangeAsync(createdOptions);
         }
         else
         {
@@ -123,21 +100,23 @@ public class SearchRepository : ISearchRepository
 
     public async Task MarkAsQueued(SearchRequestState request)
     {
-        var optionIds = request.StoredOptions.Values.Where(x => x.OptionStatus == SearchRequestOptionStatus.NotFetched).Select(x => x.OptionId);
-        await using (var transaction = _context.Database.BeginTransaction())
-        {
-            var items = optionIds.Select(optionId => new SearchOptionSnapshot
+        var items = request.StoredOptions.Values
+            .Select(x => x.OptionId)
+            .Select(optionId => new SearchOptionSnapshot
             {
                 IsProcessed = false,
                 Time = _dateTime.UtcNow,
                 SearchOptionId = optionId
             });
-            if (items.Any())
+
+        if (items.Any())
+        {
+            await using (var transaction = _context.Database.BeginTransaction())
             {
                 await _context.Snapshots.AddRangeAsync(items);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
         }
     }
 
@@ -182,8 +161,7 @@ public class SearchRepository : ISearchRepository
         await _context.Snapshots.AddRangeAsync(optionToSnapshot.Values);
 
         var optionToItems = results
-           .Where(result => result.Items is not null)
-           .SelectMany(result => result.Items!.Select(item => (item, option: new SearchRequestOptionDto(result.Website, item.ContentType, SearchOptionTerm.CreateAnd(result.Terms)))))
+           .SelectMany(result => result.Items.Select(item => (item, option: new SearchRequestOptionDto(result.Website, item.ContentType, SearchOptionTerm.CreateAnd(result.Terms)))))
            .GroupBy(x => x.option)
            .ToDictionary(x => x.Key, x => x.Select(y => y.item).ToList());
 

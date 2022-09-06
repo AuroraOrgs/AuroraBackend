@@ -4,6 +4,7 @@ using Aurora.Infrastructure.Services;
 using Aurora.Presentation.Extensions;
 using Aurora.Presentation.Services;
 using Aurora.Scrapers;
+using Aurora.Shared.Models;
 using Hangfire;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
@@ -34,7 +35,11 @@ public class Startup
             .AddInfrastructure(Configuration)
             .AddScrapers();
 
-        services.AddControllers();
+        services.AddControllers()
+            .AddJsonOptions(x =>
+            {
+                x.JsonSerializerOptions.Converters.Add(new OneOfJsonConverterFactory());
+            });
 
         services.AddCors(options =>
         {

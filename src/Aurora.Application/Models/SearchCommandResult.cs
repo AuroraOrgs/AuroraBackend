@@ -1,3 +1,7 @@
-﻿namespace Aurora.Application.Models;
+﻿using Aurora.Shared.Models;
 
-public record SearchCommandResult(List<SearchResultDto> Results, long ItemsCount);
+namespace Aurora.Application.Models;
+
+public record SearchCommandResult(List<OneOf<SearchResultDto, QueuedResult>> Results, long ItemsCount);
+//TODO: Add date of queue
+public record QueuedResult(bool IsQueued, SupportedWebsite Website);

@@ -10,11 +10,11 @@ public record SearchRequestState
         StoredOptions = storedRequests;
     }
 
-    public ImmutableDictionary<SearchRequestOptionDto, SearchRequestOptionItem> StoredOptions { get; set; }
+    public ImmutableDictionary<SearchRequestOptionDto, SearchRequestOptionItem> StoredOptions { get; }
 };
 
 public record SearchRequestOptionDto(SupportedWebsite Website, ContentType ContentType, SearchOptionTerm Term);
 
-public record SearchRequestOptionItem(Guid OptionId, SearchRequestOptionStatus OptionStatus, List<SearchSnapshot> Snapshots);
+public record SearchRequestOptionItem(Guid OptionId, List<SearchSnapshot> Snapshots);
 
-public record SearchSnapshot(Guid SnapshotId, DateTime SnapshotTime);
+public record SearchSnapshot(Guid SnapshotId, DateTime SnapshotTime, bool IsProcessed);
