@@ -1,5 +1,4 @@
-﻿using Aurora.Shared.Tests.Base;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Aurora.Shared.Tests.Dependencies;
