@@ -1,5 +1,4 @@
 using Aurora.Shared.Extensions;
-using Aurora.Shared.Tests.Base;
 
 namespace Aurora.Shared.Tests.Extensions;
 

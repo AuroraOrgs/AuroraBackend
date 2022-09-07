@@ -43,11 +43,6 @@ public class OneOf<T0, T1>
             func1(_t1);
         }
     }
-
-    public Task MatchAsync(Func<T0, Task> func0, Func<T1, Task> func1) =>
-          _isT0
-            ? func0(_t0)
-            : func1(_t1);
 }
 
 public static class OneOfExtensions
