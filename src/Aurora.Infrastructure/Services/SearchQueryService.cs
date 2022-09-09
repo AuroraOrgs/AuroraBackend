@@ -21,9 +21,7 @@ public class SearchQueryService : ISearchQueryService
     {
         var idsToLoad = state.StoredOptions.Values
             .Where(x => x.Snapshots.Any(x => x.IsProcessed))
-            //getting last snapshot does not work for items that were fetched before, but are currently in the process of refreshing
-            //TODO:fix
-            .Select(x => x.Snapshots.OrderBy(x => x.SnapshotTime).LastOrDefault()?.SnapshotId);
+            .Select(x => x.Snapshots.Where(x => x.IsProcessed).OrderBy(x => x.SnapshotTime).LastOrDefault()?.SnapshotId);
         SearchResults result;
         if (idsToLoad.Any())
         {
