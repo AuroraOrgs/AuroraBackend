@@ -42,7 +42,7 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         SearchResults result;
         if (fetchedWebsites.Any())
         {
-            result = await _query.GetResults(storedRequest, requestWrapper.Paging);
+            result = await _query.GetLatestResults(storedRequest, requestWrapper.Paging);
         }
         else
         {

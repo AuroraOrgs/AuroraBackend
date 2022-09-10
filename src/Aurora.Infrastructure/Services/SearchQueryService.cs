@@ -17,16 +17,6 @@ public class SearchQueryService : ISearchQueryService
         _logger = logger;
     }
 
-    public Task<SearchResults> GetResults(SearchRequestState state, PagingOptions? paging)
-    {
-        IEnumerable<Guid> idsToLoad = state.StoredOptions.Values
-            .Where(x => x.Snapshots.Any(x => x.IsProcessed))
-            .Select(x => x.Snapshots.Where(x => x.IsProcessed).OrderBy(x => x.SnapshotTime).LastOrDefault()?.SnapshotId)
-            .Where(x => x.HasValue)
-            .Select(x => x!.Value);
-        return GetResults(idsToLoad, paging);
-    }
-
     public async Task<SearchResults> GetResults(IEnumerable<Guid> snapshotIds, PagingOptions? paging)
     {
         SearchResults result;
