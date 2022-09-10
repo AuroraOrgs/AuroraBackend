@@ -30,7 +30,9 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         log("Received request");
 
         var storedRequest = await _repo.FetchRequest(request, true);
-        var websiteStatus = storedRequest.StoredOptions.GroupBy(x => GetStatusFor(x.Value.Snapshots))
+        var options = storedRequest.StoredOptions;
+        var websiteToQueuedTime = options.ToDictionary(x => x.Key.Website, x => x.Value.Snapshots.OrderBy(x => x.SnapshotTime).LastOrDefault()?.SnapshotTime);
+        var websiteStatus = options.GroupBy(x => GetStatusFor(x.Value.Snapshots))
                                                            .ToDictionary(x => x.Key, x => x.Select(y => y.Key.Website).Distinct());
         var queuedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.Queued, Enumerable.Empty<SupportedWebsite>());
         var notFetchedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.NotFetched, Enumerable.Empty<SupportedWebsite>());
@@ -56,12 +58,28 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
 
         var nonCachedWebsites = queuedWebsites.Union(notFetchedWebsites);
         var resultItems = result.Results.Select(x => x.ToOneOf<SearchResultDto, QueuedResult>())
-            .Union(nonCachedWebsites.Select(website => new QueuedResult(true, website).ToOneOf<SearchResultDto, QueuedResult>()))
+            .Union(nonCachedWebsites.Select(website => new QueuedResult(website, GetQueuedTime(website, websiteToQueuedTime)).ToOneOf<SearchResultDto, QueuedResult>()))
             .ToList();
 
         var resultsCount = resultItems.SelectFirsts().Sum(x => x.Items.Count);
         log($"Finished processing in {GetType().Name}, got '{resultsCount}' result items");
         return new SearchCommandResult(resultItems, result.TotalItems);
+    }
+
+    private DateTime GetQueuedTime(SupportedWebsite website, Dictionary<SupportedWebsite, DateTime?> websiteToQueuedTime)
+    {
+        DateTime result;
+        var time = websiteToQueuedTime[website];
+        if (time.HasValue)
+        {
+            result = time.Value;
+        }
+        else
+        {
+            _logger.LogWarning("Found no queued snapshots for '{site}'", website);
+            result = DateTime.MinValue;
+        }
+        return result;
     }
 
     private async Task QueueWebsites(string? userId, List<string> searchTerms, IEnumerable<SupportedWebsite> notFetchedWebsites)
