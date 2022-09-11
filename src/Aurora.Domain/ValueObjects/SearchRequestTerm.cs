@@ -1,5 +1,9 @@
-﻿namespace Aurora.Domain.ValueObjects;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
+namespace Aurora.Domain.ValueObjects;
+
+[JsonConverter(typeof(SearchOptionTermConverter))]
 public class SearchOptionTerm : ValueObject
 {
     private readonly IEnumerable<string> _terms;
@@ -26,5 +30,16 @@ public class SearchOptionTerm : ValueObject
         {
             yield return term;
         }
+    }
+}
+
+public class SearchOptionTermConverter : JsonConverter<SearchOptionTerm>
+{
+    public override SearchOptionTerm? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+        (SearchOptionTerm?)JsonSerializer.Deserialize(ref reader, typeToConvert, options);
+
+    public override void Write(Utf8JsonWriter writer, SearchOptionTerm value, JsonSerializerOptions options)
+    {
+        JsonSerializer.Serialize(writer, value.ToString(), options);
     }
 }
