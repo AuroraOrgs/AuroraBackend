@@ -120,7 +120,6 @@ public class SearchRepository : ISearchRepository
         }
     }
 
-    //TODO: Get snapshot id from request instead of just returning latest
     public async Task AddOrUpdateResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
     {
         await using (var transaction = _context.Database.BeginTransaction())
