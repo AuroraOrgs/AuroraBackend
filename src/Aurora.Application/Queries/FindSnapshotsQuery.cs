@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Aurora.Application.Queries;
 
-public class GetSnapshotsQuery : IRequest<GetSnapshotsResult>
+public class FindSnapshotsQuery : IRequest<FindSnapshotsResult>
 {
     public SearchRequestDto SearchRequest { get; } = null!;
     public PagingOptions? Paging { get; set; }

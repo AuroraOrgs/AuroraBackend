@@ -4,16 +4,16 @@ using MediatR;
 
 namespace Aurora.Application.Queries;
 
-public class GetSnapshotsQueryHandler : IRequestHandler<GetSnapshotsQuery, GetSnapshotsResult>
+public class FindSnapshotsQueryHandler : IRequestHandler<FindSnapshotsQuery, FindSnapshotsResult>
 {
     private readonly ISearchRepository _search;
 
-    public GetSnapshotsQueryHandler(ISearchRepository search)
+    public FindSnapshotsQueryHandler(ISearchRepository search)
     {
         _search = search;
     }
 
-    public async Task<GetSnapshotsResult> Handle(GetSnapshotsQuery request, CancellationToken cancellationToken)
+    public async Task<FindSnapshotsResult> Handle(FindSnapshotsQuery request, CancellationToken cancellationToken)
     {
         var state = await _search.FetchRequest(request.SearchRequest, true);
         return new(state.StoredOptions.ToDictionary(x => x.Key, x => x.Value.Snapshots));
