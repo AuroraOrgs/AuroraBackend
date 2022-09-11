@@ -16,6 +16,11 @@ public class FindSnapshotsQueryHandler : IRequestHandler<FindSnapshotsQuery, Fin
     public async Task<FindSnapshotsResult> Handle(FindSnapshotsQuery request, CancellationToken cancellationToken)
     {
         var state = await _search.FetchRequest(request.SearchRequest, true);
-        return new(state.StoredOptions.ToImmutableDictionary(x => x.Key, x => x.Value.Snapshots));
+        return new(state.StoredOptions.Select(item =>
+        {
+            var option = item.Key;
+            var snapshots = item.Value.Snapshots;
+            return new SnapshotsResult(option, snapshots);
+        }).ToImmutableList());
     }
 }

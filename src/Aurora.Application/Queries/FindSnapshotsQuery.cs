@@ -4,6 +4,9 @@ namespace Aurora.Application.Queries;
 
 public class FindSnapshotsQuery : IRequest<FindSnapshotsResult>
 {
+    public FindSnapshotsQuery(SearchRequestDto searchRequest)
+    {
+        SearchRequest = searchRequest;
+    }
     public SearchRequestDto SearchRequest { get; } = null!;
-    public PagingOptions? Paging { get; set; }
 }

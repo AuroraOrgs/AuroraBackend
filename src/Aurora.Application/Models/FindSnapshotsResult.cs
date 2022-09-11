@@ -2,4 +2,6 @@
 
 namespace Aurora.Application.Models;
 
-public record FindSnapshotsResult(ImmutableDictionary<SearchRequestOptionDto, List<SearchSnapshot>> OptionToSnapshots);
+public record FindSnapshotsResult(ImmutableList<SnapshotsResult> Results);
+
+public record SnapshotsResult(SearchRequestOptionDto Option, List<SearchSnapshot> Snapshots);
