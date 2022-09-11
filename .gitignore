@@ -355,3 +355,6 @@ src/.idea/.idea.Aurora/.idea/.name
 src/.idea/.idea.Aurora/.idea/encodings.xml
 src/.idea/.idea.Aurora/.idea/indexLayout.xml
 src/.idea/.idea.Aurora/.idea/vcs.xml
+
+#db
+src/db
