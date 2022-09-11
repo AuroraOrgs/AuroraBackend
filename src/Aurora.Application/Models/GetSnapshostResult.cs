@@ -1,5 +1,4 @@
-﻿using Aurora.Shared.Models;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 
 namespace Aurora.Application.Models;
 

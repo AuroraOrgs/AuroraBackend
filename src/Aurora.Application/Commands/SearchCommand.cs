@@ -1,5 +1,4 @@
 ﻿using Aurora.Application.Models;
-using MediatR;
 
 namespace Aurora.Application.Commands;
 

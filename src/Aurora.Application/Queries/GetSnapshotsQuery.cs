@@ -1,5 +1,4 @@
 ﻿using Aurora.Application.Models;
-using MediatR;
 using System.Collections.Immutable;
 
 namespace Aurora.Application.Queries;

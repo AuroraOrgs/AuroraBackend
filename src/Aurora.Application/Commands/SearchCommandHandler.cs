@@ -3,7 +3,6 @@ using Aurora.Application.Extensions;
 using Aurora.Application.Models;
 using Aurora.Shared.Extensions;
 using Aurora.Shared.Models;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace Aurora.Application.Commands;
