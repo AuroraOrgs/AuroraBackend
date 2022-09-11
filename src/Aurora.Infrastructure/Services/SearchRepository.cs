@@ -135,7 +135,7 @@ public class SearchRepository : ISearchRepository
 
     private async Task MarkAsProcessed(SearchRequestState state)
     {
-        var optionIds = state.StoredOptions.Values.Select(x => x.OptionId);
+        var optionIds = state.StoredOptions.Values.Select(x => x.OptionId).ToList();
         await _context.Snapshots
             .Include(x => x.SearchOption)
             .Where(x => optionIds.Contains(x.SearchOptionId))
@@ -151,13 +151,8 @@ public class SearchRepository : ISearchRepository
 
     private async Task StoreResults(SearchRequestState state, IEnumerable<SearchResultDto> results)
     {
-        var optionToSnapshot = state.StoredOptions.Keys
-            .ToDictionary(option => option, option => new SearchOptionSnapshot()
-            {
-                SearchOptionId = state.StoredOptions[option].OptionId,
-                Time = _dateTime.UtcNow
-            });
-        await _context.Snapshots.AddRangeAsync(optionToSnapshot.Values);
+        var optionToSnapshot = state.StoredOptions
+            .ToDictionary(option => option.Key, option => option.Value.Snapshots.Where(x => x.IsProcessed == false).LastOrDefault());
 
         var optionToItems = results
            .SelectMany(result => result.Items.Select(item => (item, option: new SearchRequestOptionDto(result.Website, item.ContentType, SearchOptionTerm.CreateAnd(result.Terms)))))
@@ -167,9 +162,9 @@ public class SearchRepository : ISearchRepository
         List<SearchResult> resultsToStore = new();
         foreach (var (option, items) in optionToItems)
         {
-            if (optionToSnapshot.ContainsKey(option))
+            if (optionToSnapshot.TryGetValue(option, out SearchSnapshot? snapshot) && snapshot is not null)
             {
-                var snapshotId = optionToSnapshot[option].Id;
+                var snapshotId = snapshot.SnapshotId;
                 foreach (var item in items)
                 {
                     resultsToStore.Add(new SearchResult()
