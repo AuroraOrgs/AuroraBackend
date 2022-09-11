@@ -39,8 +39,7 @@ public static class GeneralExtensions
 
     public static TValue GetOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key, TValue defaultValue)
     {
-        TValue res;
-        if (dict.TryGetValue(key, out res) == false)
+        if (dict.TryGetValue(key, out TValue res) == false)
         {
             res = defaultValue;
         }
