@@ -1,6 +1,7 @@
 ﻿using Aurora.Application.Contracts;
 using Aurora.Application.Models;
 using MediatR;
+using System.Collections.Immutable;
 
 namespace Aurora.Application.Queries;
 
@@ -16,6 +17,6 @@ public class FindSnapshotsQueryHandler : IRequestHandler<FindSnapshotsQuery, Fin
     public async Task<FindSnapshotsResult> Handle(FindSnapshotsQuery request, CancellationToken cancellationToken)
     {
         var state = await _search.FetchRequest(request.SearchRequest, true);
-        return new(state.StoredOptions.ToDictionary(x => x.Key, x => x.Value.Snapshots));
+        return new(state.StoredOptions.ToImmutableDictionary(x => x.Key, x => x.Value.Snapshots));
     }
 }
