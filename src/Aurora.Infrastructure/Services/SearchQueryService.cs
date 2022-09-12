@@ -17,19 +17,16 @@ public class SearchQueryService : ISearchQueryService
         _logger = logger;
     }
 
-    public async Task<SearchResults> GetResults(SearchRequestState state, PagingOptions? paging)
+    public async Task<SearchResults> GetResults(IEnumerable<Guid> snapshotIds, PagingOptions? paging)
     {
-        var idsToLoad = state.StoredOptions.Values
-            .Where(x => x.Snapshots.Any(x => x.IsProcessed))
-            .Select(x => x.Snapshots.Where(x => x.IsProcessed).OrderBy(x => x.SnapshotTime).LastOrDefault()?.SnapshotId);
         SearchResults result;
-        if (idsToLoad.Any())
+        if (snapshotIds.Any())
         {
             var filteredResults = _context.Result
                 .AsNoTracking()
                 .Include(x => x.SearchOptionSnapshot)
                 .ThenInclude(x => x.SearchOption)
-                .Where(request => idsToLoad.Contains(request.SearchOptionSnapshotId));
+                .Where(request => snapshotIds.Contains(request.SearchOptionSnapshotId));
             var query = filteredResults;
             if (paging is not null)
             {
@@ -41,17 +38,16 @@ public class SearchQueryService : ISearchQueryService
             }
             var storedResults = await query
                 .ToListAsync();
-
-            var terms = state.StoredOptions.Keys.SelectMany(x => x.Term.Terms).Distinct().ToList();
+            var resultToTerms = storedResults.GroupBy(x => x.SearchOptionSnapshot.SearchOption.SearchTerm);
 
             var results = storedResults.GroupBy(res => res.SearchOptionSnapshot)
                 .Select(group => new SearchResultDto(
                     group.Select(item => new SearchItem(group.Key.SearchOption.ContentType, item.ImagePreviewUrl, item.SearchItemUrl, item.AdditionalData.ToData<SearchResultData>())).ToList(),
-                    terms,
+                    group.Key.SearchOption.SearchTerm.Terms.ToList(),
                     group.Key.SearchOption.Website))
                 .ToList();
             var count = await filteredResults.CountAsync();
-            _logger.LogInformation("Loaded '{resultsCount}' out of total of '{existingCount}'  existing results for requests '[{ids}]'", results.Count, count, idsToLoad.CommaSeparate());
+            _logger.LogInformation("Loaded '{resultsCount}' out of total of '{existingCount}'  existing results for requests '[{ids}]'", results.Count, count, snapshotIds.CommaSeparate());
             result = new SearchResults(results, count);
         }
         else

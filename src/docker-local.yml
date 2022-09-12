@@ -8,6 +8,9 @@ services:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password1!
           POSTGRES_DB: aurora
+          PGDATA: var/lib/postgresql/data
+        volumes:
+            - ./db:/var/lib/postgresql/data
 
     hub:
         image: selenium/hub

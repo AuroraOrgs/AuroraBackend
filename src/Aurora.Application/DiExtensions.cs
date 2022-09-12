@@ -1,5 +1,4 @@
 ﻿using Aurora.Application.Scrapers;
-using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Aurora.Application;

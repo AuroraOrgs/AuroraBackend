@@ -3,7 +3,6 @@ using Aurora.Application.Extensions;
 using Aurora.Application.Models;
 using Aurora.Shared.Extensions;
 using Aurora.Shared.Models;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace Aurora.Application.Commands;
@@ -12,13 +11,20 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
 {
     private readonly ISearchRepository _repo;
     private readonly IQueueProvider _queue;
+    private readonly IDateTimeProvider _time;
     private readonly ISearchQueryService _query;
     private readonly ILogger<SearchCommandHandler> _logger;
 
-    public SearchCommandHandler(ISearchRepository search, IQueueProvider queue, ISearchQueryService query, ILogger<SearchCommandHandler> logger)
+    public SearchCommandHandler(
+        ISearchRepository search, 
+        IQueueProvider queue, 
+        IDateTimeProvider time,
+        ISearchQueryService query, 
+        ILogger<SearchCommandHandler> logger)
     {
         _repo = search;
         _queue = queue;
+        _time = time;
         _query = query;
         _logger = logger;
     }
@@ -30,11 +36,13 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         log("Received request");
 
         var storedRequest = await _repo.FetchRequest(request, true);
-        var websiteStatus = storedRequest.StoredOptions.GroupBy(x => GetStatusFor(x.Value.Snapshots))
-                                                           .ToDictionary(x => x.Key, x => x.Select(y => y.Key.Website).Distinct());
-        var queuedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.Queued, Enumerable.Empty<SupportedWebsite>());
-        var notFetchedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.NotFetched, Enumerable.Empty<SupportedWebsite>());
-        var fetchedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.Fetched, Enumerable.Empty<SupportedWebsite>());
+        var options = storedRequest.StoredOptions;
+        var websiteStatus = options
+            .GroupBy(x => GetStatusFor(x.Value.Snapshots))
+            .ToDictionary(x => x.Key, x => x.Select(y => y.Key).Distinct());
+        var queuedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.Queued, Enumerable.Empty<SearchRequestOptionDto>());
+        var notFetchedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.NotFetched, Enumerable.Empty<SearchRequestOptionDto>());
+        var fetchedWebsites = websiteStatus.GetOrDefault(SearchRequestOptionStatus.Fetched, Enumerable.Empty<SearchRequestOptionDto>());
         log($"Found '{fetchedWebsites.CommaSeparate()}' already processed");
         log($"Found '{notFetchedWebsites.CommaSeparate()}' not fetched");
         log($"Found '{queuedWebsites.CommaSeparate()}' queued");
@@ -42,7 +50,7 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
         SearchResults result;
         if (fetchedWebsites.Any())
         {
-            result = await _query.GetResults(storedRequest, requestWrapper.Paging);
+            result = await _query.GetLatestResults(storedRequest, requestWrapper.Paging);
         }
         else
         {
@@ -51,17 +59,32 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
 
         if (notFetchedWebsites.Any())
         {
-            await QueueWebsites(requestWrapper.UserId, request.SearchTerms, notFetchedWebsites);
+            await QueueWebsites(requestWrapper.UserId, request.SearchTerms, notFetchedWebsites.Select(x => x.Website));
         }
 
+        var websiteToQueuedTime = options.ToDictionary(x => x.Key, x => x.Value.Snapshots.OrderBy(x => x.SnapshotTime).LastOrDefault()?.SnapshotTime);
         var nonCachedWebsites = queuedWebsites.Union(notFetchedWebsites);
         var resultItems = result.Results.Select(x => x.ToOneOf<SearchResultDto, QueuedResult>())
-            .Union(nonCachedWebsites.Select(website => new QueuedResult(true, website).ToOneOf<SearchResultDto, QueuedResult>()))
+            .Union(nonCachedWebsites.Select(option => new QueuedResult(option.Website, GetQueuedTime(option, websiteToQueuedTime)).ToOneOf<SearchResultDto, QueuedResult>()))
             .ToList();
 
         var resultsCount = resultItems.SelectFirsts().Sum(x => x.Items.Count);
         log($"Finished processing in {GetType().Name}, got '{resultsCount}' result items");
         return new SearchCommandResult(resultItems, result.TotalItems);
+    }
+
+    private DateTime GetQueuedTime(SearchRequestOptionDto option, Dictionary<SearchRequestOptionDto, DateTime?> websiteToQueuedTime)
+    {
+        DateTime result;
+        if (websiteToQueuedTime.TryGetValue(option, out DateTime? time) && time.HasValue)
+        {
+            result = time.Value;
+        }
+        else
+        {
+            result = _time.UtcNow;
+        }
+        return result;
     }
 
     private async Task QueueWebsites(string? userId, List<string> searchTerms, IEnumerable<SupportedWebsite> notFetchedWebsites)

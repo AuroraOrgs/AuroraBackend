@@ -1,6 +1,4 @@
-﻿using MediatR;
-
-namespace Aurora.Application.Contracts;
+﻿namespace Aurora.Application.Contracts;
 
 public interface IQueueProvider
 {
