@@ -6,18 +6,18 @@ using Microsoft.Extensions.Options;
 
 namespace Aurora.Infrastructure.Services;
 
-internal class SearchStatistics : ISearchStatistics
+internal class SearchStatisticsQueryService : ISearchStatisticsQueryService
 {
     private readonly SearchContext _ctx;
     private readonly IOptions<RefreshConfig> _options;
 
-    public SearchStatistics(SearchContext ctx, IOptions<RefreshConfig> options)
+    public SearchStatisticsQueryService(SearchContext ctx, IOptions<RefreshConfig> options)
     {
         _ctx = ctx;
         _options = options;
     }
 
-    public async Task<IEnumerable<SearchRequestOptionDto>> QueryPopularRequests()
+    public async Task<IEnumerable<SearchRequestOptionDto>> QueryPopularOptionsAsync()
     {
         var config = _options.Value;
         return await _ctx.Options.OrderByDescending(x => x.OccurredCount)
