@@ -37,4 +37,4 @@ services:
             Selenium:SeleniumLocation: http://selenium:4444/wd/hub
         depends_on:
             - db
-            - selenium
+            - firefox
