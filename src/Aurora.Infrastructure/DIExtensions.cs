@@ -16,6 +16,7 @@ public static class DIExtensions
     {
         services.AddScoped<ISearchRepository, SearchRepository>();
         services.AddScoped<ISearchQueryService, SearchQueryService>();
+        services.AddScoped<ISearchStatistics, SearchStatistics>();
         services.AddScoped<IQueueProvider, QueueProvider>();
         services.AddScoped<IDateTimeProvider, SystemClockDateTimeProvider>();
         services.AddDistributedMemoryCache();
