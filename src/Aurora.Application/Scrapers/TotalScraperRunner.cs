@@ -26,15 +26,7 @@ public class TotalScraperRunner : ITotalScraperRunner
             var results = await fullScraper.Scrap();
             foreach (var result in results)
             {
-                var request = new SearchRequestDto()
-                {
-                    Websites = new List<SupportedWebsite>()
-                    {
-                        website
-                    },
-                    ContentTypes = ContentTypeContext.ContentTypes,
-                    SearchTerms = result.Terms
-                };
+                var request = new SearchRequestDto(result.Terms, ContentTypeContext.ContentTypes, new List<SupportedWebsite>() { website });
                 var resultDto = new SearchResultDto(result.Items, result.Terms, website);
                 var state = await _repo.FetchRequest(request, false);
                 await _repo.MarkAsQueued(state);

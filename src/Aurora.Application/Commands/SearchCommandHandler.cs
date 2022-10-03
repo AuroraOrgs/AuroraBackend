@@ -16,10 +16,10 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
     private readonly ILogger<SearchCommandHandler> _logger;
 
     public SearchCommandHandler(
-        ISearchRepository search, 
-        IQueueProvider queue, 
+        ISearchRepository search,
+        IQueueProvider queue,
         IDateTimeProvider time,
-        ISearchQueryService query, 
+        ISearchQueryService query,
         ILogger<SearchCommandHandler> logger)
     {
         _repo = search;
@@ -89,13 +89,7 @@ public class SearchCommandHandler : IRequestHandler<SearchCommand, SearchCommand
 
     private async Task QueueWebsites(string? userId, List<string> searchTerms, IEnumerable<SupportedWebsite> notFetchedWebsites)
     {
-        var childRequest = new SearchRequestDto
-        {
-            SearchTerms = searchTerms,
-            ContentTypes = ContentTypeContext.ContentTypes,
-            Websites = notFetchedWebsites.ToList()
-        };
-
+        var childRequest = new SearchRequestDto(searchTerms, ContentTypeContext.ContentTypes, notFetchedWebsites.ToList());
         string websites = String.Join(", ", notFetchedWebsites.Select(x => x.ToString()));
         var newState = await _repo.FetchRequest(childRequest, false);
         _queue.Enqueue(
