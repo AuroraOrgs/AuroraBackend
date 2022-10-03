@@ -16,9 +16,9 @@ jobs:
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json"}'
       - uses: actions/checkout@v3
-      - run: docker-compose -f src/docker-all-local-arm64.yml build --no-cache 
-      - run: docker-compose -f src/docker-all-local-arm64.yml down
-      - run: docker-compose -f src/docker-all-local-arm64.yml up --remove-orphans -d
+      - run: docker-compose -f src/docker-all-local.yml build --no-cache 
+      - run: docker-compose -f src/docker-all-local.yml down
+      - run: docker-compose -f src/docker-all-local.yml up --remove-orphans -d
       - name: send post-notification to aurora group
         uses: fjogeleit/http-request-action@v1
         with:
