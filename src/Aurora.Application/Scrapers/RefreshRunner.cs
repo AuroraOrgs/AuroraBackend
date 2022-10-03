@@ -24,14 +24,14 @@ public class RefreshRunner : IRefreshRunner
         {
             var requests = options
                 .GroupBy(x => x.Term)
-                .Select(termOptions => new SearchRequestDto(termOptions.Key.Terms.ToList(), termOptions.Select(x => x.ContentType).ToList(), termOptions.Select(x => x.Website).ToList()));
-            await Parallel.ForEachAsync(requests, async (request, token) =>
+                .Select(termOptions => new SearchRequestDto(termOptions.Key.Terms.ToList(), termOptions.Select(x => x.ContentType).Distinct().ToList(), termOptions.Select(x => x.Website).Distinct().ToList()));
+            foreach (var request in requests)
             {
                 var state = await _repo.FetchRequest(request, isUserGenerated: false);
                 await _repo.MarkAsQueued(state);
                 var command = new ScrapCommand(request, userId: null);
                 await _commandSender.Send(command, token);
-            });
+            }
         }
     }
 }
