@@ -1,5 +1,6 @@
 ﻿using Aurora.Application.Scrapers;
 using Aurora.Infrastructure;
+using Aurora.Infrastructure.Config;
 using Aurora.Scrapers.Config;
 using Aurora.Scrapers.Discovery;
 using Hangfire;
@@ -22,6 +23,13 @@ public static class ServiceProviderExtensions
     /// </summary>
     public static IServiceProvider StartRecurringJobs(this IServiceProvider provider)
     {
+        StartTotalScrapers(provider);
+        StartRefreshJobs(provider);
+        return provider;
+    }
+
+    private static void StartTotalScrapers(IServiceProvider provider)
+    {
         var totalConfig = provider.GetRequiredService<IOptions<TotalScrapersConfig>>().Value;
         var ctx = provider.GetRequiredService<ScrapersContext>();
         var scrapers = ctx.TotalScrapers;
@@ -42,9 +50,19 @@ public static class ServiceProviderExtensions
                 RecurringJob.RemoveIfExists(jobId);
             }
         }
+    }
 
-        //TODO: Add refresh job
-
-        return provider;
+    private static void StartRefreshJobs(IServiceProvider provider)
+    {
+        var config = provider.GetRequiredService<IOptions<RefreshConfig>>().Value;
+        var refreshJobId = "RefreshJob";
+        if (config.UseRefresh)
+        {
+            RecurringJob.AddOrUpdate<IRefreshRunner>(refreshJobId, runner => runner.RefreshAsync(CancellationToken.None), config.RefreshCron);
+        }
+        else
+        {
+            RecurringJob.RemoveIfExists(refreshJobId);
+        }
     }
 }

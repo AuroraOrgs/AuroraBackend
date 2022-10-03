@@ -21,7 +21,7 @@ internal class SearchStatisticsQueryService : ISearchStatisticsQueryService
     {
         var config = _options.Value;
         return await _ctx.Options.OrderByDescending(x => x.OccurredCount)
-                                                 .Take(config.RefreshCount)
+                                                 .Take(config.RefreshOptionsCount)
                                                  .Select(option => new SearchRequestOptionDto(option.Website, option.ContentType, option.SearchTerm))
                                                  .ToListAsync();
     }
