@@ -15,15 +15,7 @@ public class ScraperRunnerTests
         ScraperRunner sut = SetupRunnerFor(website);
 
         //Act 
-        var request = new SearchRequestDto()
-        {
-            ContentTypes = ContentTypeContext.ContentTypes,
-            SearchTerms = new List<string> { "test" },
-            Websites = new List<SupportedWebsite>()
-            {
-                website
-            }
-        };
+        var request = new SearchRequestDto(new List<string> { "test" }, ContentTypeContext.ContentTypes, new List<SupportedWebsite>() { website });
         var resultsCount = 0;
         await sut.RunAsync(request, result =>
         {
