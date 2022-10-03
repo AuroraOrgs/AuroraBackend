@@ -9,6 +9,7 @@ public static class DiExtensions
     {
         services.AddScoped<IScraperRunner, ScraperRunner>();
         services.AddScoped<ITotalScraperRunner, TotalScraperRunner>();
+        services.AddScoped<IRefreshRunner, RefreshRunner>();
         services.AddMediatR(typeof(DiExtensions).Assembly);
         return services;
     }
