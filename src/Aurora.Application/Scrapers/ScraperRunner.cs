@@ -1,7 +1,9 @@
-﻿using Aurora.Application.Models;
+﻿using Aurora.Application.Config;
+using Aurora.Application.Models;
 using Aurora.Shared.Extensions;
 using Aurora.Shared.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Aurora.Application.Scrapers;
 
@@ -9,15 +11,15 @@ public class ScraperRunner : IScraperRunner
 {
     //Used to prevent excessive allocation
     private static readonly List<SearchItem> _emptyList = new();
-    //TODO: Add configuration of maximum semaphore count
-    private Semaphore _scraperLimiter = new Semaphore(1, 5);
+    private SemaphoreSlim _scraperLimiter;
     private readonly IOptionsScraperCollector _collector;
     private readonly ILogger<ScraperRunner> _logger;
 
-    public ScraperRunner(IOptionsScraperCollector collector, ILogger<ScraperRunner> logger)
+    public ScraperRunner(IOptionsScraperCollector collector, ILogger<ScraperRunner> logger, IOptions<RunnerConfig> options)
     {
         _collector = collector;
         _logger = logger;
+        _scraperLimiter = new SemaphoreSlim(1, options.Value.MaxConcurrentScrapers);
     }
 
     public async Task<List<SearchResultDto>> RunAsync(SearchRequestDto searchRequest, Func<SearchResultDto, Task>? onProcessed, CancellationToken token = default)
@@ -62,7 +64,7 @@ public class ScraperRunner : IScraperRunner
         ValueOrNull<List<SearchItem>> result;
         try
         {
-            _scraperLimiter.WaitOne();
+            await _scraperLimiter.WaitAsync();
             result = await scraper.ScrapAsync(terms, token);
             onProcessed?.Invoke(new SearchResultDto(result.WithDefault(_emptyList), terms, scraper.Website));
         }

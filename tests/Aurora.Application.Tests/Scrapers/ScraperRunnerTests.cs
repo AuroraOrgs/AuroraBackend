@@ -1,7 +1,9 @@
-﻿using Aurora.Application.Models;
+﻿using Aurora.Application.Config;
+using Aurora.Application.Models;
 using Aurora.Application.Scrapers;
 using Aurora.Domain.Enums;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace Aurora.Application.Tests.Scrapers;
 
@@ -41,6 +43,6 @@ public class ScraperRunnerTests
             scraper.Object
         };
         collector.Setup(x => x.CollectFor(It.IsAny<IEnumerable<(SupportedWebsite Key, ContentType value)>>())).Returns(ValueTask.FromResult(scrapers));
-        return new ScraperRunner(collector.Object, NullLogger<ScraperRunner>.Instance);
+        return new ScraperRunner(collector.Object, NullLogger<ScraperRunner>.Instance, Options.Create(new RunnerConfig { MaxConcurrentScrapers = 5 }));
     }
 }
